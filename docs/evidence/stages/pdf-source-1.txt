@@ -1,0 +1,7 @@
+test_image_only_page_retained_and_review_required (test_pdf_variants.PDFVariantTests.test_image_only_page_retained_and_review_required) ... ok
+test_merged_cell_identity_and_geometry_preserved (test_pdf_variants.PDFVariantTests.test_merged_cell_identity_and_geometry_preserved) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.036s
+
+OK

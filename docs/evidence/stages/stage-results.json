@@ -1,0 +1,241 @@
+[
+  {
+    "id": "foundation",
+    "status": "PASS",
+    "tests": 22,
+    "commands": [
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_gates.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 7,
+        "log": "foundation-1.txt",
+        "duration_seconds": 0.069
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_workflow.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 9,
+        "log": "foundation-2.txt",
+        "duration_seconds": 0.658
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_requirements.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 1,
+        "log": "foundation-3.txt",
+        "duration_seconds": 0.073
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_verification.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 5,
+        "log": "foundation-4.txt",
+        "duration_seconds": 0.164
+      }
+    ]
+  },
+  {
+    "id": "employee-original",
+    "status": "PASS",
+    "tests": 28,
+    "commands": [
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_workspace.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 16,
+        "log": "employee-original-1.txt",
+        "duration_seconds": 2.57
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_backup.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 12,
+        "log": "employee-original-2.txt",
+        "duration_seconds": 3.403
+      }
+    ]
+  },
+  {
+    "id": "pdf-source",
+    "status": "PASS",
+    "tests": 9,
+    "commands": [
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_pdf_variants.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 2,
+        "log": "pdf-source-1.txt",
+        "duration_seconds": 0.227
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_blank_pages.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 7,
+        "log": "pdf-source-2.txt",
+        "duration_seconds": 1.169
+      }
+    ]
+  },
+  {
+    "id": "technical-meaning-guards",
+    "status": "PASS",
+    "tests": 22,
+    "commands": [
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_quantity_units.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 11,
+        "log": "technical-meaning-guards-1.txt",
+        "duration_seconds": 0.065
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_terminology.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 5,
+        "log": "technical-meaning-guards-2.txt",
+        "duration_seconds": 0.208
+      },
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_ai_and_evaluation.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 6,
+        "log": "technical-meaning-guards-3.txt",
+        "duration_seconds": 0.32
+      }
+    ]
+  },
+  {
+    "id": "document-pipeline",
+    "status": "PASS",
+    "tests": 31,
+    "commands": [
+      {
+        "command": [
+          "/workspace/urs-ai-report/.venv/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_processing.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 31,
+        "log": "document-pipeline-1.txt",
+        "duration_seconds": 8.905
+      }
+    ]
+  }
+]

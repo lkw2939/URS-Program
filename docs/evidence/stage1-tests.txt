@@ -1,0 +1,21 @@
+test_all_required_checks (test_gates.GateTests.test_all_required_checks) ... ok
+test_ambiguous_results_block (test_gates.GateTests.test_ambiguous_results_block) ... ok
+test_edit_invalidates_previous_results (test_gates.GateTests.test_edit_invalidates_previous_results) ... ok
+test_empty_or_duplicate_definition_blocks (test_gates.GateTests.test_empty_or_duplicate_definition_blocks) ... ok
+test_every_nonpassing_status_blocks (test_gates.GateTests.test_every_nonpassing_status_blocks) ... ok
+test_missing_result_blocks (test_gates.GateTests.test_missing_result_blocks) ... ok
+test_no_evidence_reference_blocks (test_gates.GateTests.test_no_evidence_reference_blocks) ... ok
+test_all_33_and_five_additional_requirements_have_stages (test_requirements.RequirementCoverage.test_all_33_and_five_additional_requirements_have_stages) ... ok
+test_all_nonpassing_statuses_block_next_stage (test_workflow.WorkflowTests.test_all_nonpassing_statuses_block_next_stage) ... ok
+test_cannot_forge_automatic_pass (test_workflow.WorkflowTests.test_cannot_forge_automatic_pass) ... ok
+test_concurrent_edit_during_validation_rejects_result (test_workflow.WorkflowTests.test_concurrent_edit_during_validation_rejects_result) ... ok
+test_definitions_are_persistent_and_frozen (test_workflow.WorkflowTests.test_definitions_are_persistent_and_frozen) ... ok
+test_full_flow_persistence_and_invalidation (test_workflow.WorkflowTests.test_full_flow_persistence_and_invalidation) ... ok
+test_http_sequence_and_forgery (test_workflow.WorkflowTests.test_http_sequence_and_forgery) ... ok
+test_rerun_clears_downstream_and_approval (test_workflow.WorkflowTests.test_rerun_clears_downstream_and_approval) ... ok
+test_validator_exception_fails_closed (test_workflow.WorkflowTests.test_validator_exception_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.542s
+
+OK

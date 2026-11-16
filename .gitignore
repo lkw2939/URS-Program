@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.runtime/
+.venv/
+.env
+.env.*
+!.env.example
+
+# Working databases and their journals are private, including operator backups.
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-*
+*.sqlite3-*
+*.db-*

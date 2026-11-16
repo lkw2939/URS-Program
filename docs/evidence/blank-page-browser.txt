@@ -1,0 +1,1 @@
+PASS: Chromium rejects unconfirmed blank page, accepts explicit blank confirmation, preserves original page preview; no AI calls and no page errors.

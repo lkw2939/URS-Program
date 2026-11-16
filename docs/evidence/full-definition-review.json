@@ -1,0 +1,175 @@
+{
+  "scope": "Full original definition chapters I-XIX plus original 33 and additional 5; local/synthetic implementation review, not live acceptance",
+  "original_sha256": "cae594011fe9630e0effbbe1a48feba7b88102880f62b7e703c1b5b876a98ae7",
+  "original_requirements": 33,
+  "additional_requirements": 5,
+  "chapter_reviews": [
+    {
+      "chapter": "Ⅰ. 프로그램의 근본적인 목적",
+      "criteria": "단일 사내 프로그램·범용 AI/PDF 엔진 재개발 금지",
+      "evidence": "기존 프로젝트와 기존 라이브러리 유지",
+      "limit": "구조 확인"
+    },
+    {
+      "chapter": "Ⅱ. 사용자가 실제로 경험해야 하는 업무 흐름",
+      "criteria": "로그인부터 검증·수정·승인·다운로드까지",
+      "evidence": "Chromium 전체 흐름",
+      "limit": "합성 흐름"
+    },
+    {
+      "chapter": "Ⅲ. 첫 번째 기능 — 원본 PDF 업로드 및 보존",
+      "criteria": "원본 불변·표/그림/출처·빈 페이지",
+      "evidence": "원본·추출·미리보기 해시 및 좌표 시험",
+      "limit": "합성 범위"
+    },
+    {
+      "chapter": "Ⅳ. 두 번째 기능 — ChatGPT 자동 한국어 번역",
+      "criteria": "영어/인도네시아어 전체 번역·문장 의미·서식",
+      "evidence": "ID 범위 검사, 별도 의미 검증, 원문 순서 보강",
+      "limit": "실제 AI 미검증"
+    },
+    {
+      "chapter": "Ⅴ. 세 번째 기능 — 번역 후 독립적인 기술 의미 검증",
+      "criteria": "독립 문장/문서 검증·근거",
+      "evidence": "별도 요청과 오류/수정 이력·선택 이동",
+      "limit": "합성 범위"
+    },
+    {
+      "chapter": "Ⅵ. 네 번째 기능 — AI 오류 자동 수정과 재검증",
+      "criteria": "자동 수정·관련 재검증·반복/비용 제한",
+      "evidence": "수정 2회·불확실 차단·수정 후 모든 게이트 무효화",
+      "limit": "합성 범위"
+    },
+    {
+      "chapter": "Ⅶ. 다섯 번째 기능 — 설비 및 공정의 기술적 분석",
+      "criteria": "설비·공정·생산능력·원문/해설 구분",
+      "evidence": "8개 필수 본문 분류·출처 및 독립 감사",
+      "limit": "실제 AI 미검증"
+    },
+    {
+      "chapter": "Ⅷ. 여섯 번째 기능 — URS 내부의 요구사항 모순 탐지",
+      "criteria": "문맥에 따른 모순 판단·양측 근거·중요성",
+      "evidence": "필수 필드·2개 이상 별도 출처·클릭 이동",
+      "limit": "합성 범위"
+    },
+    {
+      "chapter": "Ⅸ. 일곱 번째 기능 — 고객 기술질의 자동 생성",
+      "criteria": "고객 질의 이유·출처·수정/삭제·영문",
+      "evidence": "질의 구조 검사·UI·출력·재검증",
+      "limit": "합성 범위"
+    },
+    {
+      "chapter": "Ⅹ. 여덟 번째 기능 — 원문과 번역본 병렬 비교 시스템",
+      "criteria": "병렬 비교·문장/표 셀·오류 전후 확인",
+      "evidence": "원문 강조·직접 이동·오류 상세·다중 페이지 수정 보존",
+      "limit": "Chromium"
+    },
+    {
+      "chapter": "Ⅺ. 아홉 번째 기능 — 직원의 AI 대화형 수정",
+      "criteria": "AI 대화형 수정 및 승인 무효화",
+      "evidence": "수정안 적용 뒤 새 리비전·독립 재검증",
+      "limit": "실제 AI 미검증"
+    },
+    {
+      "chapter": "Ⅻ. 열 번째 기능 — 전문적인 한국어 문서 및 기술 보고서",
+      "criteria": "번역본·12개 구성 보고서·실제 Word/PDF 품질",
+      "evidence": "전체 본문 대조·원문 순서·링크·승인 기록 부록",
+      "limit": "합성 출력"
+    },
+    {
+      "chapter": "XIII. 열한 번째 기능 — 직원 계정 및 작업 관리",
+      "criteria": "직원 계정·프로젝트·상태·수정/승인 이력",
+      "evidence": "소유자 권한·기록 다운로드·최종 파일 구분",
+      "limit": "로컬 범위"
+    },
+    {
+      "chapter": "XIV. 열두 번째 기능 — 단계별 엄격한 PASS 검증",
+      "criteria": "6개 상태·단계 게이트·99%/중대 오역0 근거",
+      "evidence": "자동/수동 PASS 통제·평가 자격·모델/코드 지문",
+      "limit": "품질 실측 미완료"
+    },
+    {
+      "chapter": "XV. 최초 요구사항 33개 — 공식 체크리스트",
+      "criteria": "최초33개 추적",
+      "evidence": "requirements-map.json 및 completion-checklist.md",
+      "limit": "33개 연결"
+    },
+    {
+      "chapter": "XVI. 초기 추가 요청 5개 — 별도 추적",
+      "criteria": "추가5개 추적·중복 구현 금지",
+      "evidence": "D3/D4,E4,F1/F2,C5/F5,F3/F4에 연결",
+      "limit": "5개 연결"
+    },
+    {
+      "chapter": "XVII. 실제 개발 방향과 구현 원칙",
+      "criteria": "기존 보존·단일 프로그램·키 보호·비용 제한",
+      "evidence": "기존 guion-vivo 보존·키 출력 안 함·API 재보류",
+      "limit": "실제 청구/자동충전 미확인"
+    },
+    {
+      "chapter": "XVIII. 최종적으로 직원이 받아야 하는 결과",
+      "criteria": "12페이지 영어 URS 실제 업무 시나리오",
+      "evidence": "합성 전체 흐름과 실제 파일 재열기",
+      "limit": "실제 URS 인수 대기"
+    },
+    {
+      "chapter": "XIX. 최종 개발 원칙",
+      "criteria": "정확한 결과·누락/과장/임의 축소 방지",
+      "evidence": "개발/합성/실제 검증 상태 분리·전체 체크리스트 유지",
+      "limit": "실제 업무 완성 미판정"
+    }
+  ],
+  "findings": [
+    {
+      "id": "FIX-01",
+      "clause": "XII-A / 원문 순서",
+      "gap": "본문 뒤로 표가 밀리는 출력 순서",
+      "resolution": "본문·표를 y/x 위치 순으로 통합 출력",
+      "check": "test_translation_preserves_text_table_text_order"
+    },
+    {
+      "id": "FIX-02",
+      "clause": "VIII-4 / X-2",
+      "gap": "충돌·질의 출처가 일반 문자열",
+      "resolution": "출처 버튼으로 페이지·블록·표 셀 위치 이동",
+      "check": "source-navigation-browser.txt"
+    },
+    {
+      "id": "FIX-03",
+      "clause": "X-4 / V-3",
+      "gap": "오류의 원문·당시 번역·수정 후 상태 확인이 불편",
+      "resolution": "펼침 항목에 원문·오류·전후 번역·후속 검사 및 위치 연결",
+      "check": "source-navigation-browser.txt"
+    },
+    {
+      "id": "FIX-04",
+      "clause": "XI / F4",
+      "gap": "페이지 이동 시 저장 전 번역 수정 손실 가능",
+      "resolution": "문서 내 다중 페이지 임시 수정 보존·일괄 저장",
+      "check": "source-navigation-browser.txt"
+    },
+    {
+      "id": "FIX-05",
+      "clause": "XII-B / XIII-4",
+      "gap": "출력 본문에 최종 승인 기록 부재",
+      "resolution": "검토 본문 보존 + 승인자·KST 시각·근거·본문 해시 추가, 원자적 저장",
+      "check": "test_final_files_include_approval_and_preserve_reviewed_content"
+    },
+    {
+      "id": "FIX-06",
+      "clause": "VIII-4",
+      "gap": "충돌의 관련 대상·판단 이유·기술적 중요성·확인 여부가 필수 아님",
+      "resolution": "필수 구조 검사 및 화면·보고서 출력",
+      "check": "test_conflict_without_technical_impact_cannot_pass"
+    },
+    {
+      "id": "FIX-07",
+      "clause": "XII-3 / C3 / E5",
+      "gap": "Word 재열기의 전체 번역 본문 대조 부족",
+      "resolution": "Word 문단·표의 전체 번역/분석 문장 대조, 검토본·승인본 Office 재열기",
+      "check": "definition-review-tests.txt"
+    }
+  ],
+  "real_customer_verified": false,
+  "api_deferred": true
+}

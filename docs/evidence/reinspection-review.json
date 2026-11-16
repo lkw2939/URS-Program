@@ -1,0 +1,70 @@
+{
+  "definition_matches_latest_attachment": true,
+  "definition_sha256": "cae594011fe9630e0effbbe1a48feba7b88102880f62b7e703c1b5b876a98ae7",
+  "original_chapters": 19,
+  "original_requirements": 33,
+  "additional_requirements": 5,
+  "rules_reminded": {
+    "review_before_implementation": true,
+    "report_before_implementation": true,
+    "affected_tests_before_full_regression": true,
+    "api_deferred": true,
+    "real_quality_not_inferred_from_fixtures": true
+  },
+  "new_findings": [
+    {
+      "id": "REVIEW-01",
+      "clauses": [
+        "V-3",
+        "XIV-1"
+      ],
+      "gap": "blank independent verification reasons accepted",
+      "resolution": "nonempty trimmed evidence required; failure blocks next stage"
+    },
+    {
+      "id": "REVIEW-02",
+      "clauses": [
+        "III-2",
+        "V-2",
+        "VII-4",
+        "VIII-3"
+      ],
+      "gap": "grid and merged cell relationships not explicit in global verification/analysis context",
+      "resolution": "source_layout includes table grids, canonical cell IDs, coordinates, page/image metadata"
+    },
+    {
+      "id": "REVIEW-03",
+      "clauses": [
+        "III-2",
+        "XIV-3"
+      ],
+      "gap": "verify/analysis did not revalidate page preview bytes before AI requests",
+      "resolution": "preview count and SHA verification before calls; damage blocks next stage"
+    },
+    {
+      "id": "REVIEW-04",
+      "clauses": [
+        "VI-3",
+        "XI"
+      ],
+      "gap": "table cell context could retain old extraction after employee correction",
+      "resolution": "use current canonical corrected block text in layout context"
+    }
+  ],
+  "affected_tests": 31,
+  "real_customer_quality_verified": false,
+  "uncompleted": [
+    "api-authentication",
+    "actual-customer-full-content-and-layout-review",
+    "approved-official-reference-content",
+    "expert-semantic-accuracy-99-and-zero-critical-errors",
+    "actual-employee-operational-acceptance",
+    "client-image-display-confirmation"
+  ],
+  "full_regression_tests": 112,
+  "all_runner_exit_codes": [
+    0,
+    0,
+    0
+  ]
+}

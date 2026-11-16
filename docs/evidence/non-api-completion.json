@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "scope": "Implemented non-API functions and isolated synthetic validation; NOT full non-API operational or business acceptance",
+  "ordered_unit_stages": [
+    [
+      "foundation",
+      22,
+      "PASS"
+    ],
+    [
+      "employee-original",
+      28,
+      "PASS"
+    ],
+    [
+      "pdf-source",
+      9,
+      "PASS"
+    ],
+    [
+      "technical-meaning-guards",
+      22,
+      "PASS"
+    ],
+    [
+      "document-pipeline",
+      31,
+      "PASS"
+    ]
+  ],
+  "unit_http_tests": 112,
+  "chromium_flows": 2,
+  "libreoffice_documents": 4,
+  "stage_failure_blocks_following_execution": true,
+  "user_instructions_persisted": {
+    "AGENTS.md": "77d42b55a19203d392bd65ecaf42093bb21e4675e1563de953dd478a9adc6e34",
+    "docs/HANDOFF.md": "8a34a348aa9ec3191431d4651792a14969073892a9ad8442f0ac2e653bb8a682",
+    "docs/checklist.md": "a74e74648acfa1a7016c1ce3d8999167805ebd335dee140daa8da474c5c80b96",
+    "docs/validation-report.md": "f20b202916059d6061b9c172b37a8764b3b8791bf6db5f279e022a8c609cec14",
+    "docs/PROGRESS.md": "4d6c8f5368cf2244046d1e45678973767c642cab0a84e4d17000dc8dc8f5f683"
+  },
+  "deferred": [
+    {
+      "id": "live-api",
+      "status": "BLOCKED",
+      "deferred_by_user": true
+    },
+    {
+      "id": "actual-customer-semantic-accuracy",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "reviewed-official-source-corpus",
+      "status": "UNVERIFIED"
+    },
+    {
+      "id": "actual-business-final-approval",
+      "status": "UNVERIFIED"
+    }
+  ],
+  "business_ready": false,
+  "reproduce": "python scripts/validate.py",
+  "readable_document_checklist_verified": true,
+  "checklist_state_transitions_verified": [
+    "1/7",
+    "NEEDS_REVIEW",
+    "6/7",
+    "7/7",
+    "edit->2/7"
+  ],
+  "verification_record_export_verified": true,
+  "synthetic_workspace_backup_restore_verified": true,
+  "prework_whole_checklist_review_reported": true,
+  "backup_report_and_page_corruption_rejection_verified": true,
+  "analysis_twelve_section_output_verified": true,
+  "remaining_non_api_acceptance": [
+    "reviewed-official-references",
+    "actual-customer-document-completeness-and-quality",
+    "employee-operational-environment-acceptance"
+  ],
+  "full_original_definition_reviewed_chapters": 19,
+  "definition_review_gaps_addressed": 7,
+  "approval_appendix_and_atomic_final_files_verified": true,
+  "source_reference_navigation_and_unsaved_multi_page_edit_preservation_verified": true,
+  "operator_password_recovery_verified": true,
+  "ui_redesign_browser_verified": true,
+  "ui_screenshots_sha256": {
+    "ui-login-desktop.png": "d57fb583849aeac4be159e1ae2e15b27835fd6c195a7efe50231033ab494c0ff",
+    "ui-dashboard-mobile.png": "a86ab704012607f76d42f19a3ef8fb31c88548a41fb83eaf8407a39cf2c02562",
+    "ui-login-mobile.png": "ffbecdb26e87f1e07bcb89bde3b3560caa21be1de3e1dbaa5dbe7c3ee51aa7e9",
+    "ui-dashboard-desktop.png": "9009102811e0c988f174619a9efe9ef1fc59be92f634861c98d51364ba1fd0ef"
+  },
+  "ui_client_image_delivery_confirmed": false,
+  "reviewed_terminology_registration_verified": true,
+  "explicit_table_context_and_verification_evidence_guards_verified": true
+}

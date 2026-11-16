@@ -1,0 +1,14 @@
+test_all_nonpassing_statuses_block_next_stage (test_workflow.WorkflowTests.test_all_nonpassing_statuses_block_next_stage) ... ok
+test_cannot_forge_automatic_pass (test_workflow.WorkflowTests.test_cannot_forge_automatic_pass) ... ok
+test_concurrent_edit_during_validation_rejects_result (test_workflow.WorkflowTests.test_concurrent_edit_during_validation_rejects_result) ... ok
+test_definitions_are_persistent_and_frozen (test_workflow.WorkflowTests.test_definitions_are_persistent_and_frozen) ... ok
+test_full_flow_persistence_and_invalidation (test_workflow.WorkflowTests.test_full_flow_persistence_and_invalidation) ... ok
+test_http_sequence_and_forgery (test_workflow.WorkflowTests.test_http_sequence_and_forgery) ... ok
+test_rerun_clears_downstream_and_approval (test_workflow.WorkflowTests.test_rerun_clears_downstream_and_approval) ... ok
+test_revalidation_revokes_approval_before_validator_returns (test_workflow.WorkflowTests.test_revalidation_revokes_approval_before_validator_returns) ... ok
+test_validator_exception_fails_closed (test_workflow.WorkflowTests.test_validator_exception_fails_closed) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.554s
+
+OK

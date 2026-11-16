@@ -1,0 +1,11 @@
+test_budget_and_invalid_prices_block_before_network (test_ai_and_evaluation.AIAndEvaluationTests.test_budget_and_invalid_prices_block_before_network) ... ok
+test_duplicate_and_missing_evaluation_evidence_rejected (test_ai_and_evaluation.AIAndEvaluationTests.test_duplicate_and_missing_evaluation_evidence_rejected) ... ok
+test_failed_call_is_reserved_and_no_secret_error_leaks (test_ai_and_evaluation.AIAndEvaluationTests.test_failed_call_is_reserved_and_no_secret_error_leaks) ... ok
+test_noncompleted_ai_response_never_passes (test_ai_and_evaluation.AIAndEvaluationTests.test_noncompleted_ai_response_never_passes) ... ok
+test_qualification_threshold_critical_errors_and_model_binding (test_ai_and_evaluation.AIAndEvaluationTests.test_qualification_threshold_critical_errors_and_model_binding) ... ok
+test_response_transport_contract_and_usage_storage (test_ai_and_evaluation.AIAndEvaluationTests.test_response_transport_contract_and_usage_storage) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.134s
+
+OK

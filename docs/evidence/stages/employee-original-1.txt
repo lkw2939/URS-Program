@@ -1,0 +1,21 @@
+test_http_login_upload_download_csrf_and_other_user (test_workspace.WorkspaceTests.test_http_login_upload_download_csrf_and_other_user) ... ok
+test_invalid_encrypted_oversize_empty_pdf_rejected (test_workspace.WorkspaceTests.test_invalid_encrypted_oversize_empty_pdf_rejected) ... ok
+test_invalid_reset_does_not_create_account_or_invalidate_session (test_workspace.WorkspaceTests.test_invalid_reset_does_not_create_account_or_invalidate_session) ... ok
+test_login_rate_limit_and_password_policy (test_workspace.WorkspaceTests.test_login_rate_limit_and_password_policy) ... ok
+test_only_original_integrity_passes_and_downstream_blocks (test_workspace.WorkspaceTests.test_only_original_integrity_passes_and_downstream_blocks) ... ok
+test_operator_password_reset_invalidates_only_target_sessions_and_keeps_documents (test_workspace.WorkspaceTests.test_operator_password_reset_invalidates_only_target_sessions_and_keeps_documents) ... ok
+test_original_bytes_immutable_and_not_overwritten (test_workspace.WorkspaceTests.test_original_bytes_immutable_and_not_overwritten) ... ok
+test_owner_isolation_and_restart (test_workspace.WorkspaceTests.test_owner_isolation_and_restart) ... ok
+test_password_hash_sessions_logout_expiry (test_workspace.WorkspaceTests.test_password_hash_sessions_logout_expiry) ... ok
+test_password_reset_cli_uses_hidden_prompt_and_does_not_print_password (test_workspace.WorkspaceTests.test_password_reset_cli_uses_hidden_prompt_and_does_not_print_password) ... ok
+test_readable_record_escapes_customer_content_and_shows_unverified (test_workspace.WorkspaceTests.test_readable_record_escapes_customer_content_and_shows_unverified) ... ok
+test_repeat_exports_of_unchanged_document_have_matching_record_hashes (test_workspace.WorkspaceTests.test_repeat_exports_of_unchanged_document_have_matching_record_hashes) ... ok
+test_verification_record_does_not_include_environment_or_login_credentials (test_workspace.WorkspaceTests.test_verification_record_does_not_include_environment_or_login_credentials) ... ok
+test_verification_record_has_original_status_and_valid_content_hash (test_workspace.WorkspaceTests.test_verification_record_has_original_status_and_valid_content_hash) ... ok
+test_verification_record_is_owner_only (test_workspace.WorkspaceTests.test_verification_record_is_owner_only) ... ok
+test_verification_record_preserves_old_results_after_edit (test_workspace.WorkspaceTests.test_verification_record_preserves_old_results_after_edit) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 2.352s
+
+OK

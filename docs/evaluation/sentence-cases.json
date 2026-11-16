@@ -1,0 +1,150 @@
+{
+  "scope": "개발용 의미 오류 사례 초안. 실제 고객 URS/전문가 정답 평가집이 아님. 의미 정확도 99% 근거로 사용 금지.",
+  "expert_reviewed": false,
+  "cases": [
+    {
+      "id": "DEV-MEANING-01",
+      "category": "negation",
+      "language": "en",
+      "source": "The conveyor shall not restart automatically after power restoration.",
+      "expected_meaning": "전원 복구 후 컨베이어가 자동으로 재시작해서는 안 된다.",
+      "observed_translation": "전원 복구 후 컨베이어가 자동으로 재시작해야 한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-02",
+      "category": "condition",
+      "language": "en",
+      "source": "The conveyor shall stop when the safety guard is open.",
+      "expected_meaning": "안전 가드가 열려 있을 때 컨베이어는 정지해야 한다.",
+      "observed_translation": "안전 가드가 닫혀 있을 때 컨베이어는 정지해야 한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-03",
+      "category": "obligation",
+      "language": "en",
+      "source": "The machine must include a safety interlock.",
+      "expected_meaning": "기계에는 안전 인터록이 반드시 포함되어야 한다.",
+      "observed_translation": "기계에는 안전 인터록이 포함되는 것이 권장된다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-04",
+      "category": "recommendation",
+      "language": "en",
+      "source": "The machine should include a tool cabinet.",
+      "expected_meaning": "기계에 공구함을 포함하는 것이 권장된다.",
+      "observed_translation": "기계에 공구함이 반드시 포함되어야 한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": false,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-05",
+      "category": "quantity_unit",
+      "language": "en",
+      "source": "Length 120 mm; speed 60 packs/min.",
+      "expected_meaning": "길이 120 mm, 속도 60 packs/min.",
+      "observed_translation": "길이 120 packs/min, 속도 60 mm.",
+      "expected_verdict": "FAIL",
+      "critical_error": false,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-06",
+      "category": "product_assignment",
+      "language": "en",
+      "source": "CV-01 speed is 60 packs/min; CV-02 speed is 120 packs/min.",
+      "expected_meaning": "CV-01은 60 packs/min, CV-02는 120 packs/min이다.",
+      "observed_translation": "CV-01은 120 packs/min, CV-02는 60 packs/min이다.",
+      "expected_verdict": "FAIL",
+      "critical_error": false,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-07",
+      "category": "sequence",
+      "language": "en",
+      "source": "Stop the conveyor before opening the guard.",
+      "expected_meaning": "가드를 열기 전에 컨베이어를 정지한다.",
+      "observed_translation": "가드를 연 후 컨베이어를 정지한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-08",
+      "category": "scope",
+      "language": "en",
+      "source": "Stop CV-01; keep CV-02 running.",
+      "expected_meaning": "CV-01은 정지하고 CV-02는 계속 운전한다.",
+      "observed_translation": "CV-02는 정지하고 CV-01은 계속 운전한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-09",
+      "category": "indonesian_negation",
+      "language": "id",
+      "source": "Konveyor tidak boleh beroperasi saat pelindung terbuka.",
+      "expected_meaning": "가드가 열려 있을 때 컨베이어는 작동해서는 안 된다.",
+      "observed_translation": "가드가 열려 있을 때 컨베이어는 작동해야 한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-10",
+      "category": "indonesian_condition",
+      "language": "id",
+      "source": "Motor harus berhenti ketika pintu terbuka.",
+      "expected_meaning": "문이 열렸을 때 모터는 정지해야 한다.",
+      "observed_translation": "문이 닫혔을 때 모터는 정지해야 한다.",
+      "expected_verdict": "FAIL",
+      "critical_error": true,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-11",
+      "category": "compact_value",
+      "language": "en",
+      "source": "AB-12 length is 120mm.",
+      "expected_meaning": "AB-12 길이는 120mm이다.",
+      "observed_translation": "AB-12 길이는 102mm이다.",
+      "expected_verdict": "FAIL",
+      "critical_error": false,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    },
+    {
+      "id": "DEV-MEANING-12",
+      "category": "unit_prefix",
+      "language": "en",
+      "source": "Pressure is 120 MPa.",
+      "expected_meaning": "압력은 120 MPa이다.",
+      "observed_translation": "압력은 120 kPa이다.",
+      "expected_verdict": "FAIL",
+      "critical_error": false,
+      "review_state": "NEEDS_REVIEW",
+      "requires_independent_semantic_review": true
+    }
+  ]
+}

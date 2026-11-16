@@ -1,0 +1,2 @@
+PASS: synthetic full Chromium flow, extraction review, translation, independent correction, analysis, 4 real output downloads, source highlight, AI dialogue, qualification gate, final approval, mobile layout, translation edit invalidation, AI report proposal invalidation, verification HTML/JSON downloads, matching record hashes and audit revision history. Real OpenAI/customer accuracy NOT tested.
+PASS: Chromium rejects unconfirmed blank page, accepts explicit blank confirmation, preserves original page preview; no AI calls and no page errors.

@@ -1,0 +1,22 @@
+{
+  "revision": "stage2-v1",
+  "files": {
+    "requirements-dev.txt": "151cca93edd38b3e4aea1b744b4e6a39999d64667934de06bc1085bbb9c6d7c6",
+    "requirements.txt": "3ec8922905dc4e3a10c3b46bd7fba023c37ffc309d51c6bed2a13ec3e98177fd",
+    "static/app.css": "1db9b692861653cf094fcf7c2ffc16a6cb9b0a0e640f6c2eb32b769467b23a72",
+    "static/app.js": "c737d627763ab472171dd96e66f8af8871230d2f7a4ad98a6b678214be33dcc1",
+    "static/index.html": "5494dc40129d3fad6d0fd77ac97bc113b1a2c44701d7541ea78e260f12588103",
+    "tests/browser_smoke.py": "4647d68c4829e8df4052afdf2330115d2bab6440316cf28e867e43e6a69c7d81",
+    "tests/test_gates.py": "ff9f57587d5d66f37f673488227baf04057c7b1624a75c5728f9a622f7e16d91",
+    "tests/test_requirements.py": "8e4a59d6109cad406c8280adccfb7a709ea1d3a6fc06e754d1f068ccc9880219",
+    "tests/test_workflow.py": "0e4f6c9097197df1c05a9d535dfc8d0cfa55a5491bfefc6e33a66b433e1f9d01",
+    "tests/test_workspace.py": "fcaae243f079526bd28d0596944ee52a1893ec361503419b07f3c72377a97ef8",
+    "urs/__init__.py": "7bb470b921aaedbe3f3a0532b94a66b6977ad147af205097b58f796dfe3c5224",
+    "urs/__main__.py": "7569c01be60f5cde1c38dd06b8e13148d01aab8402e530ab6a77e7aec5ac5483",
+    "urs/gates.py": "fc505e2d65122067b516af04a971307bbc2e8f6bbdf900886a0140863029f04a",
+    "urs/server.py": "bf3c4b21705bfcd876b48631add6cabcaf51cd130b341d7268c668ef951e7e42",
+    "urs/web.py": "9bd66d8b875db3d5e590d86fbade3de71cbc37995d0978a2b076074001f2eef6",
+    "urs/workflow.py": "ebf5d5e3709c60c96edae25f6d1099507f089630cb7e99d850296da961ae3b43",
+    "urs/workspace.py": "8b3a867e8fe175737b7cf19d857c21c5dd79d3f76294175154abb3472a1753b2"
+  }
+}

@@ -1,0 +1,10 @@
+test_check_cli_does_not_create_database_or_register_corpus (test_terminology.TerminologyTests.test_check_cli_does_not_create_database_or_register_corpus) ... ok
+test_import_is_private_non_overwriting_and_invalidates_fingerprint (test_terminology.TerminologyTests.test_import_is_private_non_overwriting_and_invalidates_fingerprint) ... ok
+test_missing_is_unverified (test_terminology.TerminologyTests.test_missing_is_unverified) ... ok
+test_provenance_required_and_changes_invalidate_qualification (test_terminology.TerminologyTests.test_provenance_required_and_changes_invalidate_qualification) ... ok
+test_unapproved_or_missing_provenance_cannot_be_registered (test_terminology.TerminologyTests.test_unapproved_or_missing_provenance_cannot_be_registered) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.131s
+
+OK

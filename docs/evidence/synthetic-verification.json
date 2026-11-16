@@ -1,0 +1,507 @@
+{
+  "record": {
+    "schema_version": 1,
+    "document_id": "d502ccf3ab7cdd8447bc48547d546c80",
+    "original": {
+      "name": "synthetic-urs.pdf",
+      "sha256": "916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5",
+      "pages": 2
+    },
+    "snapshot": {
+      "id": "d502ccf3ab7cdd8447bc48547d546c80",
+      "revision": 2,
+      "stages": [
+        {
+          "id": "source",
+          "passed": true
+        },
+        {
+          "id": "extract",
+          "passed": true
+        },
+        {
+          "id": "translate",
+          "passed": true
+        },
+        {
+          "id": "verify",
+          "passed": true
+        },
+        {
+          "id": "analyze",
+          "passed": true
+        },
+        {
+          "id": "report",
+          "passed": true
+        },
+        {
+          "id": "approval",
+          "passed": false
+        }
+      ],
+      "results": [
+        {
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "stage": "analyze",
+          "revision": 2,
+          "check_id": "complete",
+          "status": "PASS",
+          "evidence": "{\"audit\": {\"issues\": [], \"status\": \"PASS\"}, \"conflicts\": 1, \"questions\": 1, \"sections\": 8, \"topics_checked\": [\"overview\", \"products\", \"process\", \"specifications\", \"explanation\", \"requirements\", \"capacity\", \"review\"]}",
+          "digest": "169235fe312be8ccde4b2d7a062d0f33d9b073f0c72b7c7025e2aa5d239e5ffa",
+          "validator": "urs-analyze",
+          "version": "1",
+          "created": "2026-10-28T00:40:23.981517+00:00"
+        },
+        {
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "stage": "extract",
+          "revision": 2,
+          "check_id": "complete",
+          "status": "PASS",
+          "evidence": "{\"artifact_sha256\": \"9f104cb4ed41d441c31ece826bbfe68084fe18f65d89a38f6073f7456325b13f\", \"blocks\": 9, \"pages\": 2, \"review\": {\"accepted\": true, \"note\": \"알려진 합성 정답의 전체 페이지·표·원문 위치 대조 시험\", \"pages\": [1, 2], \"reviewer\": \"pipeline-test\"}}",
+          "digest": "bb7718441ce58e6db159d6df081e5be4abb2dfd664e9f29605913e4c8b612b11",
+          "validator": "urs-extract",
+          "version": "1",
+          "created": "2026-10-28T00:40:23.766952+00:00"
+        },
+        {
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "stage": "report",
+          "revision": 2,
+          "check_id": "complete",
+          "status": "PASS",
+          "evidence": "{\"employee_visual_review_required\": true, \"outputs\": {\"analysis.docx\": \"32a55f5c2c1f3bfab155b2e5ad2bc5d5bc3999a3e9624c62bfb473f64f27702e\", \"analysis.pdf\": \"fbfa73e4e4e653682748445fafc2e53874b7c37bb49b6644d6601190fc096a95\", \"translation.docx\": \"cb6073a711013a70594f8880b05a085dd3584c2f5ff6d63cf6a206c2feb2800f\", \"translation.pdf\": \"488acb5b1e1efa2bcaf0da61b726824d135dfc94b6a70d21995e90b76c6bb4da\"}, \"reopened_validated\": true}",
+          "digest": "d52c511118cd968a996b68272ab9722eb7254f6c2ae2a5b43c4baddaa005a274",
+          "validator": "urs-report",
+          "version": "1",
+          "created": "2026-10-28T00:40:24.298270+00:00"
+        },
+        {
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "stage": "source",
+          "revision": 2,
+          "check_id": "integrity",
+          "status": "PASS",
+          "evidence": "{\"actual\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"expected\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\"}",
+          "digest": "16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6",
+          "validator": "original-sha256",
+          "version": "1",
+          "created": "2026-10-28T00:40:23.765671+00:00"
+        },
+        {
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "stage": "translate",
+          "revision": 2,
+          "check_id": "complete",
+          "status": "PASS",
+          "evidence": "{\"coverage\": 9, \"meaning_verified\": false, \"reason\": \"원문 ID별 번역 생성 완료. 기술 의미는 다음 독립 검증에서 확인.\"}",
+          "digest": "3e3176286426e2cb69af6c836485b2ec620432d9a4be2f903ecd2a4f0697e1ca",
+          "validator": "urs-translate",
+          "version": "1",
+          "created": "2026-10-28T00:40:23.830963+00:00"
+        },
+        {
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "stage": "verify",
+          "revision": 2,
+          "check_id": "complete",
+          "status": "PASS",
+          "evidence": "{\"accuracy_99_measured\": false, \"artifact\": \"verification\", \"deterministic_checks\": true, \"independent_requests\": true, \"model\": \"fixture-only\", \"pipeline_fingerprint\": \"54aba5c8e329a3ca1f63b1e7f393993c49d5fc2de9e2fbffe7f87aba18c40452\", \"reviewed\": 9}",
+          "digest": "8c13ebda1ed0d7e02f65ded831917ed9913e62fe61b5462d5d966e10a420ec75",
+          "validator": "urs-verify",
+          "version": "1",
+          "created": "2026-10-28T00:40:23.916526+00:00"
+        }
+      ],
+      "approved": false,
+      "events": [
+        {
+          "id": 1,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 1,
+          "action": "original_uploaded",
+          "detail": "{\"sha256\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"pages\": 2, \"actor\": \"pipeline-test\"}",
+          "created": "2026-10-28T00:40:22.292616+00:00"
+        },
+        {
+          "id": 2,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 1,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"source\", \"token\": \"ba051dfc7aefd48ee0628f339af024c0\"}",
+          "created": "2026-10-28T00:40:22.293002+00:00"
+        },
+        {
+          "id": 3,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 1,
+          "action": "check_result",
+          "detail": "{\"stage\": \"source\", \"check\": \"integrity\", \"status\": \"PASS\", \"evidence\": {\"expected\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"actual\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\"}, \"digest\": \"16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6\", \"validator\": \"original-sha256\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:22.293359+00:00"
+        },
+        {
+          "id": 4,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 1,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"extract\", \"token\": \"79e1a5e0d5d13e21652f29393dc376ae\"}",
+          "created": "2026-10-28T00:40:23.496114+00:00"
+        },
+        {
+          "id": 5,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 1,
+          "action": "check_result",
+          "detail": "{\"stage\": \"extract\", \"check\": \"complete\", \"status\": \"NEEDS_REVIEW\", \"evidence\": {\"pages\": 2, \"warnings\": [], \"reason\": \"\\ubaa8\\ub4e0 \\uc6d0\\ubb38 \\ud398\\uc774\\uc9c0\\u00b7\\ud45c\\u00b7\\uadf8\\ub9bc\\uc758 \\ucd94\\ucd9c \\ub204\\ub77d \\uc5ec\\ubd80\\ub97c \\uac80\\ud1a0\\ud574 \\uc8fc\\uc138\\uc694.\"}, \"digest\": \"ae2665c9b123b3e4b04029dca4140a03eab0365e7d1ea2b16a23ce85ac2b5df2\", \"validator\": \"urs-extract\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:23.566221+00:00"
+        },
+        {
+          "id": 6,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "edited_all_results_invalidated",
+          "detail": "{}",
+          "created": "2026-10-28T00:40:23.764412+00:00"
+        },
+        {
+          "id": 7,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "source_review",
+          "detail": "{\"actor\": \"pipeline-test\", \"previous_revision\": 1, \"changes\": {\"extraction\": {\"pages\": [{\"number\": 1, \"width\": 612.0, \"height\": 792.0, \"blocks\": [{\"id\": \"p1-b1\", \"page\": 1, \"text\": \"RQ-01 The conveyor shall not operate when the safety guard is open.\", \"bbox\": [40.0, 34.07000000000005, 348.49, 44.07000000000005]}, {\"id\": \"p1-b2\", \"page\": 1, \"text\": \"RQ-02 Minimum speed 120 packs/min.\", \"bbox\": [40.0, 54.07000000000005, 212.83000000000004, 64.07000000000005]}, {\"id\": \"p1-t1-c1\", \"page\": 1, \"text\": \"Product\", \"bbox\": [40.0, 112.0, 200.0, 152.0], \"table\": \"p1-t1\"}, {\"id\": \"p1-t1-c2\", \"page\": 1, \"text\": \"AB-12\", \"bbox\": [40.0, 152.0, 200.0, 192.0], \"table\": \"p1-t1\"}, {\"id\": \"p1-t1-c3\", \"page\": 1, \"text\": \"Length (mm)\", \"bbox\": [200.0, 112.0, 360.0, 152.0], \"table\": \"p1-t1\"}, {\"id\": \"p1-t1-c4\", \"page\": 1, \"text\": \"165\", \"bbox\": [200.0, 152.0, 360.0, 192.0], \"table\": \"p1-t1\"}], \"source_lines\": [{\"id\": \"p1-b1\", \"page\": 1, \"text\": \"RQ-01 The conveyor shall not operate when the safety guard is open.\", \"bbox\": [40.0, 34.07000000000005, 348.49, 44.07000000000005]}, {\"id\": \"p1-b2\", \"page\": 1, \"text\": \"RQ-02 Minimum speed 120 packs/min.\", \"bbox\": [40.0, 54.07000000000005, 212.83000000000004, 64.07000000000005]}, {\"id\": \"p1-b3\", \"page\": 1, \"text\": \"Product Length (mm)\", \"bbox\": [48.0, 129.07000000000005, 264.68, 139.07000000000005]}, {\"id\": \"p1-b4\", \"page\": 1, \"text\": \"AB-12 165\", \"bbox\": [48.0, 169.07000000000005, 224.68, 179.07000000000005]}], \"tables\": [{\"id\": \"p1-t1\", \"bbox\": [40.0, 112.0, 360.0, 192.0], \"cells\": [{\"id\": \"p1-t1-c1\", \"bbox\": [40.0, 112.0, 200.0, 152.0], \"text\": \"Product\"}, {\"id\": \"p1-t1-c2\", \"bbox\": [40.0, 152.0, 200.0, 192.0], \"text\": \"AB-12\"}, {\"id\": \"p1-t1-c3\", \"bbox\": [200.0, 112.0, 360.0, 152.0], \"text\": \"Length (mm)\"}, {\"id\": \"p1-t1-c4\", \"bbox\": [200.0, 152.0, 360.0, 192.0], \"text\": \"165\"}], \"grid\": [[\"p1-t1-c1\", \"p1-t1-c3\"], [\"p1-t1-c2\", \"p1-t1-c4\"]], \"text_grid\": [[\"Product\", \"Length (mm)\"], [\"AB-12\", \"165\"]]}], \"images\": [], \"blank_candidate\": false, \"preview_sha256\": \"23549621e58453f810e8a16c61f5366784d09fb93f45723add1c713a3318f8ba\", \"intentionally_blank\": false}, {\"number\": 2, \"width\": 612.0, \"height\": 792.0, \"blocks\": [{\"id\": \"p2-b1\", \"page\": 2, \"text\": \"RQ-03 Produk harus dihentikan jika pelindung terbuka.\", \"bbox\": [40.0, 34.07000000000005, 282.89000000000004, 44.07000000000005]}, {\"id\": \"p2-b2\", \"page\": 2, \"text\": \"RQ-04 AB-12 length is 160 mm.\", \"bbox\": [40.0, 54.07000000000005, 181.72000000000006, 64.07000000000005]}, {\"id\": \"p2-b3\", \"page\": 2, \"text\": \"RQ-05 Sorting speed 600 sachets/min; wrapping 60 packs/min.\", \"bbox\": [40.0, 74.07000000000005, 320.12, 84.07000000000005]}], \"source_lines\": [{\"id\": \"p2-b1\", \"page\": 2, \"text\": \"RQ-03 Produk harus dihentikan jika pelindung terbuka.\", \"bbox\": [40.0, 34.07000000000005, 282.89000000000004, 44.07000000000005]}, {\"id\": \"p2-b2\", \"page\": 2, \"text\": \"RQ-04 AB-12 length is 160 mm.\", \"bbox\": [40.0, 54.07000000000005, 181.72000000000006, 64.07000000000005]}, {\"id\": \"p2-b3\", \"page\": 2, \"text\": \"RQ-05 Sorting speed 600 sachets/min; wrapping 60 packs/min.\", \"bbox\": [40.0, 74.07000000000005, 320.12, 84.07000000000005]}], \"tables\": [], \"images\": [], \"blank_candidate\": false, \"preview_sha256\": \"55dc65aa902c5f455acbb77dbef5c7f30d370168405146db6d0a98e865d2f0be\", \"intentionally_blank\": false}], \"warnings\": [], \"sha256\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"coverage\": \"UNVERIFIED\", \"review\": {\"accepted\": true, \"reviewer\": \"pipeline-test\", \"pages\": [1, 2], \"note\": \"\\uc54c\\ub824\\uc9c4 \\ud569\\uc131 \\uc815\\ub2f5\\uc758 \\uc804\\uccb4 \\ud398\\uc774\\uc9c0\\u00b7\\ud45c\\u00b7\\uc6d0\\ubb38 \\uc704\\uce58 \\ub300\\uc870 \\uc2dc\\ud5d8\"}}}}",
+          "created": "2026-10-28T00:40:23.765032+00:00"
+        },
+        {
+          "id": 8,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"source\", \"token\": \"d01da02d78774c5ebcc3fc5dd0331e0b\"}",
+          "created": "2026-10-28T00:40:23.765366+00:00"
+        },
+        {
+          "id": 9,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "check_result",
+          "detail": "{\"stage\": \"source\", \"check\": \"integrity\", \"status\": \"PASS\", \"evidence\": {\"expected\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"actual\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\"}, \"digest\": \"16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6\", \"validator\": \"original-sha256\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:23.765757+00:00"
+        },
+        {
+          "id": 10,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"extract\", \"token\": \"0842a4ea6ee6d11d68ac92c2d29d23ad\"}",
+          "created": "2026-10-28T00:40:23.766070+00:00"
+        },
+        {
+          "id": 11,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "check_result",
+          "detail": "{\"stage\": \"extract\", \"check\": \"complete\", \"status\": \"PASS\", \"evidence\": {\"pages\": 2, \"blocks\": 9, \"review\": {\"accepted\": true, \"reviewer\": \"pipeline-test\", \"pages\": [1, 2], \"note\": \"\\uc54c\\ub824\\uc9c4 \\ud569\\uc131 \\uc815\\ub2f5\\uc758 \\uc804\\uccb4 \\ud398\\uc774\\uc9c0\\u00b7\\ud45c\\u00b7\\uc6d0\\ubb38 \\uc704\\uce58 \\ub300\\uc870 \\uc2dc\\ud5d8\"}, \"artifact_sha256\": \"9f104cb4ed41d441c31ece826bbfe68084fe18f65d89a38f6073f7456325b13f\"}, \"digest\": \"bb7718441ce58e6db159d6df081e5be4abb2dfd664e9f29605913e4c8b612b11\", \"validator\": \"urs-extract\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:23.766999+00:00"
+        },
+        {
+          "id": 12,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"translate\", \"token\": \"1719d422e82a0b8bfb0f2656a0e5eb96\"}",
+          "created": "2026-10-28T00:40:23.829776+00:00"
+        },
+        {
+          "id": 13,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "check_result",
+          "detail": "{\"stage\": \"translate\", \"check\": \"complete\", \"status\": \"PASS\", \"evidence\": {\"coverage\": 9, \"meaning_verified\": false, \"reason\": \"\\uc6d0\\ubb38 ID\\ubcc4 \\ubc88\\uc5ed \\uc0dd\\uc131 \\uc644\\ub8cc. \\uae30\\uc220 \\uc758\\ubbf8\\ub294 \\ub2e4\\uc74c \\ub3c5\\ub9bd \\uac80\\uc99d\\uc5d0\\uc11c \\ud655\\uc778.\"}, \"digest\": \"3e3176286426e2cb69af6c836485b2ec620432d9a4be2f903ecd2a4f0697e1ca\", \"validator\": \"urs-translate\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:23.830996+00:00"
+        },
+        {
+          "id": 14,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"verify\", \"token\": \"b946c82bf55534207e05f40ab9ac18b6\"}",
+          "created": "2026-10-28T00:40:23.911227+00:00"
+        },
+        {
+          "id": 15,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "check_result",
+          "detail": "{\"stage\": \"verify\", \"check\": \"complete\", \"status\": \"PASS\", \"evidence\": {\"reviewed\": 9, \"deterministic_checks\": true, \"independent_requests\": true, \"accuracy_99_measured\": false, \"artifact\": \"verification\", \"model\": \"fixture-only\", \"pipeline_fingerprint\": \"54aba5c8e329a3ca1f63b1e7f393993c49d5fc2de9e2fbffe7f87aba18c40452\"}, \"digest\": \"8c13ebda1ed0d7e02f65ded831917ed9913e62fe61b5462d5d966e10a420ec75\", \"validator\": \"urs-verify\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:23.916563+00:00"
+        },
+        {
+          "id": 16,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"analyze\", \"token\": \"607b601eed70a60dcd84250865e5427f\"}",
+          "created": "2026-10-28T00:40:23.978395+00:00"
+        },
+        {
+          "id": 17,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "check_result",
+          "detail": "{\"stage\": \"analyze\", \"check\": \"complete\", \"status\": \"PASS\", \"evidence\": {\"sections\": 8, \"conflicts\": 1, \"questions\": 1, \"audit\": {\"status\": \"PASS\", \"issues\": []}, \"topics_checked\": [\"overview\", \"products\", \"process\", \"specifications\", \"explanation\", \"requirements\", \"capacity\", \"review\"]}, \"digest\": \"169235fe312be8ccde4b2d7a062d0f33d9b073f0c72b7c7025e2aa5d239e5ffa\", \"validator\": \"urs-analyze\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:23.981559+00:00"
+        },
+        {
+          "id": 18,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "validation_started",
+          "detail": "{\"stage\": \"report\", \"token\": \"458ee560e6770c38ee44988514e3032f\"}",
+          "created": "2026-10-28T00:40:24.061236+00:00"
+        },
+        {
+          "id": 19,
+          "job": "d502ccf3ab7cdd8447bc48547d546c80",
+          "revision": 2,
+          "action": "check_result",
+          "detail": "{\"stage\": \"report\", \"check\": \"complete\", \"status\": \"PASS\", \"evidence\": {\"outputs\": {\"translation.docx\": \"cb6073a711013a70594f8880b05a085dd3584c2f5ff6d63cf6a206c2feb2800f\", \"translation.pdf\": \"488acb5b1e1efa2bcaf0da61b726824d135dfc94b6a70d21995e90b76c6bb4da\", \"analysis.docx\": \"32a55f5c2c1f3bfab155b2e5ad2bc5d5bc3999a3e9624c62bfb473f64f27702e\", \"analysis.pdf\": \"fbfa73e4e4e653682748445fafc2e53874b7c37bb49b6644d6601190fc096a95\"}, \"reopened_validated\": true, \"employee_visual_review_required\": true}, \"digest\": \"d52c511118cd968a996b68272ab9722eb7254f6c2ae2a5b43c4baddaa005a274\", \"validator\": \"urs-report\", \"version\": \"1\"}",
+          "created": "2026-10-28T00:40:24.298309+00:00"
+        }
+      ]
+    },
+    "all_results": [
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "extract",
+        "revision": 1,
+        "check_id": "complete",
+        "status": "NEEDS_REVIEW",
+        "evidence": "{\"pages\": 2, \"reason\": \"모든 원문 페이지·표·그림의 추출 누락 여부를 검토해 주세요.\", \"warnings\": []}",
+        "digest": "ae2665c9b123b3e4b04029dca4140a03eab0365e7d1ea2b16a23ce85ac2b5df2",
+        "validator": "urs-extract",
+        "version": "1",
+        "created": "2026-10-28T00:40:23.566182+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "source",
+        "revision": 1,
+        "check_id": "integrity",
+        "status": "PASS",
+        "evidence": "{\"actual\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"expected\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\"}",
+        "digest": "16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6",
+        "validator": "original-sha256",
+        "version": "1",
+        "created": "2026-10-28T00:40:22.293326+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "analyze",
+        "revision": 2,
+        "check_id": "complete",
+        "status": "PASS",
+        "evidence": "{\"audit\": {\"issues\": [], \"status\": \"PASS\"}, \"conflicts\": 1, \"questions\": 1, \"sections\": 8, \"topics_checked\": [\"overview\", \"products\", \"process\", \"specifications\", \"explanation\", \"requirements\", \"capacity\", \"review\"]}",
+        "digest": "169235fe312be8ccde4b2d7a062d0f33d9b073f0c72b7c7025e2aa5d239e5ffa",
+        "validator": "urs-analyze",
+        "version": "1",
+        "created": "2026-10-28T00:40:23.981517+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "extract",
+        "revision": 2,
+        "check_id": "complete",
+        "status": "PASS",
+        "evidence": "{\"artifact_sha256\": \"9f104cb4ed41d441c31ece826bbfe68084fe18f65d89a38f6073f7456325b13f\", \"blocks\": 9, \"pages\": 2, \"review\": {\"accepted\": true, \"note\": \"알려진 합성 정답의 전체 페이지·표·원문 위치 대조 시험\", \"pages\": [1, 2], \"reviewer\": \"pipeline-test\"}}",
+        "digest": "bb7718441ce58e6db159d6df081e5be4abb2dfd664e9f29605913e4c8b612b11",
+        "validator": "urs-extract",
+        "version": "1",
+        "created": "2026-10-28T00:40:23.766952+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "report",
+        "revision": 2,
+        "check_id": "complete",
+        "status": "PASS",
+        "evidence": "{\"employee_visual_review_required\": true, \"outputs\": {\"analysis.docx\": \"32a55f5c2c1f3bfab155b2e5ad2bc5d5bc3999a3e9624c62bfb473f64f27702e\", \"analysis.pdf\": \"fbfa73e4e4e653682748445fafc2e53874b7c37bb49b6644d6601190fc096a95\", \"translation.docx\": \"cb6073a711013a70594f8880b05a085dd3584c2f5ff6d63cf6a206c2feb2800f\", \"translation.pdf\": \"488acb5b1e1efa2bcaf0da61b726824d135dfc94b6a70d21995e90b76c6bb4da\"}, \"reopened_validated\": true}",
+        "digest": "d52c511118cd968a996b68272ab9722eb7254f6c2ae2a5b43c4baddaa005a274",
+        "validator": "urs-report",
+        "version": "1",
+        "created": "2026-10-28T00:40:24.298270+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "source",
+        "revision": 2,
+        "check_id": "integrity",
+        "status": "PASS",
+        "evidence": "{\"actual\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\", \"expected\": \"916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5\"}",
+        "digest": "16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6",
+        "validator": "original-sha256",
+        "version": "1",
+        "created": "2026-10-28T00:40:23.765671+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "translate",
+        "revision": 2,
+        "check_id": "complete",
+        "status": "PASS",
+        "evidence": "{\"coverage\": 9, \"meaning_verified\": false, \"reason\": \"원문 ID별 번역 생성 완료. 기술 의미는 다음 독립 검증에서 확인.\"}",
+        "digest": "3e3176286426e2cb69af6c836485b2ec620432d9a4be2f903ecd2a4f0697e1ca",
+        "validator": "urs-translate",
+        "version": "1",
+        "created": "2026-10-28T00:40:23.830963+00:00"
+      },
+      {
+        "job": "d502ccf3ab7cdd8447bc48547d546c80",
+        "stage": "verify",
+        "revision": 2,
+        "check_id": "complete",
+        "status": "PASS",
+        "evidence": "{\"accuracy_99_measured\": false, \"artifact\": \"verification\", \"deterministic_checks\": true, \"independent_requests\": true, \"model\": \"fixture-only\", \"pipeline_fingerprint\": \"54aba5c8e329a3ca1f63b1e7f393993c49d5fc2de9e2fbffe7f87aba18c40452\", \"reviewed\": 9}",
+        "digest": "8c13ebda1ed0d7e02f65ded831917ed9913e62fe61b5462d5d966e10a420ec75",
+        "validator": "urs-verify",
+        "version": "1",
+        "created": "2026-10-28T00:40:23.916526+00:00"
+      }
+    ],
+    "verification_history": [
+      {
+        "revision": 2,
+        "verification": {
+          "history": [
+            {
+              "attempt": 0,
+              "translations": {
+                "p1-b1": "RQ-01 안전 가드가 열려 있을 때 컨베이어는 작동해서는 안 됩니다.",
+                "p1-b2": "RQ-02 최소 속도는 102 packs/min입니다.",
+                "p1-t1-c1": "제품",
+                "p1-t1-c2": "AB-12",
+                "p1-t1-c3": "길이 (mm)",
+                "p1-t1-c4": "165",
+                "p2-b1": "RQ-03 가드가 열리면 제품을 정지해야 합니다.",
+                "p2-b2": "RQ-04 AB-12 길이는 160 mm입니다.",
+                "p2-b3": "RQ-05 정렬 속도는 600 sachets/min이며 포장 속도는 60 packs/min입니다."
+              },
+              "issues": [
+                {
+                  "id": "p1-b2",
+                  "type": "numbers",
+                  "reason": "수치 누락·변경·추가",
+                  "source": "RQ-02 Minimum speed 120 packs/min.",
+                  "target": "RQ-02 최소 속도는 102 packs/min입니다."
+                },
+                {
+                  "id": "p1-b2",
+                  "type": "quantity_unit",
+                  "reason": "수치와 단위의 연결 누락·변경·추가. 단위별 수치 관계를 원문과 대조해야 합니다.",
+                  "source": "RQ-02 Minimum speed 120 packs/min.",
+                  "target": "RQ-02 최소 속도는 102 packs/min입니다."
+                },
+                {
+                  "id": "p1-b2",
+                  "type": "semantic",
+                  "reason": "수치 불일치",
+                  "status": "FAIL"
+                }
+              ],
+              "reviewed_ids": [
+                "p1-b1",
+                "p1-b2",
+                "p1-t1-c1",
+                "p1-t1-c2",
+                "p1-t1-c3",
+                "p1-t1-c4",
+                "p2-b1",
+                "p2-b2",
+                "p2-b3"
+              ]
+            },
+            {
+              "attempt": 1,
+              "translations": {
+                "p1-b1": "RQ-01 안전 가드가 열려 있을 때 컨베이어는 작동해서는 안 됩니다.",
+                "p1-b2": "RQ-02 최소 속도는 120 packs/min입니다.",
+                "p1-t1-c1": "제품",
+                "p1-t1-c2": "AB-12",
+                "p1-t1-c3": "길이 (mm)",
+                "p1-t1-c4": "165",
+                "p2-b1": "RQ-03 가드가 열리면 제품을 정지해야 합니다.",
+                "p2-b2": "RQ-04 AB-12 길이는 160 mm입니다.",
+                "p2-b3": "RQ-05 정렬 속도는 600 sachets/min이며 포장 속도는 60 packs/min입니다."
+              },
+              "issues": [],
+              "reviewed_ids": [
+                "p1-b1",
+                "p1-b2",
+                "p1-t1-c1",
+                "p1-t1-c2",
+                "p1-t1-c3",
+                "p1-t1-c4",
+                "p2-b1",
+                "p2-b2",
+                "p2-b3"
+              ]
+            }
+          ],
+          "issues": [],
+          "accuracy_target_measured": false
+        }
+      }
+    ],
+    "artifact_hashes": [
+      {
+        "revision": 1,
+        "kind": "extraction",
+        "sha256": "e23e3f4f3ea4fa31da418a920d8ec2aecfa91562a7b2e7c209904616829ba80a"
+      },
+      {
+        "revision": 2,
+        "kind": "analysis",
+        "sha256": "e2d23e2f0aafa6e96a7d5ef9012bc7fb6c02a06b4a1f7b748ca54d5a11d7f124"
+      },
+      {
+        "revision": 2,
+        "kind": "analysis.docx",
+        "sha256": "32a55f5c2c1f3bfab155b2e5ad2bc5d5bc3999a3e9624c62bfb473f64f27702e"
+      },
+      {
+        "revision": 2,
+        "kind": "analysis.pdf",
+        "sha256": "fbfa73e4e4e653682748445fafc2e53874b7c37bb49b6644d6601190fc096a95"
+      },
+      {
+        "revision": 2,
+        "kind": "extraction",
+        "sha256": "bce1e71e05a234b29c1bd918f09769d035ff6b02bd795df23cc46d1d62d151a1"
+      },
+      {
+        "revision": 2,
+        "kind": "translation",
+        "sha256": "1cfbe948c0ee1f62bdea6cc5c2ac68ee8291a8a010f5075c96cab67b9d39efe7"
+      },
+      {
+        "revision": 2,
+        "kind": "translation.docx",
+        "sha256": "cb6073a711013a70594f8880b05a085dd3584c2f5ff6d63cf6a206c2feb2800f"
+      },
+      {
+        "revision": 2,
+        "kind": "translation.pdf",
+        "sha256": "488acb5b1e1efa2bcaf0da61b726824d135dfc94b6a70d21995e90b76c6bb4da"
+      },
+      {
+        "revision": 2,
+        "kind": "verification",
+        "sha256": "dc6acd95f607555bc49924077a1640b1e06352076f2e57a45f881f441c02fd4f"
+      }
+    ],
+    "scope": "Document evidence only. No process environment, application authentication credential tables, raw original binary or app payment configuration is included. No inferred accuracy score."
+  },
+  "record_sha256": "8af4faa5986fc37e8e2c75667167456f3d304c3f99e895c02bcd74c239f8ed23",
+  "hash_scope": "SHA-256 detects accidental content changes; this is not a digital signature or proof of translation accuracy.",
+  "exported_at_kst": "2026-10-28T09:40:24.916857+09:00"
+}

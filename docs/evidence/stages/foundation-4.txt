@@ -1,0 +1,10 @@
+test_expected_failure_does_not_count_as_required_pass (test_verification.DevelopmentGateTests.test_expected_failure_does_not_count_as_required_pass) ... ok
+test_failed_stage_prevents_later_command_actually_running (test_verification.DevelopmentGateTests.test_failed_stage_prevents_later_command_actually_running) ... ok
+test_passing_stage_allows_next_stage_and_preserves_both_logs (test_verification.DevelopmentGateTests.test_passing_stage_allows_next_stage_and_preserves_both_logs) ... ok
+test_skipped_checks_do_not_unlock_next_stage (test_verification.DevelopmentGateTests.test_skipped_checks_do_not_unlock_next_stage) ... ok
+test_zero_test_run_cannot_unlock_next_stage (test_verification.DevelopmentGateTests.test_zero_test_run_cannot_unlock_next_stage) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.069s
+
+OK

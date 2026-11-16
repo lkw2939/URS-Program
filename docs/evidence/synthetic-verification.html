@@ -1,0 +1,536 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>URS 문서 검증 기록</title><style>body{font:15px/1.7 sans-serif;max-width:1100px;margin:35px auto;padding:0 20px;color:#18343e}table{border-collapse:collapse;width:100%;margin:20px 0;display:block;overflow-x:auto}th,td{border:1px solid #cbd9df;padding:9px;text-align:left;vertical-align:top}th{background:#e8f3f2}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7f9;padding:16px}.notice{padding:15px;background:#fff1dc}details{border-bottom:1px solid #d5e1e6;padding:12px 0}code{overflow-wrap:anywhere}</style></head><body><h1>문서 검증·수정 기록</h1><p class="notice">이 파일은 검증 기록입니다. 내려받았다는 사실만으로 문서의 정확도나 최종 승인이 보장되지 않습니다.</p><p>원본: synthetic-urs.pdf · 2페이지</p><p>현재 리비전: 2 · 승인 상태: 승인 전</p><p>내보낸 시각(한국): 2026-10-28T09:40:24.964156+09:00</p><p>원본 SHA-256: <code>916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5</code></p><h2>단계별 체크리스트</h2><table><thead><tr><th>단계</th><th>상태</th><th>기록 코드</th></tr></thead><tbody><tr><td>원본 보관</td><td>완료</td><td>PASS</td></tr><tr><td>추출·원문 대조</td><td>완료</td><td>PASS</td></tr><tr><td>번역 생성</td><td>완료</td><td>PASS</td></tr><tr><td>독립 의미 검증</td><td>완료</td><td>PASS</td></tr><tr><td>기술 분석</td><td>완료</td><td>PASS</td></tr><tr><td>보고서</td><td>완료</td><td>PASS</td></tr><tr><td>직원 승인</td><td>확인 전</td><td>UNVERIFIED</td></tr></tbody></table><h2>현재·이전 리비전의 검사 결과</h2><table><thead><tr><th>리비전</th><th>단계</th><th>검사</th><th>결과</th><th>근거 요약</th><th>검사기</th><th>버전</th><th>검사 시각(UTC)</th></tr></thead><tbody><tr><td>1</td><td>추출·원문 대조</td><td>complete</td><td>검토 필요</td><td>모든 원문 페이지·표·그림의 추출 누락 여부를 검토해 주세요.</td><td>urs-extract</td><td>1</td><td>2026-10-28T00:40:23.566182+00:00</td></tr><tr><td>1</td><td>원본 보관</td><td>integrity</td><td>완료</td><td>검사별 근거는 원본 JSON 참조</td><td>original-sha256</td><td>1</td><td>2026-10-28T00:40:22.293326+00:00</td></tr><tr><td>2</td><td>기술 분석</td><td>complete</td><td>완료</td><td>검사별 근거는 원본 JSON 참조</td><td>urs-analyze</td><td>1</td><td>2026-10-28T00:40:23.981517+00:00</td></tr><tr><td>2</td><td>추출·원문 대조</td><td>complete</td><td>완료</td><td>검사별 근거는 원본 JSON 참조</td><td>urs-extract</td><td>1</td><td>2026-10-28T00:40:23.766952+00:00</td></tr><tr><td>2</td><td>보고서</td><td>complete</td><td>완료</td><td>검사별 근거는 원본 JSON 참조</td><td>urs-report</td><td>1</td><td>2026-10-28T00:40:24.298270+00:00</td></tr><tr><td>2</td><td>원본 보관</td><td>integrity</td><td>완료</td><td>검사별 근거는 원본 JSON 참조</td><td>original-sha256</td><td>1</td><td>2026-10-28T00:40:23.765671+00:00</td></tr><tr><td>2</td><td>번역 생성</td><td>complete</td><td>완료</td><td>원문 ID별 번역 생성 완료. 기술 의미는 다음 독립 검증에서 확인.</td><td>urs-translate</td><td>1</td><td>2026-10-28T00:40:23.830963+00:00</td></tr><tr><td>2</td><td>독립 의미 검증</td><td>complete</td><td>완료</td><td>검사별 근거는 원본 JSON 참조</td><td>urs-verify</td><td>1</td><td>2026-10-28T00:40:23.916526+00:00</td></tr></tbody></table><h2>오류 수정 전후·독립 재검증</h2><details><summary>리비전 2 · 오류 수정 및 독립 재검증</summary><pre>{
+  &quot;history&quot;: [
+    {
+      &quot;attempt&quot;: 0,
+      &quot;translations&quot;: {
+        &quot;p1-b1&quot;: &quot;RQ-01 안전 가드가 열려 있을 때 컨베이어는 작동해서는 안 됩니다.&quot;,
+        &quot;p1-b2&quot;: &quot;RQ-02 최소 속도는 102 packs/min입니다.&quot;,
+        &quot;p1-t1-c1&quot;: &quot;제품&quot;,
+        &quot;p1-t1-c2&quot;: &quot;AB-12&quot;,
+        &quot;p1-t1-c3&quot;: &quot;길이 (mm)&quot;,
+        &quot;p1-t1-c4&quot;: &quot;165&quot;,
+        &quot;p2-b1&quot;: &quot;RQ-03 가드가 열리면 제품을 정지해야 합니다.&quot;,
+        &quot;p2-b2&quot;: &quot;RQ-04 AB-12 길이는 160 mm입니다.&quot;,
+        &quot;p2-b3&quot;: &quot;RQ-05 정렬 속도는 600 sachets/min이며 포장 속도는 60 packs/min입니다.&quot;
+      },
+      &quot;issues&quot;: [
+        {
+          &quot;id&quot;: &quot;p1-b2&quot;,
+          &quot;type&quot;: &quot;numbers&quot;,
+          &quot;reason&quot;: &quot;수치 누락·변경·추가&quot;,
+          &quot;source&quot;: &quot;RQ-02 Minimum speed 120 packs/min.&quot;,
+          &quot;target&quot;: &quot;RQ-02 최소 속도는 102 packs/min입니다.&quot;
+        },
+        {
+          &quot;id&quot;: &quot;p1-b2&quot;,
+          &quot;type&quot;: &quot;quantity_unit&quot;,
+          &quot;reason&quot;: &quot;수치와 단위의 연결 누락·변경·추가. 단위별 수치 관계를 원문과 대조해야 합니다.&quot;,
+          &quot;source&quot;: &quot;RQ-02 Minimum speed 120 packs/min.&quot;,
+          &quot;target&quot;: &quot;RQ-02 최소 속도는 102 packs/min입니다.&quot;
+        },
+        {
+          &quot;id&quot;: &quot;p1-b2&quot;,
+          &quot;type&quot;: &quot;semantic&quot;,
+          &quot;reason&quot;: &quot;수치 불일치&quot;,
+          &quot;status&quot;: &quot;FAIL&quot;
+        }
+      ],
+      &quot;reviewed_ids&quot;: [
+        &quot;p1-b1&quot;,
+        &quot;p1-b2&quot;,
+        &quot;p1-t1-c1&quot;,
+        &quot;p1-t1-c2&quot;,
+        &quot;p1-t1-c3&quot;,
+        &quot;p1-t1-c4&quot;,
+        &quot;p2-b1&quot;,
+        &quot;p2-b2&quot;,
+        &quot;p2-b3&quot;
+      ]
+    },
+    {
+      &quot;attempt&quot;: 1,
+      &quot;translations&quot;: {
+        &quot;p1-b1&quot;: &quot;RQ-01 안전 가드가 열려 있을 때 컨베이어는 작동해서는 안 됩니다.&quot;,
+        &quot;p1-b2&quot;: &quot;RQ-02 최소 속도는 120 packs/min입니다.&quot;,
+        &quot;p1-t1-c1&quot;: &quot;제품&quot;,
+        &quot;p1-t1-c2&quot;: &quot;AB-12&quot;,
+        &quot;p1-t1-c3&quot;: &quot;길이 (mm)&quot;,
+        &quot;p1-t1-c4&quot;: &quot;165&quot;,
+        &quot;p2-b1&quot;: &quot;RQ-03 가드가 열리면 제품을 정지해야 합니다.&quot;,
+        &quot;p2-b2&quot;: &quot;RQ-04 AB-12 길이는 160 mm입니다.&quot;,
+        &quot;p2-b3&quot;: &quot;RQ-05 정렬 속도는 600 sachets/min이며 포장 속도는 60 packs/min입니다.&quot;
+      },
+      &quot;issues&quot;: [],
+      &quot;reviewed_ids&quot;: [
+        &quot;p1-b1&quot;,
+        &quot;p1-b2&quot;,
+        &quot;p1-t1-c1&quot;,
+        &quot;p1-t1-c2&quot;,
+        &quot;p1-t1-c3&quot;,
+        &quot;p1-t1-c4&quot;,
+        &quot;p2-b1&quot;,
+        &quot;p2-b2&quot;,
+        &quot;p2-b3&quot;
+      ]
+    }
+  ],
+  &quot;issues&quot;: [],
+  &quot;accuracy_target_measured&quot;: false
+}</pre></details><h2>수정·검증 이력</h2><details><summary>리비전 1 · original_uploaded · 2026-10-28T00:40:22.292616+00:00</summary><pre>{
+  &quot;sha256&quot;: &quot;916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5&quot;,
+  &quot;pages&quot;: 2,
+  &quot;actor&quot;: &quot;pipeline-test&quot;
+}</pre></details><details><summary>리비전 1 · validation_started · 2026-10-28T00:40:22.293002+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;source&quot;,
+  &quot;token&quot;: &quot;ba051dfc7aefd48ee0628f339af024c0&quot;
+}</pre></details><details><summary>리비전 1 · check_result · 2026-10-28T00:40:22.293359+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;source&quot;,
+  &quot;check&quot;: &quot;integrity&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;expected&quot;: &quot;916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5&quot;,
+    &quot;actual&quot;: &quot;916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5&quot;
+  },
+  &quot;digest&quot;: &quot;16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6&quot;,
+  &quot;validator&quot;: &quot;original-sha256&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 1 · validation_started · 2026-10-28T00:40:23.496114+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;extract&quot;,
+  &quot;token&quot;: &quot;79e1a5e0d5d13e21652f29393dc376ae&quot;
+}</pre></details><details><summary>리비전 1 · check_result · 2026-10-28T00:40:23.566221+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;extract&quot;,
+  &quot;check&quot;: &quot;complete&quot;,
+  &quot;status&quot;: &quot;NEEDS_REVIEW&quot;,
+  &quot;evidence&quot;: {
+    &quot;pages&quot;: 2,
+    &quot;warnings&quot;: [],
+    &quot;reason&quot;: &quot;모든 원문 페이지·표·그림의 추출 누락 여부를 검토해 주세요.&quot;
+  },
+  &quot;digest&quot;: &quot;ae2665c9b123b3e4b04029dca4140a03eab0365e7d1ea2b16a23ce85ac2b5df2&quot;,
+  &quot;validator&quot;: &quot;urs-extract&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 2 · edited_all_results_invalidated · 2026-10-28T00:40:23.764412+00:00</summary><pre>{}</pre></details><details><summary>리비전 2 · source_review · 2026-10-28T00:40:23.765032+00:00</summary><pre>{
+  &quot;actor&quot;: &quot;pipeline-test&quot;,
+  &quot;previous_revision&quot;: 1,
+  &quot;changes&quot;: {
+    &quot;extraction&quot;: {
+      &quot;pages&quot;: [
+        {
+          &quot;number&quot;: 1,
+          &quot;width&quot;: 612.0,
+          &quot;height&quot;: 792.0,
+          &quot;blocks&quot;: [
+            {
+              &quot;id&quot;: &quot;p1-b1&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;RQ-01 The conveyor shall not operate when the safety guard is open.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                34.07000000000005,
+                348.49,
+                44.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p1-b2&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;RQ-02 Minimum speed 120 packs/min.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                54.07000000000005,
+                212.83000000000004,
+                64.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p1-t1-c1&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;Product&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                112.0,
+                200.0,
+                152.0
+              ],
+              &quot;table&quot;: &quot;p1-t1&quot;
+            },
+            {
+              &quot;id&quot;: &quot;p1-t1-c2&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;AB-12&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                152.0,
+                200.0,
+                192.0
+              ],
+              &quot;table&quot;: &quot;p1-t1&quot;
+            },
+            {
+              &quot;id&quot;: &quot;p1-t1-c3&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;Length (mm)&quot;,
+              &quot;bbox&quot;: [
+                200.0,
+                112.0,
+                360.0,
+                152.0
+              ],
+              &quot;table&quot;: &quot;p1-t1&quot;
+            },
+            {
+              &quot;id&quot;: &quot;p1-t1-c4&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;165&quot;,
+              &quot;bbox&quot;: [
+                200.0,
+                152.0,
+                360.0,
+                192.0
+              ],
+              &quot;table&quot;: &quot;p1-t1&quot;
+            }
+          ],
+          &quot;source_lines&quot;: [
+            {
+              &quot;id&quot;: &quot;p1-b1&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;RQ-01 The conveyor shall not operate when the safety guard is open.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                34.07000000000005,
+                348.49,
+                44.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p1-b2&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;RQ-02 Minimum speed 120 packs/min.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                54.07000000000005,
+                212.83000000000004,
+                64.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p1-b3&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;Product Length (mm)&quot;,
+              &quot;bbox&quot;: [
+                48.0,
+                129.07000000000005,
+                264.68,
+                139.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p1-b4&quot;,
+              &quot;page&quot;: 1,
+              &quot;text&quot;: &quot;AB-12 165&quot;,
+              &quot;bbox&quot;: [
+                48.0,
+                169.07000000000005,
+                224.68,
+                179.07000000000005
+              ]
+            }
+          ],
+          &quot;tables&quot;: [
+            {
+              &quot;id&quot;: &quot;p1-t1&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                112.0,
+                360.0,
+                192.0
+              ],
+              &quot;cells&quot;: [
+                {
+                  &quot;id&quot;: &quot;p1-t1-c1&quot;,
+                  &quot;bbox&quot;: [
+                    40.0,
+                    112.0,
+                    200.0,
+                    152.0
+                  ],
+                  &quot;text&quot;: &quot;Product&quot;
+                },
+                {
+                  &quot;id&quot;: &quot;p1-t1-c2&quot;,
+                  &quot;bbox&quot;: [
+                    40.0,
+                    152.0,
+                    200.0,
+                    192.0
+                  ],
+                  &quot;text&quot;: &quot;AB-12&quot;
+                },
+                {
+                  &quot;id&quot;: &quot;p1-t1-c3&quot;,
+                  &quot;bbox&quot;: [
+                    200.0,
+                    112.0,
+                    360.0,
+                    152.0
+                  ],
+                  &quot;text&quot;: &quot;Length (mm)&quot;
+                },
+                {
+                  &quot;id&quot;: &quot;p1-t1-c4&quot;,
+                  &quot;bbox&quot;: [
+                    200.0,
+                    152.0,
+                    360.0,
+                    192.0
+                  ],
+                  &quot;text&quot;: &quot;165&quot;
+                }
+              ],
+              &quot;grid&quot;: [
+                [
+                  &quot;p1-t1-c1&quot;,
+                  &quot;p1-t1-c3&quot;
+                ],
+                [
+                  &quot;p1-t1-c2&quot;,
+                  &quot;p1-t1-c4&quot;
+                ]
+              ],
+              &quot;text_grid&quot;: [
+                [
+                  &quot;Product&quot;,
+                  &quot;Length (mm)&quot;
+                ],
+                [
+                  &quot;AB-12&quot;,
+                  &quot;165&quot;
+                ]
+              ]
+            }
+          ],
+          &quot;images&quot;: [],
+          &quot;blank_candidate&quot;: false,
+          &quot;preview_sha256&quot;: &quot;23549621e58453f810e8a16c61f5366784d09fb93f45723add1c713a3318f8ba&quot;,
+          &quot;intentionally_blank&quot;: false
+        },
+        {
+          &quot;number&quot;: 2,
+          &quot;width&quot;: 612.0,
+          &quot;height&quot;: 792.0,
+          &quot;blocks&quot;: [
+            {
+              &quot;id&quot;: &quot;p2-b1&quot;,
+              &quot;page&quot;: 2,
+              &quot;text&quot;: &quot;RQ-03 Produk harus dihentikan jika pelindung terbuka.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                34.07000000000005,
+                282.89000000000004,
+                44.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p2-b2&quot;,
+              &quot;page&quot;: 2,
+              &quot;text&quot;: &quot;RQ-04 AB-12 length is 160 mm.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                54.07000000000005,
+                181.72000000000006,
+                64.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p2-b3&quot;,
+              &quot;page&quot;: 2,
+              &quot;text&quot;: &quot;RQ-05 Sorting speed 600 sachets/min; wrapping 60 packs/min.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                74.07000000000005,
+                320.12,
+                84.07000000000005
+              ]
+            }
+          ],
+          &quot;source_lines&quot;: [
+            {
+              &quot;id&quot;: &quot;p2-b1&quot;,
+              &quot;page&quot;: 2,
+              &quot;text&quot;: &quot;RQ-03 Produk harus dihentikan jika pelindung terbuka.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                34.07000000000005,
+                282.89000000000004,
+                44.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p2-b2&quot;,
+              &quot;page&quot;: 2,
+              &quot;text&quot;: &quot;RQ-04 AB-12 length is 160 mm.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                54.07000000000005,
+                181.72000000000006,
+                64.07000000000005
+              ]
+            },
+            {
+              &quot;id&quot;: &quot;p2-b3&quot;,
+              &quot;page&quot;: 2,
+              &quot;text&quot;: &quot;RQ-05 Sorting speed 600 sachets/min; wrapping 60 packs/min.&quot;,
+              &quot;bbox&quot;: [
+                40.0,
+                74.07000000000005,
+                320.12,
+                84.07000000000005
+              ]
+            }
+          ],
+          &quot;tables&quot;: [],
+          &quot;images&quot;: [],
+          &quot;blank_candidate&quot;: false,
+          &quot;preview_sha256&quot;: &quot;55dc65aa902c5f455acbb77dbef5c7f30d370168405146db6d0a98e865d2f0be&quot;,
+          &quot;intentionally_blank&quot;: false
+        }
+      ],
+      &quot;warnings&quot;: [],
+      &quot;sha256&quot;: &quot;916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5&quot;,
+      &quot;coverage&quot;: &quot;UNVERIFIED&quot;,
+      &quot;review&quot;: {
+        &quot;accepted&quot;: true,
+        &quot;reviewer&quot;: &quot;pipeline-test&quot;,
+        &quot;pages&quot;: [
+          1,
+          2
+        ],
+        &quot;note&quot;: &quot;알려진 합성 정답의 전체 페이지·표·원문 위치 대조 시험&quot;
+      }
+    }
+  }
+}</pre></details><details><summary>리비전 2 · validation_started · 2026-10-28T00:40:23.765366+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;source&quot;,
+  &quot;token&quot;: &quot;d01da02d78774c5ebcc3fc5dd0331e0b&quot;
+}</pre></details><details><summary>리비전 2 · check_result · 2026-10-28T00:40:23.765757+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;source&quot;,
+  &quot;check&quot;: &quot;integrity&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;expected&quot;: &quot;916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5&quot;,
+    &quot;actual&quot;: &quot;916b4a7aa20a4177da96354c0d6db1a67355210553b8d2d7f4ebacd663a28bc5&quot;
+  },
+  &quot;digest&quot;: &quot;16e85ab80e089f6d7e6ca8fb1f30c0c42c027ed23a53e2258e811009717572d6&quot;,
+  &quot;validator&quot;: &quot;original-sha256&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 2 · validation_started · 2026-10-28T00:40:23.766070+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;extract&quot;,
+  &quot;token&quot;: &quot;0842a4ea6ee6d11d68ac92c2d29d23ad&quot;
+}</pre></details><details><summary>리비전 2 · check_result · 2026-10-28T00:40:23.766999+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;extract&quot;,
+  &quot;check&quot;: &quot;complete&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;pages&quot;: 2,
+    &quot;blocks&quot;: 9,
+    &quot;review&quot;: {
+      &quot;accepted&quot;: true,
+      &quot;reviewer&quot;: &quot;pipeline-test&quot;,
+      &quot;pages&quot;: [
+        1,
+        2
+      ],
+      &quot;note&quot;: &quot;알려진 합성 정답의 전체 페이지·표·원문 위치 대조 시험&quot;
+    },
+    &quot;artifact_sha256&quot;: &quot;9f104cb4ed41d441c31ece826bbfe68084fe18f65d89a38f6073f7456325b13f&quot;
+  },
+  &quot;digest&quot;: &quot;bb7718441ce58e6db159d6df081e5be4abb2dfd664e9f29605913e4c8b612b11&quot;,
+  &quot;validator&quot;: &quot;urs-extract&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 2 · validation_started · 2026-10-28T00:40:23.829776+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;translate&quot;,
+  &quot;token&quot;: &quot;1719d422e82a0b8bfb0f2656a0e5eb96&quot;
+}</pre></details><details><summary>리비전 2 · check_result · 2026-10-28T00:40:23.830996+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;translate&quot;,
+  &quot;check&quot;: &quot;complete&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;coverage&quot;: 9,
+    &quot;meaning_verified&quot;: false,
+    &quot;reason&quot;: &quot;원문 ID별 번역 생성 완료. 기술 의미는 다음 독립 검증에서 확인.&quot;
+  },
+  &quot;digest&quot;: &quot;3e3176286426e2cb69af6c836485b2ec620432d9a4be2f903ecd2a4f0697e1ca&quot;,
+  &quot;validator&quot;: &quot;urs-translate&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 2 · validation_started · 2026-10-28T00:40:23.911227+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;verify&quot;,
+  &quot;token&quot;: &quot;b946c82bf55534207e05f40ab9ac18b6&quot;
+}</pre></details><details><summary>리비전 2 · check_result · 2026-10-28T00:40:23.916563+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;verify&quot;,
+  &quot;check&quot;: &quot;complete&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;reviewed&quot;: 9,
+    &quot;deterministic_checks&quot;: true,
+    &quot;independent_requests&quot;: true,
+    &quot;accuracy_99_measured&quot;: false,
+    &quot;artifact&quot;: &quot;verification&quot;,
+    &quot;model&quot;: &quot;fixture-only&quot;,
+    &quot;pipeline_fingerprint&quot;: &quot;54aba5c8e329a3ca1f63b1e7f393993c49d5fc2de9e2fbffe7f87aba18c40452&quot;
+  },
+  &quot;digest&quot;: &quot;8c13ebda1ed0d7e02f65ded831917ed9913e62fe61b5462d5d966e10a420ec75&quot;,
+  &quot;validator&quot;: &quot;urs-verify&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 2 · validation_started · 2026-10-28T00:40:23.978395+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;analyze&quot;,
+  &quot;token&quot;: &quot;607b601eed70a60dcd84250865e5427f&quot;
+}</pre></details><details><summary>리비전 2 · check_result · 2026-10-28T00:40:23.981559+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;analyze&quot;,
+  &quot;check&quot;: &quot;complete&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;sections&quot;: 8,
+    &quot;conflicts&quot;: 1,
+    &quot;questions&quot;: 1,
+    &quot;audit&quot;: {
+      &quot;status&quot;: &quot;PASS&quot;,
+      &quot;issues&quot;: []
+    },
+    &quot;topics_checked&quot;: [
+      &quot;overview&quot;,
+      &quot;products&quot;,
+      &quot;process&quot;,
+      &quot;specifications&quot;,
+      &quot;explanation&quot;,
+      &quot;requirements&quot;,
+      &quot;capacity&quot;,
+      &quot;review&quot;
+    ]
+  },
+  &quot;digest&quot;: &quot;169235fe312be8ccde4b2d7a062d0f33d9b073f0c72b7c7025e2aa5d239e5ffa&quot;,
+  &quot;validator&quot;: &quot;urs-analyze&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><details><summary>리비전 2 · validation_started · 2026-10-28T00:40:24.061236+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;report&quot;,
+  &quot;token&quot;: &quot;458ee560e6770c38ee44988514e3032f&quot;
+}</pre></details><details><summary>리비전 2 · check_result · 2026-10-28T00:40:24.298309+00:00</summary><pre>{
+  &quot;stage&quot;: &quot;report&quot;,
+  &quot;check&quot;: &quot;complete&quot;,
+  &quot;status&quot;: &quot;PASS&quot;,
+  &quot;evidence&quot;: {
+    &quot;outputs&quot;: {
+      &quot;translation.docx&quot;: &quot;cb6073a711013a70594f8880b05a085dd3584c2f5ff6d63cf6a206c2feb2800f&quot;,
+      &quot;translation.pdf&quot;: &quot;488acb5b1e1efa2bcaf0da61b726824d135dfc94b6a70d21995e90b76c6bb4da&quot;,
+      &quot;analysis.docx&quot;: &quot;32a55f5c2c1f3bfab155b2e5ad2bc5d5bc3999a3e9624c62bfb473f64f27702e&quot;,
+      &quot;analysis.pdf&quot;: &quot;fbfa73e4e4e653682748445fafc2e53874b7c37bb49b6644d6601190fc096a95&quot;
+    },
+    &quot;reopened_validated&quot;: true,
+    &quot;employee_visual_review_required&quot;: true
+  },
+  &quot;digest&quot;: &quot;d52c511118cd968a996b68272ab9722eb7254f6c2ae2a5b43c4baddaa005a274&quot;,
+  &quot;validator&quot;: &quot;urs-report&quot;,
+  &quot;version&quot;: &quot;1&quot;
+}</pre></details><h2>기록 무결성</h2><p>기록 SHA-256: <code>8af4faa5986fc37e8e2c75667167456f3d304c3f99e895c02bcd74c239f8ed23</code></p><p>같이 제공되는 JSON의 record를 정렬·UTF-8 직렬화해 계산한 값입니다. 전자서명이나 실제 번역 정확도 인증은 아닙니다.</p></body></html>

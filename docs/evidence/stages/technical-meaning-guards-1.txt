@@ -1,0 +1,16 @@
+test_changed_unitless_value_at_sentence_end_is_detected (test_quantity_units.QuantityMeaningTests.test_changed_unitless_value_at_sentence_end_is_detected) ... ok
+test_compact_dimensions_cannot_silently_change (test_quantity_units.QuantityMeaningTests.test_compact_dimensions_cannot_silently_change) ... ok
+test_composite_unknown_units_not_partially_reinterpreted (test_quantity_units.QuantityMeaningTests.test_composite_unknown_units_not_partially_reinterpreted) ... ok
+test_indonesian_pack_rate (test_quantity_units.QuantityMeaningTests.test_indonesian_pack_rate) ... ok
+test_localized_korean_units_keep_pairs (test_quantity_units.QuantityMeaningTests.test_localized_korean_units_keep_pairs) ... ok
+test_order_can_change_without_changing_quantity_relationship (test_quantity_units.QuantityMeaningTests.test_order_can_change_without_changing_quantity_relationship) ... ok
+test_same_number_different_unit_fails (test_quantity_units.QuantityMeaningTests.test_same_number_different_unit_fails) ... ok
+test_same_numbers_and_units_wrongly_associated_fail (test_quantity_units.QuantityMeaningTests.test_same_numbers_and_units_wrongly_associated_fail) ... ok
+test_sentence_final_punctuation_does_not_drop_numeric_value (test_quantity_units.QuantityMeaningTests.test_sentence_final_punctuation_does_not_drop_numeric_value) ... ok
+test_si_prefix_case_is_not_silently_equated (test_quantity_units.QuantityMeaningTests.test_si_prefix_case_is_not_silently_equated) ... ok
+test_unit_omission_requires_review (test_quantity_units.QuantityMeaningTests.test_unit_omission_requires_review) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.001s
+
+OK

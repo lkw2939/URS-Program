@@ -1,0 +1,12 @@
+test_all_required_checks (test_gates.GateTests.test_all_required_checks) ... ok
+test_ambiguous_results_block (test_gates.GateTests.test_ambiguous_results_block) ... ok
+test_edit_invalidates_previous_results (test_gates.GateTests.test_edit_invalidates_previous_results) ... ok
+test_empty_or_duplicate_definition_blocks (test_gates.GateTests.test_empty_or_duplicate_definition_blocks) ... ok
+test_every_nonpassing_status_blocks (test_gates.GateTests.test_every_nonpassing_status_blocks) ... ok
+test_missing_result_blocks (test_gates.GateTests.test_missing_result_blocks) ... ok
+test_no_evidence_reference_blocks (test_gates.GateTests.test_no_evidence_reference_blocks) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.000s
+
+OK
