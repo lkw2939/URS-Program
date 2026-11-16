@@ -14,7 +14,7 @@ git pull && python scripts/check_api_report.py --call
 - api_key_present: 키 존재 여부만, 키 값은 출력하지 않음.
 - prompt_saved/version/bytes/sha256: 저장 여부 및 버전; 프롬프트 본문은 출력하지 않음.
 - requested_model: 현재 환경 설정의 요청 모델. returned_model: 실제 API가 돌려준 모델.
-- requested_effort=null: 현행 코드가 reasoning.effort를 보내지 않음. returned_effort는 실제 응답 필드가 있을 때만 기록하며 없으면 미확인.
+- requested_effort: URS_OPENAI_REASONING_EFFORT 설정값. 빈 값이면 null이며 요청에서 생략합니다. returned_effort는 실제 응답 필드가 있을 때만 기록하며 없으면 미확인.
 - api_call_verified: 실제 HTTP 200 + completed 응답에 한해 true.
 - live_request: 실제 HTTP 상태, 요청/응답 식별자, 원본 PDF/프롬프트 동일 여부, usage. 인증 헤더/키/본문은 출력하지 않음.
 - html_image_only_verified: 모델 원본과 최종본의 주소 사이 모든 문자열이 동일한지 별도 비교.
@@ -24,3 +24,7 @@ git pull && python scripts/check_api_report.py --call
 진단 HTML은 .runtime/diagnostics의 새 디렉터리에만 보관합니다. 원본 PDF/기존 보고서 재생성·덮어쓰기는 하지 않으며, 실제 호출에 따른 ai_usage 원장 행만 추가합니다. 비용 한도와 모델 설정을 바꾸지 않고, 네트워크/모델 응답을 모의 응답으로 대체하지 않습니다.
 
 `--call` 없이 실행하면 읽기 전용 조회이며 유료 호출이 없습니다. 시험 코드의 응답 모의 처리는 진단 코드 시험에만 쓰이고, CLI 실행에는 적용하지 않습니다.
+
+## effort 설정
+
+.env에 URS_OPENAI_REASONING_EFFORT=high 처럼 원하는 값을 적습니다(예시). 빈 값은 기존 API 기본값을 유지합니다. 모델이 지원하는 명칭은 실제 API 응답으로 검증해야 합니다. 키/모델/effort 등 .env 변경은 서버 재시작 후 웹 서버에 적용됩니다. 진단 CLI는 실행할 때마다 .env를 새로 읽습니다.

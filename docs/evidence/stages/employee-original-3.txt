@@ -5,7 +5,7 @@ test_normal_launcher_stops_background_service_then_uses_original_foreground_path
 test_server_crash_restarts_and_keeps_database_and_sessions (test_service.ServiceTests.test_server_crash_restarts_and_keeps_database_and_sessions) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 7.588s
+Ran 5 tests in 6.994s
 
 OK
 웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.

@@ -1,9 +1,10 @@
 test_401_is_reported_as_failure_with_safe_error_code (test_api_diagnostic.DiagnosticTests.test_401_is_reported_as_failure_with_safe_error_code) ... ok
 test_completed_response_yields_independent_image_only_comparison_and_preserves_reports (test_api_diagnostic.DiagnosticTests.test_completed_response_yields_independent_image_only_comparison_and_preserves_reports) ... ok
+test_configured_effort_is_visible_without_calling_api (test_api_diagnostic.DiagnosticTests.test_configured_effort_is_visible_without_calling_api) ... ok
 test_inspect_reports_model_and_unset_effort_without_any_network (test_api_diagnostic.DiagnosticTests.test_inspect_reports_model_and_unset_effort_without_any_network) ... ok
 test_missing_saved_prompt_blocks_live_call_and_does_not_invent_prompt (test_api_diagnostic.DiagnosticTests.test_missing_saved_prompt_blocks_live_call_and_does_not_invent_prompt) ... ok
 
 ----------------------------------------------------------------------
-Ran 4 tests in 1.921s
+Ran 5 tests in 1.135s
 
 OK

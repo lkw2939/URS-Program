@@ -19,7 +19,7 @@ import urllib.request
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
-from urs.ai import OpenAI
+from urs.ai import OpenAI, AIBlocked, requested_effort
 from urs.workspace import Workspace
 from urs.workflow import Workflow
 
@@ -34,7 +34,7 @@ def inspect(root,document=None):
     result={'scope':'configuration and existing artifacts; no API call yet',
         'api_key_present':bool(os.environ.get('URS_OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')),
         'requested_model':os.environ.get('URS_OPENAI_MODEL','').strip() or None,
-        'requested_effort':None,'effort_note':'reasoning.effort is not sent; provider default, not yet observed',
+        'requested_effort':requested_effort(),'effort_note':'explicit configured effort' if requested_effort() is not None else 'reasoning.effort is not sent; provider default, not yet observed',
         'api_call_verified':False,'html_image_only_verified':False}
     if not path.exists():result['blocked']='workspace database missing';return result,None
     with sqlite3.connect(path.as_uri()+'?mode=ro',uri=True) as db:
@@ -147,7 +147,7 @@ def run(root=ROOT,document=None,live=False):
         result['blocked']='diagnostic failed';result['error_type']=type(exc).__name__
     finally:
         result['live_request']=proof
-        result['effort_note']='reasoning.effort not sent; provider returned '+str(proof['returned_effort']) if proof.get('returned_effort') is not None else 'reasoning.effort not sent; effective provider default was not reported'
+        result['effort_note']=('requested effort '+str(proof.get('requested_effort'))+'; provider returned '+str(proof.get('returned_effort'))) if proof.get('requested_effort') is not None else ('reasoning.effort not sent; provider returned '+str(proof['returned_effort']) if proof.get('returned_effort') is not None else 'reasoning.effort not sent; effective provider default was not reported')
         with sqlite3.connect((root/'.runtime/workspace.sqlite').as_uri()+'?mode=ro',uri=True) as db:
             artifacts=[tuple(r) for r in db.execute('SELECT revision,kind,payload FROM artifacts WHERE document=? ORDER BY revision,kind',(source['id'],))]
             results=[tuple(r) for r in db.execute('SELECT * FROM results WHERE job=? ORDER BY revision,stage,check_id',(source['id'],))]
@@ -161,7 +161,8 @@ def main():
     parser.add_argument('--document',help='Document ID; defaults to latest uploaded PDF')
     args=parser.parse_args()
     load_dotenv(ROOT/'.env',override=False,interpolate=False)
-    result=run(ROOT,args.document,args.call)
+    try:result=run(ROOT,args.document,args.call)
+    except AIBlocked as exc:result={'blocked':str(exc),'api_call_verified':False,'html_image_only_verified':False}
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return 1 if result.get('blocked') else 0
 if __name__=='__main__':raise SystemExit(main())

@@ -287,7 +287,8 @@ class Workspace:
         result=next((r for r in state['results'] if r['stage']=='verify' and r['status']=='PASS'),None)
         if result is None:raise Blocked('현재 리비전의 의미 검증을 완료해야 합니다.')
         evidence=json.loads(result['evidence'])
-        if evidence.get('pipeline_fingerprint')!=fingerprint() or evidence.get('model')!=os.environ.get('URS_OPENAI_MODEL',''):
+        from urs.ai import requested_effort
+        if evidence.get('pipeline_fingerprint')!=fingerprint() or evidence.get('model')!=os.environ.get('URS_OPENAI_MODEL','') or evidence.get('reasoning_effort')!=requested_effort():
             raise Blocked('코드 또는 모델 변경 후 의미 검증을 다시 실행해야 합니다.')
 
     def verification_record(self, owner, document):

@@ -40,11 +40,31 @@ class AIAndEvaluationTests(unittest.TestCase):
             self.assertEqual(payload['max_output_tokens'],5000)
             self.assertNotIn('text',payload)
             self.assertNotIn('instructions',payload)
+            self.assertNotIn('reasoning',payload)
         with self.w.workflow.connect() as db:
             row=dict(db.execute('SELECT * FROM ai_usage').fetchone())
         self.assertEqual(row['state'],'completed')
         self.assertEqual(json.loads(row['usage'])['input_tokens'],12)
         self.assertNotIn(SETTINGS['URS_OPENAI_API_KEY'],str(row))
+
+    def test_effort_is_sent_for_reports_and_reviews_without_changing_prompt(self):
+        for effort in ['none','minimal','low','medium','high','xhigh']:
+            for task in ['report','independent_verify','technical_analysis']:
+                raw='<html><body>fixture</body></html>' if task=='report' else '{}'
+                response={'status':'completed','output':[{'content':[{'type':'output_text','text':raw}]}]}
+                with self.subTest(effort=effort,task=task),patch.dict(os.environ,{**SETTINGS,'URS_AI_BUDGET_USD':'50','URS_OPENAI_REASONING_EFFORT':effort},clear=True),patch('urllib.request.urlopen',return_value=io.BytesIO(json.dumps(response).encode())) as network:
+                    if task=='report':self.ai.report_html(b'%PDF-fixture','source.pdf','saved prompt unchanged','image map')
+                    else:self.ai.review_pdf(task,b'%PDF-fixture','source.pdf','<html>saved</html>')
+                    payload=json.loads(network.call_args.args[0].data)
+                    self.assertEqual(payload['reasoning'],{'effort':effort})
+                    self.assertEqual(payload['model'],SETTINGS['URS_OPENAI_MODEL'])
+                    if task=='report':self.assertEqual(payload['input'][0]['content'][1]['text'],'saved prompt unchanged')
+
+    def test_invalid_effort_blocks_before_network_and_budget_reservation(self):
+        with patch.dict(os.environ,{**SETTINGS,'URS_OPENAI_REASONING_EFFORT':'invalid-value'},clear=True),patch('urllib.request.urlopen') as network:
+            with self.assertRaises(AIBlocked):self.ai.report_html(b'%PDF-fixture','source.pdf','prompt','guide')
+            network.assert_not_called()
+        with self.w.workflow.connect() as db:self.assertEqual(db.execute('SELECT COUNT(*) FROM ai_usage').fetchone()[0],0)
 
     def test_budget_and_invalid_prices_block_before_network(self):
         for values in [{'URS_AI_BUDGET_USD':'0.000001'},{'URS_AI_INPUT_USD_PER_MILLION':'NaN'}, {'URS_AI_OUTPUT_USD_PER_MILLION':'-1'}]:

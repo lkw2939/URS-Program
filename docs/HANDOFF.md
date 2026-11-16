@@ -1,3 +1,13 @@
+# 선택형 reasoning.effort 지원 (2026-11-16)
+
+.env의 URS_OPENAI_REASONING_EFFORT를 보고서·독립검증·분석 API 요청의 reasoning.effort로 전달합니다. 빈 값/미설정은 기존처럼 해당 필드를 생략합니다. 앱에서 허용하는 명칭은 none/minimal/low/medium/high/xhigh이며, 각 모델의 실제 지원 여부는 실제 API 응답으로 확인해야 합니다. 임의의 기본 effort나 모델을 지정하지 않습니다.
+보고서 메타데이터와 검증 근거에 effort를 기록하며 설정이 달라지면 기존 검증을 최종 승인에 재사용하지 않습니다. 기존 HTML/운영 자료는 수정하지 않습니다.
+진단 CLI의 requested_effort는 실제 설정값을 표시하고 returned_effort는 API 응답 필드가 있을 때만 기록합니다.
+추가 시험 3개: 보고서/검토 요청 값 전달(허용값별), 잘못된 값의 네트워크/비용 예약 전 차단, 진단의 설정 표시. 전체 현재 시험 100개. 실제 사용자 API의 모델/effort 지원은 미검증입니다.
+.env 저장 후 실행 중인 서버에 적용하려면 서버 재시작이 필요합니다. .env.example은 새 빈 항목만 추가하며 기존 .env를 덮어쓰지 않습니다.
+
+---
+
 # 실제 API/HTML 진단 명령 추가 (2026-11-16)
 
 `python scripts/check_api_report.py`는 같은 서버의 .env 로딩 규칙 및 현재 직원/최근 PDF의 저장 프롬프트 유무·모델 설정·기존 호출 기록을 읽습니다. API 키, 프롬프트/PDF/HTML 본문은 출력하지 않습니다.

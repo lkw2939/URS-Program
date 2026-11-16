@@ -15,6 +15,15 @@ class AIError(RuntimeError):
     pass
 
 
+REASONING_EFFORTS = frozenset({'none','minimal','low','medium','high','xhigh'})
+
+def requested_effort():
+    value=os.environ.get('URS_OPENAI_REASONING_EFFORT','').strip().lower()
+    if value and value not in REASONING_EFFORTS:
+        raise AIBlocked('URS_OPENAI_REASONING_EFFORT 값을 확인해 주세요: none/minimal/low/medium/high/xhigh 또는 빈 값.')
+    return value or None
+
+
 class OpenAI:
     def __init__(self, workflow, document):
         self.workflow, self.document = workflow, document
@@ -34,6 +43,7 @@ class OpenAI:
     def _pdf_request(self, task, pdf, filename, texts, json_response):
         key=os.environ.get('URS_OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')
         model=os.environ.get('URS_OPENAI_MODEL','').strip()
+        effort=requested_effort()
         try:
             budget=float(os.environ.get('URS_AI_BUDGET_USD','0'))
             ir=float(os.environ.get('URS_AI_INPUT_USD_PER_MILLION','0'))
@@ -51,6 +61,7 @@ class OpenAI:
                 (self.document,task,model,reserve,'reserved')).lastrowid
         content=[{'type':'input_file','filename':filename,'file_data':'data:application/pdf;base64,'+base64.b64encode(pdf).decode()},*texts]
         payload={'model':model,'input':[{'role':'user','content':content}],'max_output_tokens':5000,'store':False}
+        if effort is not None:payload['reasoning']={'effort':effort}
         if json_response:payload['text']={'format':{'type':'json_object'}}
         req=urllib.request.Request('https://api.openai.com/v1/responses',data=json.dumps(payload).encode(),
             headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')

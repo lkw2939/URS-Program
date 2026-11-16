@@ -2,7 +2,7 @@
 import hashlib
 import json
 import os
-from urs.ai import OpenAI
+from urs.ai import OpenAI, requested_effort
 from urs.images import crop_images, bind_images
 from urs.gates import Status
 from urs.workflow import Blocked
@@ -62,7 +62,7 @@ class Processing:
         data={'report.raw.html':raw.encode(),'report.html':final.encode(),
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
-                  'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':os.environ.get('URS_OPENAI_MODEL',''),
+                  'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':os.environ.get('URS_OPENAI_MODEL',''),'reasoning_effort':requested_effort(),
                   'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
         # Append-only report artifacts. Retries/regeneration must use a new revision.
         with self.workflow.connect() as db:
@@ -99,7 +99,7 @@ class Processing:
         bindings=self.get(document,'image-bindings',revision)
         status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(result['status'])
         return status, {'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
-            'model':os.environ.get('URS_OPENAI_MODEL',''),'pipeline_fingerprint':fingerprint(),
+            'model':os.environ.get('URS_OPENAI_MODEL',''),'reasoning_effort':requested_effort(),'pipeline_fingerprint':fingerprint(),
             'accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
 
     def verify(self, content):return self._review(content,'independent_verify','verification')
