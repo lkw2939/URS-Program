@@ -1,3 +1,5 @@
+> Linux/Codespaces: `python start.py`로 백그라운드 실행. 종료는 `python service.py stop`, 다시 켜기는 `python service.py start`. Codespace 자체가 정지된 동안에는 접속할 수 없습니다. [자동 시작 적용 안내](GITHUB-START.md)를 확인하세요.
+
 # URS AI REPORT SYSTEM — 직접 HTML 보고서
 
 최신 구현: 업로드한 원본 PDF와 웹 설정의 보고서 프롬프트 원문을 OpenAI의 기존 설정 모델에 전달하고, 받은 HTML의 이미지 주소만 원본 사진·도면으로 연결합니다. 텍스트 추출·블록 번역·고정 Word/PDF 제작 기능은 제거했습니다.

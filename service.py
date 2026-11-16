@@ -1,0 +1,136 @@
+"""Persistent local/Codespaces server supervisor (POSIX, no extra dependencies)."""
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import signal
+import socket
+import sqlite3
+import subprocess
+import sys
+import time
+import urllib.request
+
+ROOT=Path(__file__).resolve().parent
+
+class Service:
+    def __init__(self, root=ROOT, port=8795):
+        self.root=Path(root).resolve();self.port=port
+        self.runtime=self.root/'.runtime'
+        self.runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
+        self.lockfile=self.runtime/'service.lock'
+        self.state=self.runtime/'service.json'
+        self.disabled=self.runtime/'service.disabled'
+        self.log=self.runtime/'server.log'
+        self.python=self.root/'.venv/bin/python'
+        if not self.python.exists():self.python=Path(sys.executable)
+
+    def running(self):
+        with self.lockfile.open('a+') as handle:
+            try:
+                fcntl.flock(handle,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:return True
+            fcntl.flock(handle,fcntl.LOCK_UN)
+        return False
+
+    def has_account(self):
+        dbfile=self.runtime/'workspace.sqlite'
+        if not dbfile.exists():return False
+        with sqlite3.connect(dbfile.as_uri()+'?mode=ro',uri=True) as db:
+            if not db.execute("SELECT 1 FROM sqlite_master WHERE name='users' AND type='table'").fetchone():return False
+            return bool(db.execute('SELECT 1 FROM users LIMIT 1').fetchone())
+
+    def healthy(self):
+        try:
+            with urllib.request.urlopen(f'http://127.0.0.1:{self.port}/',timeout=1) as response:
+                return response.status==200 and b'URS AI REPORT SYSTEM' in response.read(32768)
+        except (OSError,ValueError):return False
+
+    def status(self):
+        alive=self.running()
+        return {'supervisor_running':alive,'web_ready':alive and self.healthy(),
+                'manually_stopped':self.disabled.exists(),'port':self.port}
+
+    def start(self, automatic=False):
+        if automatic and self.disabled.exists():
+            print('수동 종료 상태입니다. python service.py start 로 다시 켜세요.');return 0
+        if not self.has_account():
+            print('첫 실행: python start.py 로 직원 계정을 먼저 만들어 주세요.');return 0 if automatic else 1
+        if not automatic:self.disabled.unlink(missing_ok=True)
+        if not self.running():
+            # A foreground/other server must be stopped once before switching.
+            with socket.socket() as probe:
+                if probe.connect_ex(('127.0.0.1',self.port))==0:
+                    print('이 포트에 다른 서버가 있습니다. 기존 터미널에서 Ctrl+C 후 다시 실행하세요.');return 1
+            fd=os.open(self.log,os.O_WRONLY|os.O_CREAT|os.O_APPEND,0o600)
+            with os.fdopen(fd,'ab',buffering=0) as output:
+                subprocess.Popen([str(self.python),str(Path(__file__).resolve()),'supervise','--root',str(self.root),'--port',str(self.port)],
+                    cwd=self.root,stdin=subprocess.DEVNULL,stdout=output,stderr=output,start_new_session=True,close_fds=True)
+        deadline=time.monotonic()+12
+        while time.monotonic()<deadline:
+            if self.running() and self.healthy():
+                print(f'웹 실행 중: http://127.0.0.1:{self.port} (터미널을 닫아도 유지됩니다.)')
+                print('종료: python service.py stop / 다시 켜기: python service.py start')
+                return 0
+            time.sleep(.15)
+        print('아직 시작되지 않았습니다. python service.py status 및 .runtime/server.log 를 확인하세요.')
+        return 1
+
+    def stop(self):
+        self.disabled.touch(mode=0o600,exist_ok=True)
+        deadline=time.monotonic()+12
+        while self.running() and time.monotonic()<deadline:time.sleep(.1)
+        if self.running():
+            print('종료가 지연되고 있습니다. 상태와 로그를 확인하세요.');return 1
+        print('웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.');return 0
+
+    def supervise(self):
+        with self.lockfile.open('a+') as lock:
+            try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:return 0
+            stopping=False;child=None
+            def shutdown(*_):
+                nonlocal stopping
+                stopping=True
+            signal.signal(signal.SIGTERM,shutdown);signal.signal(signal.SIGINT,shutdown)
+            delay=1
+            try:
+                while not stopping and not self.disabled.exists():
+                    started=time.monotonic()
+                    child=subprocess.Popen([str(self.python),'-m','urs','--data',str(self.runtime/'workspace.sqlite'),'serve','--port',str(self.port)],
+                        cwd=self.root,stdin=subprocess.DEVNULL,close_fds=True)
+                    temporary=self.state.with_suffix('.tmp')
+                    temporary.write_text(json.dumps({'supervisor_pid':os.getpid(),'server_pid':child.pid,'port':self.port}))
+                    temporary.chmod(0o600);temporary.replace(self.state)
+                    while child.poll() is None and not stopping and not self.disabled.exists():time.sleep(.15)
+                    if child.poll() is None:
+                        child.terminate()
+                        try:child.wait(timeout=8)
+                        except subprocess.TimeoutExpired:child.kill();child.wait()
+                    if stopping or self.disabled.exists():break
+                    print('Server exited; restarting.',flush=True)
+                    end=time.monotonic()+delay
+                    while time.monotonic()<end and not stopping and not self.disabled.exists():time.sleep(.1)
+                    delay=1 if time.monotonic()-started>=30 else min(delay*2,30)
+            finally:
+                if child is not None and child.poll() is None:
+                    child.terminate()
+                    try:child.wait(timeout=8)
+                    except subprocess.TimeoutExpired:child.kill();child.wait()
+                self.state.unlink(missing_ok=True)
+        return 0
+
+
+def main():
+    parser=argparse.ArgumentParser(description='URS 웹 시작/종료/자동 복구')
+    parser.add_argument('command',choices=['start','stop','status','autostart','supervise'])
+    parser.add_argument('--root',type=Path,default=ROOT,help=argparse.SUPPRESS)
+    parser.add_argument('--port',type=int,default=8795,help=argparse.SUPPRESS)
+    args=parser.parse_args();service=Service(args.root,args.port)
+    if args.command=='status':print(json.dumps(service.status(),ensure_ascii=False));return 0
+    if args.command=='stop':return service.stop()
+    if args.command=='supervise':return service.supervise()
+    return service.start(automatic=args.command=='autostart')
+
+if __name__=='__main__':raise SystemExit(main())

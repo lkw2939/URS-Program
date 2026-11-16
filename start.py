@@ -1,4 +1,4 @@
-"""Install pinned dependencies and launch the unchanged local URS application."""
+"""Install dependencies, set up the first account, and start the URS application."""
 import os
 from pathlib import Path
 import subprocess
@@ -36,6 +36,11 @@ def main():
         if not username:
             raise SystemExit("Employee ID is required.")
         subprocess.run([str(python), "-m", "urs", "--data", str(data), "add-user", username], check=True)
+    if os.name == 'posix':
+        result=subprocess.call([str(python),str(ROOT/'service.py'),'start'])
+        if not result and not os.environ.get('CODESPACES'):
+            webbrowser.open('http://127.0.0.1:8795')
+        return result
     print("Open http://127.0.0.1:8795 — press Ctrl+C to stop.")
     timer = threading.Timer(2, lambda: webbrowser.open("http://127.0.0.1:8795"))
     timer.daemon = True
