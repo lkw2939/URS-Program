@@ -19,7 +19,7 @@
         "exit_code": 0,
         "tests": 7,
         "log": "foundation-1.txt",
-        "duration_seconds": 0.263
+        "duration_seconds": 0.319
       },
       {
         "command": [
@@ -36,7 +36,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "foundation-2.txt",
-        "duration_seconds": 1.604
+        "duration_seconds": 1.795
       },
       {
         "command": [
@@ -53,7 +53,7 @@
         "exit_code": 0,
         "tests": 1,
         "log": "foundation-3.txt",
-        "duration_seconds": 0.26
+        "duration_seconds": 0.229
       },
       {
         "command": [
@@ -70,7 +70,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "foundation-4.txt",
-        "duration_seconds": 0.394
+        "duration_seconds": 0.243
       }
     ]
   },
@@ -94,7 +94,7 @@
         "exit_code": 0,
         "tests": 16,
         "log": "employee-original-1.txt",
-        "duration_seconds": 9.217
+        "duration_seconds": 6.98
       },
       {
         "command": [
@@ -111,7 +111,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-2.txt",
-        "duration_seconds": 6.361
+        "duration_seconds": 5.102
       },
       {
         "command": [
@@ -128,7 +128,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "employee-original-3.txt",
-        "duration_seconds": 8.146
+        "duration_seconds": 7.942
       }
     ]
   },
@@ -152,7 +152,7 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-1.txt",
-        "duration_seconds": 0.416
+        "duration_seconds": 0.391
       },
       {
         "command": [
@@ -169,14 +169,14 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-2.txt",
-        "duration_seconds": 0.405
+        "duration_seconds": 0.471
       }
     ]
   },
   {
     "id": "technical-meaning-guards",
     "status": "PASS",
-    "tests": 22,
+    "tests": 26,
     "commands": [
       {
         "command": [
@@ -193,7 +193,7 @@
         "exit_code": 0,
         "tests": 11,
         "log": "technical-meaning-guards-1.txt",
-        "duration_seconds": 0.125
+        "duration_seconds": 0.137
       },
       {
         "command": [
@@ -210,7 +210,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "technical-meaning-guards-2.txt",
-        "duration_seconds": 0.429
+        "duration_seconds": 0.393
       },
       {
         "command": [
@@ -227,7 +227,24 @@
         "exit_code": 0,
         "tests": 6,
         "log": "technical-meaning-guards-3.txt",
-        "duration_seconds": 1.221
+        "duration_seconds": 1.576
+      },
+      {
+        "command": [
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_api_diagnostic.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 4,
+        "log": "technical-meaning-guards-4.txt",
+        "duration_seconds": 2.424
       }
     ]
   },
@@ -251,7 +268,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "document-pipeline-1.txt",
-        "duration_seconds": 6.627
+        "duration_seconds": 5.779
       }
     ]
   }

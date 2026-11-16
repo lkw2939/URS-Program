@@ -35,7 +35,7 @@ def main():
                 page.locator('#report-settings summary').click()
                 page.locator('#report-prompt').fill(PROMPT)
                 page.get_by_role('button',name='프롬프트 저장',exact=True).click()
-                page.wait_for_function("document.getElementById('prompt-version').textContent.includes('1')")
+                page.wait_for_function("() => document.getElementById('prompt-version').textContent.includes('1')")
                 page.get_by_label('새 프로젝트 이름').fill('HTML 생성 검증 · 합성 자료')
                 page.get_by_role('button',name='프로젝트 만들기').click()
                 page.get_by_label('고객 원본 PDF',exact=True).set_input_files({'name':'synthetic.pdf','mimeType':'application/pdf','buffer':visual_pdf()})
