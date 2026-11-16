@@ -37,14 +37,16 @@ def main():
             raise SystemExit("Employee ID is required.")
         subprocess.run([str(python), "-m", "urs", "--data", str(data), "add-user", username], check=True)
     if os.name == 'posix':
-        result=subprocess.call([str(python),str(ROOT/'service.py'),'start'])
-        if not result and not os.environ.get('CODESPACES'):
-            webbrowser.open('http://127.0.0.1:8795')
-        return result
+        # Recover the original foreground path and stop any detached supervisor.
+        # The persistent stop flag also disables an old cached Codespaces hook.
+        from service import Service
+        if Service(ROOT).stop():
+            return 1
     print("Open http://127.0.0.1:8795 — press Ctrl+C to stop.")
-    timer = threading.Timer(2, lambda: webbrowser.open("http://127.0.0.1:8795"))
-    timer.daemon = True
-    timer.start()
+    if not os.environ.get('CODESPACES'):
+        timer = threading.Timer(2, lambda: webbrowser.open("http://127.0.0.1:8795"))
+        timer.daemon = True
+        timer.start()
     try:
         return subprocess.call([str(python), "-m", "urs", "--data", str(data), "serve", "--port", "8795"])
     except KeyboardInterrupt:

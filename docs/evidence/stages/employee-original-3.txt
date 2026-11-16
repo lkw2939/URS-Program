@@ -1,14 +1,18 @@
 test_detached_survives_start_command_exit_and_start_is_idempotent (test_service.ServiceTests.test_detached_survives_start_command_exit_and_start_is_idempotent) ... ok
 test_first_run_autostart_never_creates_an_account_or_prompts (test_service.ServiceTests.test_first_run_autostart_never_creates_an_account_or_prompts) ... ok
 test_manual_stop_persists_across_autostart_and_explicit_start_resumes (test_service.ServiceTests.test_manual_stop_persists_across_autostart_and_explicit_start_resumes) ... ok
+test_normal_launcher_stops_background_service_then_uses_original_foreground_path (test_service.ServiceTests.test_normal_launcher_stops_background_service_then_uses_original_foreground_path) ... ok
 test_server_crash_restarts_and_keeps_database_and_sessions (test_service.ServiceTests.test_server_crash_restarts_and_keeps_database_and_sessions) ... ok
 
 ----------------------------------------------------------------------
-Ran 4 tests in 6.308s
+Ran 5 tests in 7.683s
 
 OK
 웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.
 첫 실행: python start.py 로 직원 계정을 먼저 만들어 주세요.
 웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.
+웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.
+웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.
+Open http://127.0.0.1:8795 — press Ctrl+C to stop.
 웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.
 웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.

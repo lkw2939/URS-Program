@@ -1,4 +1,4 @@
-> Linux/Codespaces: `python start.py`로 백그라운드 실행. 종료는 `python service.py stop`, 다시 켜기는 `python service.py start`. Codespace 자체가 정지된 동안에는 접속할 수 없습니다. [자동 시작 적용 안내](GITHUB-START.md)를 확인하세요.
+> 기본 실행을 기존 터미널 방식으로 복구했습니다. `git pull && python start.py`로 적용합니다. 기존 백그라운드 서버는 자동 종료하며 같은 계정/DB/보고서를 유지합니다. [복구 안내](GITHUB-START.md). 외부 포트 접속의 404 원인은 아직 미확인입니다.
 
 # URS AI REPORT SYSTEM — 직접 HTML 보고서
 

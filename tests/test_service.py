@@ -83,4 +83,31 @@ class ServiceTests(unittest.TestCase):
             self.assertFalse(service.running())
             self.assertFalse((Path(folder)/'.runtime/workspace.sqlite').exists())
 
+    def test_normal_launcher_stops_background_service_then_uses_original_foreground_path(self):
+        import hashlib
+        import start
+        from unittest.mock import patch
+        self.assertEqual(self.command('start').returncode,0)
+        self.assertTrue(self.service.running())
+        before=self.w.verification_record('fixture',self.doc)['record_sha256']
+        venv=self.root/'.venv';(venv/'bin').mkdir(parents=True)
+        (venv/'bin/python').symlink_to(sys.executable)
+        lock=(ROOT/'requirements.lock').read_bytes()
+        (self.root/'requirements.lock').write_bytes(lock)
+        (venv/'urs-requirements.sha256').write_text(hashlib.sha256(lock).hexdigest())
+        cwd=Path.cwd()
+        try:
+            with patch.object(start,'ROOT',self.root),patch.dict(os.environ,{'CODESPACES':'true'}),patch('start.subprocess.call',return_value=0) as foreground,patch('start.webbrowser.open') as browser:
+                self.assertEqual(start.main(),0)
+                args=foreground.call_args.args[0]
+                self.assertEqual(args[1:3],['-m','urs'])
+                self.assertEqual(args[-3:],['serve','--port','8795'])
+                self.assertEqual(args[4],str(self.root/'.runtime/workspace.sqlite'))
+                browser.assert_not_called()
+        finally:os.chdir(cwd)
+        self.assertFalse(self.service.running())
+        self.assertTrue(self.service.disabled.exists())
+        self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],before)
+        self.assertEqual(self.w.session(self.token)[0],'fixture')
+
 if __name__=='__main__':unittest.main()
