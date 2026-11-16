@@ -173,7 +173,7 @@ class ProcessingTests(unittest.TestCase):
         with request(f'/api/documents/{self.doc}/detail') as r:
             detail=json.load(r);self.assertNotIn('extraction',detail);self.assertNotIn('translation',detail)
         with request(f'/api/documents/{self.doc}/report.html') as r:
-            self.assertEqual(r.read(),self.w.report_html('alice',self.doc));self.assertIn('sandbox',r.headers['Content-Security-Policy']);self.assertIn("style-src 'unsafe-inline'",r.headers['Content-Security-Policy'])
+            self.assertEqual(r.read(),self.w.report_html('alice',self.doc));self.assertIn('sandbox allow-scripts allow-modals;',r.headers['Content-Security-Policy']);self.assertNotIn('allow-same-origin',r.headers['Content-Security-Policy']);self.assertIn('worker-src blob:',r.headers['Content-Security-Policy']);self.assertIn("style-src 'unsafe-inline'",r.headers['Content-Security-Policy'])
         with request('/api/settings/report') as r:self.assertEqual(json.load(r)['prompt'],PROMPT)
         with self.assertRaises(AccessDenied):self.w.report_html('bob',self.doc)
 

@@ -1,10 +1,14 @@
 test_401_is_reported_as_failure_with_safe_error_code (test_api_diagnostic.DiagnosticTests.test_401_is_reported_as_failure_with_safe_error_code) ... ok
 test_completed_response_yields_independent_image_only_comparison_and_preserves_reports (test_api_diagnostic.DiagnosticTests.test_completed_response_yields_independent_image_only_comparison_and_preserves_reports) ... ok
 test_configured_effort_is_visible_without_calling_api (test_api_diagnostic.DiagnosticTests.test_configured_effort_is_visible_without_calling_api) ... ok
+test_explicit_prompt_file_is_saved_verbatim_and_idempotently (test_api_diagnostic.DiagnosticTests.test_explicit_prompt_file_is_saved_verbatim_and_idempotently) ... ok
+test_incomplete_output_distinguishes_successful_http_from_unfinished_html (test_api_diagnostic.DiagnosticTests.test_incomplete_output_distinguishes_successful_http_from_unfinished_html) ... ok
 test_inspect_reports_model_and_unset_effort_without_any_network (test_api_diagnostic.DiagnosticTests.test_inspect_reports_model_and_unset_effort_without_any_network) ... ok
 test_missing_saved_prompt_blocks_live_call_and_does_not_invent_prompt (test_api_diagnostic.DiagnosticTests.test_missing_saved_prompt_blocks_live_call_and_does_not_invent_prompt) ... ok
+test_no_image_slots_is_reported_as_binding_not_exercised (test_api_diagnostic.DiagnosticTests.test_no_image_slots_is_reported_as_binding_not_exercised) ... ok
+test_prompt_save_does_not_create_a_database_or_invent_a_document (test_api_diagnostic.DiagnosticTests.test_prompt_save_does_not_create_a_database_or_invent_a_document) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 1.135s
+Ran 9 tests in 3.479s
 
 OK

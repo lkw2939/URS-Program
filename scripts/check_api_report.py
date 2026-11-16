@@ -59,6 +59,22 @@ def inspect(root,document=None):
     return result,selected
 
 
+def save_prompt_file(root, filename, document=None):
+    """Explicit user action: append a settings version for the selected PDF owner."""
+    root=Path(root).resolve();prompt=Path(filename).read_text(encoding='utf-8')
+    if not prompt.strip() or len(prompt.encode())>180000:raise ValueError('Prompt file must contain 1..180000 UTF-8 bytes')
+    path=root/'.runtime/workspace.sqlite'
+    if not path.exists():raise ValueError('Upload the original PDF first')
+    with sqlite3.connect(path.as_uri()+'?mode=ro',uri=True) as db:
+        row=db.execute('SELECT p.owner FROM documents d JOIN projects p ON p.id=d.project'+(' WHERE d.id=?' if document else '')+' ORDER BY d.rowid DESC LIMIT 1',(document,) if document else ()).fetchone()
+    if not row:raise ValueError('Uploaded PDF missing')
+    w=Workspace(path)
+    current=w.report_settings(row[0])
+    if current['prompt']==prompt:return {'version':current['version'],'changed':False,'sha256':sha(prompt.encode())}
+    saved=w.save_report_settings(row[0],prompt)
+    return {'version':saved['version'],'changed':True,'sha256':sha(prompt.encode())}
+
+
 class ResponseObserver:
     def __init__(self,response,proof):self.response,self.proof=response,proof
     def __enter__(self):
@@ -71,7 +87,7 @@ class ResponseObserver:
             value=json.loads(raw)
             self.proof.update({'response_id':value.get('id'),'returned_model':value.get('model'),
                 'returned_effort':(value.get('reasoning') or {}).get('effort'),
-                'response_status':value.get('status'),'usage':value.get('usage',{})})
+                'response_status':value.get('status'),'incomplete_reason':(value.get('incomplete_details') or {}).get('reason'),'usage':value.get('usage',{})})
         except (ValueError,TypeError):pass
         return raw
     def __exit__(self,*args):self.response.close()
@@ -133,7 +149,7 @@ def run(root=ROOT,document=None,live=False):
                     identical &= raw_text[change['start']:change['end']]==change['uri'] and final_text[final_pos:final_pos+len(replacement)]==replacement
                     final_pos+=len(replacement);source_pos=change['end']
                 identical &= final_text[final_pos:]==raw_text[source_pos:]
-                result.update({'html_image_only_verified':bool(identical),'images_inserted':len(comparison['replacements']),
+                result.update({'html_image_only_verified':bool(identical),'image_binding_exercised':bool(comparison['replacements']),'images_inserted':len(comparison['replacements']),
                     'unresolved_images':comparison['unresolved'],'raw_html_sha256':sha(raw),'final_html_sha256':sha(final)})
                 directory=root/'.runtime/diagnostics'/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
                 directory.mkdir(parents=True,mode=0o700)
@@ -147,6 +163,8 @@ def run(root=ROOT,document=None,live=False):
         result['blocked']='diagnostic failed';result['error_type']=type(exc).__name__
     finally:
         result['live_request']=proof
+        result['api_http_success']=proof.get('http_status')==200
+        result['api_response_completed']=proof.get('response_status')=='completed'
         result['effort_note']=('requested effort '+str(proof.get('requested_effort'))+'; provider returned '+str(proof.get('returned_effort'))) if proof.get('requested_effort') is not None else ('reasoning.effort not sent; provider returned '+str(proof['returned_effort']) if proof.get('returned_effort') is not None else 'reasoning.effort not sent; effective provider default was not reported')
         with sqlite3.connect((root/'.runtime/workspace.sqlite').as_uri()+'?mode=ro',uri=True) as db:
             artifacts=[tuple(r) for r in db.execute('SELECT revision,kind,payload FROM artifacts WHERE document=? ORDER BY revision,kind',(source['id'],))]
@@ -158,11 +176,16 @@ def run(root=ROOT,document=None,live=False):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--call',action='store_true',help='Make at most one real paid report request when PDF, saved prompt and configuration exist')
+    parser.add_argument('--save-prompt',type=Path,help='Explicitly save the supplied prompt file to the selected PDF owner settings before diagnosis')
     parser.add_argument('--document',help='Document ID; defaults to latest uploaded PDF')
     args=parser.parse_args()
     load_dotenv(ROOT/'.env',override=False,interpolate=False)
-    try:result=run(ROOT,args.document,args.call)
-    except AIBlocked as exc:result={'blocked':str(exc),'api_call_verified':False,'html_image_only_verified':False}
+    try:
+        saved=save_prompt_file(ROOT,args.save_prompt,args.document) if args.save_prompt else None
+        result=run(ROOT,args.document,args.call)
+        if saved:result['prompt_saved_from_file']=saved
+    except (AIBlocked,ValueError,OSError) as exc:
+        result={'blocked':'configuration or prompt-file error','error_type':type(exc).__name__,'api_call_verified':False,'html_image_only_verified':False}
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return 1 if result.get('blocked') else 0
 if __name__=='__main__':raise SystemExit(main())

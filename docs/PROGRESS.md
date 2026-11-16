@@ -1,3 +1,15 @@
+# 사용자 프롬프트 저장 / 로컬 PDF.js 보고서 지원 (2026-11-16)
+
+- 사용자가 제공한 한국어 HTML/PDF.js 프롬프트를 prompts/user-report-ko-html.txt에 보관했습니다. 기본 프롬프트로 자동 주입하지 않습니다.
+- 진단 명령의 --save-prompt FILE은 선택한 원본 PDF 직원의 웹 설정에 원문을 새 버전으로 저장합니다. 동일 내용이면 중복 버전을 만들지 않으며 기존 프롬프트 이력/보고서/검증 결과는 보존합니다.
+- 최종 HTML의 인라인 JavaScript 및 cdnjs/jsdelivr/unpkg PDF.js/worker 실행을 분리된 sandbox에서 허용합니다. allow-same-origin은 허용하지 않으며 부모 직원 화면 접근, 폼 전송은 차단합니다. 저장된 모델 HTML bytes는 수정하지 않습니다.
+- 브라우저 시험에서 실제 PDF.js 3.11.174로 로컬 선택 PDF를 읽어 페이지/빨강·파랑 원본 이미지를 캔버스 픽셀로 확인했습니다. PDF 선택 시 서버 POST가 없고 부모 화면 접근이 차단됨을 확인했습니다. 재현 시험은 Apache-2.0 배포본을 tests/vendor/pdfjs에 보관해 외부 네트워크 없이 실행합니다.
+- 실제 API 응답이 HTTP 200이지만 incomplete인 경우를 별도로 기록합니다(api_http_success/api_response_completed/incomplete_reason). HTML 완료나 번역 품질 통과로 오인하지 않습니다.
+- 전체 단위/HTTP 현재 시험 104개 및 Chromium/HTML 재열기. 사용자의 실제 키·25페이지 원본으로 성공했는지는 사용자 Codespaces에서 진단 결과를 받은 뒤 판정합니다. 이 개발 시험에는 유료 API 호출이 없습니다.
+- 새 JavaScript 실행 정책과 .env 변경을 실행 중인 웹 서버에 적용하려면 서버 재시작이 필요합니다. 프롬프트 DB 저장/진단 자체는 서버를 중지하지 않고 실행할 수 있습니다.
+
+---
+
 # 선택형 reasoning.effort 지원 (2026-11-16)
 
 .env의 URS_OPENAI_REASONING_EFFORT를 보고서·독립검증·분석 API 요청의 reasoning.effort로 전달합니다. 빈 값/미설정은 기존처럼 해당 필드를 생략합니다. 앱에서 허용하는 명칭은 none/minimal/low/medium/high/xhigh이며, 각 모델의 실제 지원 여부는 실제 API 응답으로 확인해야 합니다. 임의의 기본 effort나 모델을 지정하지 않습니다.

@@ -28,3 +28,16 @@ git pull && python scripts/check_api_report.py --call
 ## effort 설정
 
 .env에 URS_OPENAI_REASONING_EFFORT=high 처럼 원하는 값을 적습니다(예시). 빈 값은 기존 API 기본값을 유지합니다. 모델이 지원하는 명칭은 실제 API 응답으로 검증해야 합니다. 키/모델/effort 등 .env 변경은 서버 재시작 후 웹 서버에 적용됩니다. 진단 CLI는 실행할 때마다 .env를 새로 읽습니다.
+
+## 이번에 지정한 사용자 프롬프트 저장과 호출
+
+```bash
+git pull && python scripts/check_api_report.py --save-prompt prompts/user-report-ko-html.txt --call
+```
+
+이 명령에 한해, 최근 원본 PDF를 보유한 직원의 웹 프롬프트 설정에 제공된 원문을 저장하고 API 진단을 실행합니다. 기존 프롬프트 버전은 지우지 않으며 같은 원문이면 저장 버전을 반복 생성하지 않습니다. 다른 직원/문서는 --document ID로 명시할 수 있습니다.
+진단은 기존 운영 보고서를 생성/교체하지 않고 새 .runtime/diagnostics에만 HTML을 저장합니다. 최종 HTML에서 이미지 주소 바깥 문자열의 일치 여부를 별도로 비교합니다.
+api_http_success는 실제 HTTP 200, api_response_completed는 공급자의 completed 응답입니다. incomplete_reason=max_output_tokens 등이면 HTML 완성을 확인한 것으로 보고하지 않습니다.
+새 프롬프트의 브라우저 PDF 선택은 최종 HTML 내부에서 처리하는 기능입니다. 앱에 원본을 처음 등록·보관하고 OpenAI에 입력 파일을 전달하는 흐름은 별개이며 유지합니다.
+
+image_binding_exercised는 실제 이미지 주소 치환이 1회 이상 수행된 경우에만 true입니다. 모델이 PDF.js/canvas 방식만 출력해 치환 자리가 없으면 0회/false로 기록하며, 이미지 삽입이 실제 검증됐다고 보고하지 않습니다.

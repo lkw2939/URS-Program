@@ -8,7 +8,7 @@ import unittest
 import urllib.error
 from unittest.mock import patch
 from html_fixtures import RAW,PROMPT,visual_pdf
-from scripts.check_api_report import run
+from scripts.check_api_report import run, save_prompt_file
 from urs.workspace import Workspace
 
 SETTINGS={'URS_OPENAI_API_KEY':'fixture-only-not-a-real-key','URS_OPENAI_MODEL':'fixture-terra',
@@ -24,6 +24,22 @@ class DiagnosticTests(unittest.TestCase):
         self.w.add_user('fixture','fixture-password-123')
         project=self.w.create_project('fixture','fixture')
         self.doc=self.w.upload('fixture',project,'fixture.pdf',visual_pdf())
+    def test_explicit_prompt_file_is_saved_verbatim_and_idempotently(self):
+        file=self.root/'user-prompt.txt';file.write_text(PROMPT)
+        old=self.w.verification_record('fixture',self.doc)['record_sha256']
+        first=save_prompt_file(self.root,file,self.doc)
+        self.assertTrue(first['changed']);self.assertEqual(first['version'],1)
+        self.assertEqual(self.w.report_settings('fixture')['prompt'],PROMPT)
+        second=save_prompt_file(self.root,file,self.doc)
+        self.assertFalse(second['changed']);self.assertEqual(second['version'],1)
+        self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],old)
+
+    def test_prompt_save_does_not_create_a_database_or_invent_a_document(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);file=root/'prompt.txt';file.write_text(PROMPT)
+            with self.assertRaises(ValueError):save_prompt_file(root,file)
+            self.assertFalse((root/'.runtime/workspace.sqlite').exists())
+
     def test_missing_saved_prompt_blocks_live_call_and_does_not_invent_prompt(self):
         with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen') as network:
             result=run(self.root,live=True)
@@ -61,6 +77,26 @@ class DiagnosticTests(unittest.TestCase):
         with self.w.workflow.connect() as db:
             self.assertEqual(db.execute('SELECT state FROM ai_usage').fetchone()[0],'completed')
         raw=(self.root/result['diagnostic_files']/'report.raw.html').read_bytes();self.assertEqual(raw,RAW.encode())
+    def test_no_image_slots_is_reported_as_binding_not_exercised(self):
+        self.w.save_report_settings('fixture',PROMPT)
+        body={'id':'fixture-no-slots','model':'fixture-terra','status':'completed',
+              'output':[{'content':[{'type':'output_text','text':'<!DOCTYPE html><html><body><input type="file"></body></html>'}]}]}
+        with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',return_value=Response(json.dumps(body).encode())):
+            result=run(self.root,live=True)
+        self.assertTrue(result['api_call_verified']);self.assertTrue(result['html_image_only_verified'])
+        self.assertFalse(result['image_binding_exercised']);self.assertEqual(result['images_inserted'],0)
+
+    def test_incomplete_output_distinguishes_successful_http_from_unfinished_html(self):
+        self.w.save_report_settings('fixture',PROMPT)
+        body={'id':'fixture-incomplete','model':'fixture-terra','status':'incomplete',
+              'incomplete_details':{'reason':'max_output_tokens'},'usage':{'output_tokens':5000},'output':[]}
+        with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',return_value=Response(json.dumps(body).encode())):
+            result=run(self.root,live=True)
+        self.assertTrue(result['api_http_success']);self.assertFalse(result['api_response_completed'])
+        self.assertFalse(result['api_call_verified']);self.assertFalse(result['html_image_only_verified'])
+        self.assertEqual(result['live_request']['incomplete_reason'],'max_output_tokens')
+        self.assertTrue(result['existing_reports_and_stages_unchanged'])
+
     def test_401_is_reported_as_failure_with_safe_error_code(self):
         self.w.save_report_settings('fixture',PROMPT)
         failure=urllib.error.HTTPError('https://api.openai.com/v1/responses',401,'unauthorized',{},io.BytesIO(b'{"error":{"code":"invalid_api_key","type":"invalid_request_error"}}'))

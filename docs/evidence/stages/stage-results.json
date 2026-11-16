@@ -19,7 +19,7 @@
         "exit_code": 0,
         "tests": 7,
         "log": "foundation-1.txt",
-        "duration_seconds": 0.104
+        "duration_seconds": 0.259
       },
       {
         "command": [
@@ -36,7 +36,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "foundation-2.txt",
-        "duration_seconds": 1.372
+        "duration_seconds": 1.728
       },
       {
         "command": [
@@ -53,7 +53,7 @@
         "exit_code": 0,
         "tests": 1,
         "log": "foundation-3.txt",
-        "duration_seconds": 0.121
+        "duration_seconds": 0.568
       },
       {
         "command": [
@@ -70,7 +70,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "foundation-4.txt",
-        "duration_seconds": 0.27
+        "duration_seconds": 2.644
       }
     ]
   },
@@ -94,7 +94,7 @@
         "exit_code": 0,
         "tests": 16,
         "log": "employee-original-1.txt",
-        "duration_seconds": 6.257
+        "duration_seconds": 23.873
       },
       {
         "command": [
@@ -111,7 +111,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-2.txt",
-        "duration_seconds": 6.59
+        "duration_seconds": 6.614
       },
       {
         "command": [
@@ -128,7 +128,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "employee-original-3.txt",
-        "duration_seconds": 7.346
+        "duration_seconds": 9.127
       }
     ]
   },
@@ -152,7 +152,7 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-1.txt",
-        "duration_seconds": 0.49
+        "duration_seconds": 1.045
       },
       {
         "command": [
@@ -169,14 +169,14 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-2.txt",
-        "duration_seconds": 0.38
+        "duration_seconds": 0.743
       }
     ]
   },
   {
     "id": "technical-meaning-guards",
     "status": "PASS",
-    "tests": 29,
+    "tests": 33,
     "commands": [
       {
         "command": [
@@ -193,7 +193,7 @@
         "exit_code": 0,
         "tests": 11,
         "log": "technical-meaning-guards-1.txt",
-        "duration_seconds": 0.12
+        "duration_seconds": 0.234
       },
       {
         "command": [
@@ -210,7 +210,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "technical-meaning-guards-2.txt",
-        "duration_seconds": 0.36
+        "duration_seconds": 0.638
       },
       {
         "command": [
@@ -227,7 +227,7 @@
         "exit_code": 0,
         "tests": 8,
         "log": "technical-meaning-guards-3.txt",
-        "duration_seconds": 1.278
+        "duration_seconds": 2.049
       },
       {
         "command": [
@@ -242,9 +242,9 @@
           "-v"
         ],
         "exit_code": 0,
-        "tests": 5,
+        "tests": 9,
         "log": "technical-meaning-guards-4.txt",
-        "duration_seconds": 1.486
+        "duration_seconds": 4.043
       }
     ]
   },
@@ -268,7 +268,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "document-pipeline-1.txt",
-        "duration_seconds": 4.877
+        "duration_seconds": 6.463
       }
     ]
   }

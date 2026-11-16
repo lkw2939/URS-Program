@@ -31,7 +31,7 @@ def main():
         runs.append(entry)
         print(name,'PASS' if entry['exit_code']==0 else 'FAIL',flush=True)
         if entry['exit_code']!=0:break
-    paths=[*ROOT.glob('urs/*.py'),*ROOT.glob('tests/*.py'),*ROOT.glob('scripts/*.py'),*ROOT.glob('static/*.*'),ROOT/'requirements.lock',ROOT/'service.py',ROOT/'start.py',ROOT/'.devcontainer/devcontainer.json']
+    paths=[*ROOT.glob('urs/*.py'),*ROOT.glob('tests/*.py'),*ROOT.glob('scripts/*.py'),*ROOT.glob('static/*.*'),*ROOT.glob('tests/vendor/pdfjs/*'),*ROOT.glob('prompts/*.txt'),ROOT/'requirements.lock',ROOT/'service.py',ROOT/'start.py',ROOT/'.devcontainer/devcontainer.json']
     manifest={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
     evidence={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.rglob('*') if p.is_file() and p.parent==OUT and (p.name.startswith(('final-','html-report-','synthetic-model-')) or p.name in ('html-comparison.json','html-request-contract.json'))}
     stage_file=OUT/'stages/stage-results.json'

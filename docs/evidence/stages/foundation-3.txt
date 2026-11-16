@@ -1,6 +1,6 @@
 test_all_33_and_five_additional_requirements_have_stages (test_requirements.RequirementCoverage.test_all_33_and_five_additional_requirements_have_stages) ... ok
 
 ----------------------------------------------------------------------
-Ran 1 test in 0.002s
+Ran 1 test in 0.009s
 
 OK

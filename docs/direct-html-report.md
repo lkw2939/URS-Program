@@ -29,7 +29,7 @@ report.raw.html은 모델 문자열의 UTF-8 bytes 그대로입니다. report.ht
 HTML 파싱은 원래 주소의 오프셋을 찾는 데만 쓰며, DOM 재직렬화·본문/표/캡션/CSS 변경·그림 추가·페이지 재배치는 없습니다. 같은 토큰이 본문/주석/CSS 문자열/스크립트에 있어도 바꾸지 않습니다.
 못 찾은 그림은 원래 주소를 유지하고 URI와 HTML 위치를 image-bindings에 기록하며 직원 화면에 표시합니다. 미연결이 있으면 검증 통과/최종 승인을 차단합니다.
 
-직원 기본 결과는 최종 HTML iframe입니다. 다운로드는 최종 HTML과 Terra 원본 HTML을 각각 제공합니다. iframe/응답 보안 정책으로 스크립트는 실행하지 않으며 HTML bytes는 변경하지 않습니다.
+직원 기본 결과는 최종 HTML iframe입니다. 다운로드는 최종 HTML과 Terra 원본 HTML을 각각 제공합니다. 사용자 요청의 PDF.js/로컬 파일 선택을 위해 분리된 iframe에서 인라인 스크립트·정해진 CDN·worker를 허용합니다. 부모 직원 화면 접근은 차단하며 HTML bytes는 변경하지 않습니다.
 
 ## 검증/기술 분석과 기존 기록
 
