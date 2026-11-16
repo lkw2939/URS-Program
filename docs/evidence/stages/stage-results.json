@@ -6,7 +6,7 @@
     "commands": [
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -19,11 +19,11 @@
         "exit_code": 0,
         "tests": 7,
         "log": "foundation-1.txt",
-        "duration_seconds": 0.069
+        "duration_seconds": 0.147
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -36,11 +36,11 @@
         "exit_code": 0,
         "tests": 9,
         "log": "foundation-2.txt",
-        "duration_seconds": 0.658
+        "duration_seconds": 1.626
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -53,11 +53,11 @@
         "exit_code": 0,
         "tests": 1,
         "log": "foundation-3.txt",
-        "duration_seconds": 0.073
+        "duration_seconds": 0.114
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -70,7 +70,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "foundation-4.txt",
-        "duration_seconds": 0.164
+        "duration_seconds": 0.217
       }
     ]
   },
@@ -81,7 +81,7 @@
     "commands": [
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -94,11 +94,11 @@
         "exit_code": 0,
         "tests": 16,
         "log": "employee-original-1.txt",
-        "duration_seconds": 2.57
+        "duration_seconds": 10.066
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -111,18 +111,18 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-2.txt",
-        "duration_seconds": 3.403
+        "duration_seconds": 8.265
       }
     ]
   },
   {
     "id": "pdf-source",
     "status": "PASS",
-    "tests": 9,
+    "tests": 4,
     "commands": [
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -135,11 +135,11 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-1.txt",
-        "duration_seconds": 0.227
+        "duration_seconds": 0.572
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -150,9 +150,9 @@
           "-v"
         ],
         "exit_code": 0,
-        "tests": 7,
+        "tests": 2,
         "log": "pdf-source-2.txt",
-        "duration_seconds": 1.169
+        "duration_seconds": 0.469
       }
     ]
   },
@@ -163,7 +163,7 @@
     "commands": [
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -176,11 +176,11 @@
         "exit_code": 0,
         "tests": 11,
         "log": "technical-meaning-guards-1.txt",
-        "duration_seconds": 0.065
+        "duration_seconds": 0.127
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -193,11 +193,11 @@
         "exit_code": 0,
         "tests": 5,
         "log": "technical-meaning-guards-2.txt",
-        "duration_seconds": 0.208
+        "duration_seconds": 0.417
       },
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -210,18 +210,18 @@
         "exit_code": 0,
         "tests": 6,
         "log": "technical-meaning-guards-3.txt",
-        "duration_seconds": 0.32
+        "duration_seconds": 1.347
       }
     ]
   },
   {
     "id": "document-pipeline",
     "status": "PASS",
-    "tests": 31,
+    "tests": 12,
     "commands": [
       {
         "command": [
-          "/workspace/urs-ai-report/.venv/bin/python",
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
           "-m",
           "unittest",
           "discover",
@@ -232,9 +232,9 @@
           "-v"
         ],
         "exit_code": 0,
-        "tests": 31,
+        "tests": 12,
         "log": "document-pipeline-1.txt",
-        "duration_seconds": 8.905
+        "duration_seconds": 4.703
       }
     ]
   }

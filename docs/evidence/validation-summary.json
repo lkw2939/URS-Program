@@ -7,7 +7,7 @@
       "commands": [
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -20,11 +20,11 @@
           "exit_code": 0,
           "tests": 7,
           "log": "foundation-1.txt",
-          "duration_seconds": 0.069
+          "duration_seconds": 0.147
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -37,11 +37,11 @@
           "exit_code": 0,
           "tests": 9,
           "log": "foundation-2.txt",
-          "duration_seconds": 0.658
+          "duration_seconds": 1.626
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -54,11 +54,11 @@
           "exit_code": 0,
           "tests": 1,
           "log": "foundation-3.txt",
-          "duration_seconds": 0.073
+          "duration_seconds": 0.114
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -71,7 +71,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "foundation-4.txt",
-          "duration_seconds": 0.164
+          "duration_seconds": 0.217
         }
       ]
     },
@@ -82,7 +82,7 @@
       "commands": [
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -95,11 +95,11 @@
           "exit_code": 0,
           "tests": 16,
           "log": "employee-original-1.txt",
-          "duration_seconds": 2.57
+          "duration_seconds": 10.066
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -112,18 +112,18 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-2.txt",
-          "duration_seconds": 3.403
+          "duration_seconds": 8.265
         }
       ]
     },
     {
       "id": "pdf-source",
       "status": "PASS",
-      "tests": 9,
+      "tests": 4,
       "commands": [
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -136,11 +136,11 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-1.txt",
-          "duration_seconds": 0.227
+          "duration_seconds": 0.572
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -151,9 +151,9 @@
             "-v"
           ],
           "exit_code": 0,
-          "tests": 7,
+          "tests": 2,
           "log": "pdf-source-2.txt",
-          "duration_seconds": 1.169
+          "duration_seconds": 0.469
         }
       ]
     },
@@ -164,7 +164,7 @@
       "commands": [
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -177,11 +177,11 @@
           "exit_code": 0,
           "tests": 11,
           "log": "technical-meaning-guards-1.txt",
-          "duration_seconds": 0.065
+          "duration_seconds": 0.127
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -194,11 +194,11 @@
           "exit_code": 0,
           "tests": 5,
           "log": "technical-meaning-guards-2.txt",
-          "duration_seconds": 0.208
+          "duration_seconds": 0.417
         },
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -211,18 +211,18 @@
           "exit_code": 0,
           "tests": 6,
           "log": "technical-meaning-guards-3.txt",
-          "duration_seconds": 0.32
+          "duration_seconds": 1.347
         }
       ]
     },
     {
       "id": "document-pipeline",
       "status": "PASS",
-      "tests": 31,
+      "tests": 12,
       "commands": [
         {
           "command": [
-            "/workspace/urs-ai-report/.venv/bin/python",
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
             "-m",
             "unittest",
             "discover",
@@ -233,9 +233,9 @@
             "-v"
           ],
           "exit_code": 0,
-          "tests": 31,
+          "tests": 12,
           "log": "document-pipeline-1.txt",
-          "duration_seconds": 8.905
+          "duration_seconds": 4.703
         }
       ]
     }
@@ -245,13 +245,13 @@
     {
       "name": "unit-http",
       "command": [
-        "/workspace/urs-ai-report/.venv/bin/python",
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
         "scripts/validate_unit_stages.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 17.91,
+      "duration_seconds": 28.13,
       "log": "final-tests.txt",
-      "tests": 112
+      "tests": 88
     },
     {
       "name": "chromium",
@@ -260,90 +260,71 @@
         "tests/browser_pipeline.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 13.93,
+      "duration_seconds": 6.342,
       "log": "final-browser.txt"
     },
     {
-      "name": "libreoffice",
+      "name": "html-artifacts",
       "command": [
         "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
-        "tests/office_smoke.py"
+        "tests/html_smoke.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 2.496,
-      "log": "final-office.txt"
+      "duration_seconds": 0.769,
+      "log": "final-html.txt"
     }
   ],
   "source_sha256": {
     "requirements.lock": "87c88485a1e6c33cf0bc24dedeab3aa0434c0c9653e413f53b6100d8384b6bd3",
-    "scripts/validate.py": "dbfca7f40c508f5bcb9205ffb159b20ee096627141b0367df268f8b6bc0fbe49",
+    "scripts/validate.py": "af1fea2c0738e82b51ef05fab52d87a6b1fb0806b3bf46e304a659dde2a5f8d3",
     "scripts/validate_unit_stages.py": "b29452c13546ea625335aaf556b582f9ceb90eedb7888d441ed67a4b7565c8a0",
-    "static/app.css": "75cbc54d03a1b0276184a70ea02732bce4dcdf0f261e9a1519b6dc220ffdd795",
-    "static/app.js": "09430eea261bcc9a12895dd9f111355b5911ccf4bcd36d6188e8aefef07141fc",
-    "static/index.html": "ba9d12244dcc5bf9d9c1001ac701f99ef16270479f8860bef45e9ac768c9e99b",
-    "tests/browser_blank_pages.py": "1a61ddfd8a8b165163ab917cecbd81c84eebdf7603f74d29810d09a42db0bf62",
-    "tests/browser_pipeline.py": "f4a73c50ba91627040ba74023d07689953d8b8e9673af09d2f5b27670fe11552",
-    "tests/browser_smoke.py": "4647d68c4829e8df4052afdf2330115d2bab6440316cf28e867e43e6a69c7d81",
+    "static/app.css": "0eeed9d6d49dae1376014e1c328bfc8c2c3090948f353d89c1194895a161c0ff",
+    "static/app.js": "1d23a4f39f5dc791f0f2b638df56bc7e452a1fbc895f190b63479f1020e28910",
+    "static/index.html": "bb2189edae03342ab87b0b13f54d43fce4e2d28c04db2ddcac110a867234e5d6",
+    "tests/browser_pipeline.py": "725c484f2d63401121b0be6200ea2748d2a71df5de881cd0a78f939f0c560076",
     "tests/fixtures.py": "821bc8a1d2b3c98ab1b7baf69d10691ce815dfce0d302699a7e4749240f2425f",
-    "tests/office_smoke.py": "137c746b3d5f2781574db660deb582a187e56962bb1a68bfa078c6e0290f808b",
-    "tests/test_ai_and_evaluation.py": "abb8e3f555117402f819daec08e38a6428eced52994aa7a33d48096259723518",
-    "tests/test_backup.py": "9d46ba47cdc35479d6e9cde095978d322edaa37004f01af51b8df5550eb824e0",
-    "tests/test_blank_pages.py": "d2041bcb37a9644d4e8daa2060adcddc55507c1e767484b7e0b78717ab02e7b9",
+    "tests/html_fixtures.py": "b1477088ba2dd4e291de6c668cf77ff54aa43c9dc6ed323b3c756e02ed54bd66",
+    "tests/html_smoke.py": "c9268c4ed7228c765a9c9224c45b31222d2a3d8d47385cb65af1b3300496497c",
+    "tests/test_ai_and_evaluation.py": "978572e42c73e5c5f1b5a69fa2714bad17694893b02fd6734096f987b06d903b",
+    "tests/test_backup.py": "c2aba89cc0f45c5497bdbe9df8dac27a8b2e904a0319478a2fa3e2270afdae82",
+    "tests/test_blank_pages.py": "dc0f4a1dc0a23a50acacf225cfde055372e854dc0debcb50a0b16f5fcfb887b7",
     "tests/test_gates.py": "ff9f57587d5d66f37f673488227baf04057c7b1624a75c5728f9a622f7e16d91",
-    "tests/test_pdf_variants.py": "a6bc693d9d919092f1debebc24173301f3544cda9c9f79ddf2bbde030122fc66",
-    "tests/test_processing.py": "567da0f4b9032a60cb1c7fb2d32495f71edd57174b866f578d522e54e6493dac",
+    "tests/test_pdf_variants.py": "431159cf447e0828820da883d812e4dddb58ba5772f5e9c609948331a1235742",
+    "tests/test_processing.py": "9b8dceb933afc03f8f9228b7069d75f3250203479f8b9c8ae3ff435fb436d0d0",
     "tests/test_quantity_units.py": "df076edbf15b7980b7bb465baf44db9f2800634afb38c25340d5cad575e2e085",
     "tests/test_requirements.py": "8e4a59d6109cad406c8280adccfb7a709ea1d3a6fc06e754d1f068ccc9880219",
     "tests/test_terminology.py": "21ae719e1e6e3653e069c89258813e9bcea8dc535c822d6bc76d0c9b2a37a241",
     "tests/test_verification.py": "54ca21aa792f6e80954492d41c5d9437345868a4633944ed6ead4a766ad587f1",
     "tests/test_workflow.py": "fa3955f6fece06c20a0deec03e75408f33e5aacf760e4eae784b0758ff95407c",
-    "tests/test_workspace.py": "7991e72d22204dc0f6cc240b6518afcc316c3a1d7a982ffd4ef24bddd77aef00",
+    "tests/test_workspace.py": "99b256bb5bb21d90f7b89e7b13b997f9adc73911914dadb33aafb1e7cdbaf074",
     "urs/__init__.py": "7bb470b921aaedbe3f3a0532b94a66b6977ad147af205097b58f796dfe3c5224",
     "urs/__main__.py": "944c7b6e1a1db3ac08edd7ef98af52aae7c3e47c15114637f299820943073067",
-    "urs/ai.py": "384a2c9faca5109841d6d6ca9f810a6d835a16647a7b433ef97dc62f09c275d0",
+    "urs/ai.py": "191174a1a575995d5de6cb9aca2a480251ce2969aec3c668eb4445ba38ba0d43",
     "urs/audit.py": "0312bfe9e814de47bfabafa8361df600686f571abfb060708ebb84ba222a005e",
     "urs/backup.py": "d19ca817eea6969c23330900184c9d80124caa42ef89c571a7457d22ed8d382e",
-    "urs/evaluation.py": "ea3fcc023bdb4b52b66389a7c7f73383571d12fdca17e0dbdc4a44c2dd479c58",
-    "urs/extraction.py": "e8e4f7ea38b3e8e036c21cbd2ffaa42c47c521d721446ed019c7e19e3a4b66d5",
+    "urs/evaluation.py": "c718dc74c4490efc6f81556f1277da73d5f3d8c2864ab0d929c914ca3e62868a",
     "urs/gates.py": "fc505e2d65122067b516af04a971307bbc2e8f6bbdf900886a0140863029f04a",
-    "urs/processing.py": "86ac972b20776f1a031347230128905bb605bed135dfe8473d4984966ee94df7",
+    "urs/images.py": "726338b4a3ae505662cec66e611f9c36b657b830fcb199e99ad97867cbe0827b",
+    "urs/processing.py": "7172f73d5c9be27b8a9d046493d351bd1da97de1307208eef007d550b25d2963",
     "urs/quality.py": "14b108d963179efc85cb06903213e39d4d734955c106eb2fe756e975aa9140a5",
-    "urs/reports.py": "ab14219500e57a5f12adbef03435a47348a0b1f123e5437515271f045c6b7155",
     "urs/server.py": "bf3c4b21705bfcd876b48631add6cabcaf51cd130b341d7268c668ef951e7e42",
     "urs/terminology.py": "8f7385954224b6ca004621d1b32ce5deec26653c282b963fc554fad910f011f7",
     "urs/verification.py": "efa63924d6e96b44655017ac104d4827c9b4a0b9d204b13a9169e62f60d78f2c",
-    "urs/web.py": "24574b9ef91bee6ec044637050f710a77edd9862f1e54990deb2c8c3afc0a950",
-    "urs/workflow.py": "1318a0bd9778f00ead464798b2f5312dfd52019318ba394ccec73db6221bb6e1",
-    "urs/workspace.py": "86b5df341f5666048d24924d8127c81d00bfbae3a83aa389bafe6af5bd82cbfd"
+    "urs/web.py": "9edd8051b13291641c6e57e1c81c66c42a93457dfdd577069e8ddf1330cc5633",
+    "urs/workflow.py": "6b51cb366f2023f25babc1eeec8ff3e68f79481e5b0431e41c9c5c74ba198ec9",
+    "urs/workspace.py": "25f7c8ac67e364c82b4db7b2afb253d3b942e2390e6d932bb842c62338f0908f"
   },
   "evidence_sha256": {
-    "final-browser.txt": "3c2f3922049b7f8f3efdc0df89ca80f4e98fd271eee7d43656d0bf7ab0b1f601",
+    "html-request-contract.json": "8c67c2783b6f5eee592cd3c1e0b00bcd5587fad98cde8b605cbab4b454401805",
+    "synthetic-model-final.html": "a7c95f1f6e1e49261ee251139c759cadfe7719986224f2693a665a5787cd911d",
     "final-office.txt": "c0972375ff23124232bb122e0743bdd7ee309b516ef164e00bbab805a423ffcb",
-    "final-tests.txt": "b91cc842cbd499ba7e9541b25fff259c63a6e67a36175d2fe76b1f15d243c04e",
-    "synthetic-draft-analysis.docx": "32a55f5c2c1f3bfab155b2e5ad2bc5d5bc3999a3e9624c62bfb473f64f27702e",
-    "synthetic-draft-analysis.pdf": "fbfa73e4e4e653682748445fafc2e53874b7c37bb49b6644d6601190fc096a95",
-    "synthetic-draft-translation.docx": "cb6073a711013a70594f8880b05a085dd3584c2f5ff6d63cf6a206c2feb2800f",
-    "synthetic-draft-translation.pdf": "488acb5b1e1efa2bcaf0da61b726824d135dfc94b6a70d21995e90b76c6bb4da",
-    "synthetic-final-analysis.docx": "d31b663497c4250a6fc55588cbef0de96db51d64ee9243147cd5ae5e1a40917c",
-    "synthetic-final-analysis.pdf": "37abe870c744f8a46e2ae48fca8d20de43ba138e5c2b6956c6cd20853756eff8",
-    "synthetic-final-translation.docx": "c4895b7497bfc50978582330344bd40476835c4b8f9e1533be3d6bea7eeb1376",
-    "synthetic-final-translation.pdf": "54bcaab1ecfb8f53f28bc67b6eeaf4a94c3ef9a3ca412474348f460baa7ae3a8",
-    "word-rendered/final-analysis-page-1.png": "6c22fc5c012a30b34e32c29cd031ae678789a3dd69adb33578b8fe7daf9e1f8d",
-    "word-rendered/final-analysis-page-2.png": "7b75be3ba0521001d82c60e44c4f5d6443995e074317f82e4b6687d594a6e3d8",
-    "word-rendered/final-analysis-page-3.png": "8b6076f45bfe1a235d1c85d691be5c1b06613b57cef97e2ae8ac6da53a125d3f",
-    "word-rendered/final-analysis-page-4.png": "2656e6acc1c3ffdcebd6fb18a4b3d57ffdc4becaf0dc99725d55bbc9bf91d168",
-    "word-rendered/final-analysis-page-5.png": "68376fdb35dc00de7a63c614e8483992125cadf99fa1145941888e03d9521dbe",
-    "word-rendered/final-analysis-page-6.png": "b036e979dceca13e1a4c23889c26477558a717e4a66f7f9a1ffbe89d94b51797",
-    "word-rendered/final-analysis-page-7.png": "41a7a40162d44a31fd4a1aadee26fd202f0f9d2ae7135360dc9694bbc7ca3ce6",
-    "word-rendered/final-analysis-page-8.png": "9fe2f46e22b7bbe01d3e5308de3bfc0ea1e0690ad744b7e75fc2a16035df6819",
-    "word-rendered/final-translation-page-1.png": "5d26d396c8e613fad72d882d3f09b3999d76f7ab06617469a94873d9220568b9",
-    "word-rendered/final-translation-page-2.png": "68376fdb35dc00de7a63c614e8483992125cadf99fa1145941888e03d9521dbe",
-    "word-rendered/final-translation-page-3.png": "0e14d73bacb309c368e772f659a3c7538ee1864caf82cdb1bd438189372c48e7",
-    "word-rendered/final-translation-page-4.png": "0a68e7c2b81c01be4db587dd9797f3b146aef678f5d75c5704951fc914c8482b",
-    "word-rendered/synthetic-draft-analysis.pdf": "e5cbad58cca68407a65486bceddd6c8bee2bf175344e046273350ccdd48866cb",
-    "word-rendered/synthetic-draft-translation.pdf": "b378e9526f1e9a6f4bdd75a956676e2b441408f056c0efd018302e2b312ea2b6",
-    "word-rendered/synthetic-final-analysis.pdf": "1e679caa2128e8fcf23bc19acc67e5bf3a93f42585239e6b1a591f6f6c8f414e",
-    "word-rendered/synthetic-final-translation.pdf": "8ead6f9efb02aae7ac88bbc5c62b687fd565806066cb2fc13797ac1247f4a6ab"
+    "html-comparison.json": "e49cff4855a02103c518bccc12bf02b2e6922f103b80f8a4705a68cd43dd73c6",
+    "final-html.txt": "1c86b501cc057163a3f0fc1b63e90eb1d236b52029b273d6a8a6e8f30740aab9",
+    "html-report-mobile.png": "28037bb7a64764ecef1c0894a4b91407030a43eefae8c8df8529179ec11ee2dd",
+    "synthetic-model-original.html": "b52fa003521c9934af94095e72014bcbc443ed6291ab40a4f7b1dc04564c6e9f",
+    "final-tests.txt": "fdca4e72c0399a52de777bf3c69185d47eb8e84a35f7074a374c7d3125e0ae61",
+    "html-report-desktop.png": "797ecd633f112a482cd79a4f1589176a1758bc541b2734a2cb18aec51b996a5f",
+    "final-browser.txt": "f800df019c91b4122f2a9e7ed6c98da030caa1c96237be021bcfa3fd15553c9a"
   },
   "real_openai_verified": false,
   "real_customer_urs_verified": false,

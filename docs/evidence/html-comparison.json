@@ -1,0 +1,25 @@
+{
+  "replacements": [
+    {
+      "uri": "urs-image:1:2",
+      "start": 238,
+      "end": 251,
+      "replacement_sha256": "3417c09b16eb11588da89e2a7defe6b7dbbc6dfa0b972d1778039a9cf7b300a2"
+    },
+    {
+      "uri": "urs-image:1:1",
+      "start": 332,
+      "end": 345,
+      "replacement_sha256": "2361a30cfdf12015713ef70f1d0741e989da847b7b27aabf7d3e2847dacd4d8f"
+    }
+  ],
+  "unresolved": [
+    {
+      "uri": "urs-image:9:8",
+      "offset": 368
+    }
+  ],
+  "raw_sha256": "b52fa003521c9934af94095e72014bcbc443ed6291ab40a4f7b1dc04564c6e9f",
+  "final_sha256": "a7c95f1f6e1e49261ee251139c759cadfe7719986224f2693a665a5787cd911d",
+  "only_image_addresses_changed": true
+}

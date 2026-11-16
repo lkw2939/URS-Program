@@ -1,32 +1,24 @@
+import base64
 import io
 import unittest
 from PIL import Image
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-from urs.extraction import extract_pdf
-
+from unittest.mock import patch
+from html_fixtures import visual_pdf
+from urs.images import crop_images
 
 class PDFVariantTests(unittest.TestCase):
-    def test_merged_cell_identity_and_geometry_preserved(self):
-        stream=io.BytesIO();c=canvas.Canvas(stream,pagesize=(400,400))
-        for x in (40,340):c.line(x,180,x,300)
-        c.line(190,180,190,240)
-        for y in (180,240,300):c.line(40,y,340,y)
-        c.drawString(50,270,'Merged header');c.drawString(50,210,'Left');c.drawString(200,210,'Right')
-        c.save();extracted,_=extract_pdf(stream.getvalue())
-        table=extracted['pages'][0]['tables'][0]
-        self.assertEqual(len(table['cells']),3)
-        self.assertEqual(table['grid'][0][0],table['grid'][0][1])
-        self.assertNotEqual(table['grid'][1][0],table['grid'][1][1])
-        self.assertEqual({c['text'] for c in table['cells']},{'Merged header','Left','Right'})
+    def test_two_raster_regions_are_distinct_and_in_reading_order(self):
+        assets=crop_images(visual_pdf())
+        self.assertEqual([a['uri'] for a in assets],['urs-image:1:1','urs-image:1:2'])
+        self.assertEqual(assets[0]['bbox'],[20.,100.,120.,200.])
+        self.assertNotEqual(assets[0]['sha256'],assets[1]['sha256'])
+        for a,color in zip(assets,[(255,0,0),(0,0,255)]):
+            with Image.open(io.BytesIO(base64.b64decode(a['data_url'].split(',')[1]))) as img:
+                self.assertEqual(img.convert('RGB').getpixel((70,70)),color)
 
-    def test_image_only_page_retained_and_review_required(self):
-        stream=io.BytesIO();c=canvas.Canvas(stream,pagesize=(400,400))
-        image=Image.new('RGB',(100,100),'orange')
-        c.drawImage(ImageReader(image),40,40,200,200);c.save()
-        extracted,previews=extract_pdf(stream.getvalue())
-        self.assertEqual(extracted['coverage'],'NEEDS_REVIEW')
-        self.assertEqual(extracted['pages'][0]['blocks'],[])
-        self.assertEqual(len(extracted['pages'][0]['images']),1)
-        self.assertTrue(any('그림' in w['reason'] for w in extracted['warnings']))
-        self.assertTrue(previews[0].startswith(b'\x89PNG'))
+    def test_vector_diagram_retained_without_text_access(self):
+        with patch('pdfplumber.page.Page.extract_text',side_effect=AssertionError('No text extraction')),patch('pdfplumber.page.Page.extract_text_lines',side_effect=AssertionError('No text extraction')):
+            assets=crop_images(visual_pdf(blank=True,vector=True))
+        self.assertEqual(len(assets),1)
+        self.assertEqual(assets[0]['bbox'],[30.,280.,100.,360.])
+        self.assertNotIn('text',assets[0])

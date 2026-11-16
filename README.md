@@ -1,3 +1,15 @@
+# URS AI REPORT SYSTEM — 직접 HTML 보고서
+
+최신 구현: 업로드한 원본 PDF와 웹 설정의 보고서 프롬프트 원문을 OpenAI의 기존 설정 모델에 전달하고, 받은 HTML의 이미지 주소만 원본 사진·도면으로 연결합니다. 텍스트 추출·블록 번역·고정 Word/PDF 제작 기능은 제거했습니다.
+
+[현재 동작/검증 범위](docs/direct-html-report.md) · [최신 진행 상태](docs/PROGRESS.md) · [Codespaces 실행 안내](GITHUB-START.md)
+
+Python 3.12에서 `python start.py`로 실행합니다. 기존 DB와 원본·역사 자료는 유지합니다. 실제 API 인증/고객 품질/99% 정확도는 미검증입니다.
+
+아래는 배포 초기 버전의 설명입니다. 추출/블록 번역/Word·PDF 제작에 관한 설명은 현재 실행 흐름에 적용되지 않습니다.
+
+---
+
 # URS AI REPORT SYSTEM
 
 우도산기 직원이 해외 고객 URS를 보관·번역·검증·분석·수정·출력·승인하는 통합 웹 프로그램이다. 기존 guion-vivo와 별도 프로젝트다.

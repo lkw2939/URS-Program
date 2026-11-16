@@ -13,11 +13,11 @@ OUT=ROOT/'docs/evidence'
 
 def main():
     OUT.mkdir(parents=True,exist_ok=True)
-    python=str(ROOT/'.venv/bin/python')
-    # Browser and LibreOffice helpers use the host's installed system integrations.
+    python=str(ROOT/'.venv/bin/python') if (ROOT/'.venv/bin/python').exists() else sys.executable
+    # The browser runner uses host Playwright; document checks reopen unchanged HTML.
     commands=[('unit-http',[python,'scripts/validate_unit_stages.py'],'final-tests.txt'),
               ('chromium',[sys.executable,'tests/browser_pipeline.py'],'final-browser.txt'),
-              ('libreoffice',[sys.executable,'tests/office_smoke.py'],'final-office.txt')]
+              ('html-artifacts',[sys.executable,'tests/html_smoke.py'],'final-html.txt')]
     runs=[]
     for name,command,filename in commands:
         started=time.time()
@@ -33,7 +33,7 @@ def main():
         if entry['exit_code']!=0:break
     paths=[*ROOT.glob('urs/*.py'),*ROOT.glob('tests/*.py'),*ROOT.glob('scripts/*.py'),*ROOT.glob('static/*.*'),ROOT/'requirements.lock']
     manifest={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
-    evidence={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.rglob('*') if p.is_file() and (p.suffix in ('.pdf','.docx') or p.name.startswith('final-'))}
+    evidence={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.rglob('*') if p.is_file() and p.parent==OUT and (p.name.startswith(('final-','html-report-','synthetic-model-')) or p.name in ('html-comparison.json','html-request-contract.json'))}
     stage_file=OUT/'stages/stage-results.json'
     unit_stages=json.loads(stage_file.read_text()) if stage_file.exists() else []
     summary={'unit_stages':unit_stages,'scope':'synthetic fixtures and mocked AI transport only','runs':runs,'source_sha256':manifest,'evidence_sha256':evidence,

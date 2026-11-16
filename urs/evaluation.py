@@ -9,7 +9,7 @@ from urs.workflow import Blocked
 def fingerprint():
     root=Path(__file__).resolve().parent
     digest=hashlib.sha256()
-    for name in ('ai.py','processing.py','quality.py','extraction.py','reports.py'):
+    for name in ('ai.py','processing.py','images.py','workspace.py','workflow.py'):
         digest.update(name.encode());digest.update((root/name).read_bytes())
     from urs.terminology import digest as terminology_digest
     digest.update(terminology_digest().encode())

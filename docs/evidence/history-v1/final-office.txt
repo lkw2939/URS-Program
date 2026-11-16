@@ -1,0 +1,5 @@
+PASS: LibreOffice reopened draft-translation.docx; 3 PDF pages, Korean text, original images and internal links present.
+PASS: LibreOffice reopened draft-analysis.docx; 7 PDF pages, Korean text, original images and internal links present.
+PASS: LibreOffice reopened final-translation.docx; 4 PDF pages, Korean text, original images and internal links present.
+PASS: LibreOffice reopened final-analysis.docx; 8 PDF pages, Korean text, original images and internal links present.
+Scope: synthetic documents; these artifacts do not establish real customer/AI accuracy.

@@ -155,11 +155,9 @@ class WorkspaceTests(unittest.TestCase):
         self.assertTrue(snapshot['stages'][0]['passed'])
         self.assertFalse(any(s['passed'] for s in snapshot['stages'][1:]))
         self.assertFalse(snapshot['approved'])
-        self.w.run('alice', document, 'extract')
-        snapshot = self.w.status('alice', document)
-        self.assertEqual(next(r['status'] for r in snapshot['results'] if r['stage'] == 'extract'), 'NEEDS_REVIEW')
-        with self.assertRaises(Blocked):
-            self.w.run('alice', document, 'translate')
+        with self.assertRaises(ValueError):self.w.run('alice',document,'extract')
+        with self.assertRaises(Blocked):self.w.run('alice',document,'report')
+        with self.assertRaises(Blocked):self.w.run('alice',document,'verify')
         with self.assertRaises(Blocked):
             self.w.workflow.approve(document, 1, 'alice')
 
@@ -203,7 +201,7 @@ class WorkspaceTests(unittest.TestCase):
         self.assertIn('attachment',record_headers['Content-Disposition'])
         self.assertEqual(req(f'/api/documents/{doc}/verification.html')[0],200)
         self.assertEqual(req(f'/api/documents/{doc}/original')[1], self.payload)
-        self.assertEqual(req(f'/api/documents/{doc}/run', {'stage': 'translate'})[0], 409)
+        self.assertEqual(req(f'/api/documents/{doc}/run', {'stage': 'translate'})[0], 404)
         self.assertEqual(req(f'/api/documents/{doc}/run', {'stage': 'extract', 'status': 'PASS'})[0], 400)
         self.assertEqual(req(path, {'name': 'x.pdf', 'content': 'invalid-base64'})[0], 400)
         self.assertEqual(req('/api/logout', {})[0], 200)

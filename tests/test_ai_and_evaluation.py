@@ -30,15 +30,16 @@ class AIAndEvaluationTests(unittest.TestCase):
 
     def test_response_transport_contract_and_usage_storage(self):
         response={'status':'completed','usage':{'input_tokens':12,'output_tokens':6},
-                  'output':[{'content':[{'type':'output_text','text':'{"translations": []}'}]}]}
+                  'output':[{'content':[{'type':'output_text','text':'<html><body>fixture</body></html>'}]}]}
         with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',return_value=io.BytesIO(json.dumps(response).encode())) as network:
-            self.assertEqual(self.ai.call('translate',{'source':'fixture'}),{'translations':[]})
+            self.assertEqual(self.ai.report_html(b'%PDF-fixture','source.pdf','saved prompt','image map'),'<html><body>fixture</body></html>')
             request=network.call_args.args[0]
             self.assertEqual(request.full_url,'https://api.openai.com/v1/responses')
             payload=json.loads(request.data)
             self.assertFalse(payload['store'])
             self.assertEqual(payload['max_output_tokens'],5000)
-            self.assertEqual(payload['text']['format']['type'],'json_object')
+            self.assertNotIn('text',payload)
+            self.assertNotIn('instructions',payload)
         with self.w.workflow.connect() as db:
             row=dict(db.execute('SELECT * FROM ai_usage').fetchone())
         self.assertEqual(row['state'],'completed')
@@ -48,12 +49,12 @@ class AIAndEvaluationTests(unittest.TestCase):
     def test_budget_and_invalid_prices_block_before_network(self):
         for values in [{'URS_AI_BUDGET_USD':'0.000001'},{'URS_AI_INPUT_USD_PER_MILLION':'NaN'}, {'URS_AI_OUTPUT_USD_PER_MILLION':'-1'}]:
             with self.subTest(values=values),patch.dict(os.environ,{**SETTINGS,**values},clear=True),patch('urllib.request.urlopen') as network:
-                with self.assertRaises(AIBlocked):self.ai.call('translate',{'source':'fixture'})
+                with self.assertRaises(AIBlocked):self.ai.report_html(b'%PDF-fixture','source.pdf','saved prompt','image map')
                 network.assert_not_called()
 
     def test_failed_call_is_reserved_and_no_secret_error_leaks(self):
         with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',side_effect=RuntimeError('synthetic-test-key-not-real upstream details')):
-            with self.assertRaises(AIError) as error:self.ai.call('translate',{})
+            with self.assertRaises(AIError) as error:self.ai.report_html(b'%PDF-fixture','source.pdf','saved prompt','image map')
         self.assertNotIn(SETTINGS['URS_OPENAI_API_KEY'],str(error.exception))
         with self.w.workflow.connect() as db:
             row=db.execute('SELECT * FROM ai_usage').fetchone()
@@ -61,7 +62,7 @@ class AIAndEvaluationTests(unittest.TestCase):
 
     def test_noncompleted_ai_response_never_passes(self):
         with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',return_value=io.BytesIO(b'{"status":"incomplete"}')):
-            with self.assertRaises(AIError):self.ai.call('translate',{})
+            with self.assertRaises(AIError):self.ai.report_html(b'%PDF-fixture','source.pdf','saved prompt','image map')
 
     def test_qualification_threshold_critical_errors_and_model_binding(self):
         with self.assertRaises(Blocked):require(self.w.workflow,'fixture')

@@ -93,6 +93,8 @@ class Workflow:
             return revision
 
     def _definitions(self, db):
+        if hasattr(self, 'active_stages'):
+            return [dict(id=s['id'],position=i,checks=json.dumps(s['checks'])) for i,s in enumerate(self.active_stages)]
         return db.execute('SELECT * FROM definitions ORDER BY position').fetchall()
 
     def _passed(self, db, job, revision, stage):
@@ -127,10 +129,11 @@ class Workflow:
             run_token = secrets.token_hex(16)
             # Invalidate before invoking any validator: old approval/results
             # cannot remain usable while a new verification is in progress.
-            db.execute('DELETE FROM results WHERE job=? AND revision=? AND stage IN '
-                       '(SELECT id FROM definitions WHERE position>=?)', (job, revision, stage['position']))
-            db.execute('DELETE FROM stage_runs WHERE job=? AND stage IN '
-                       '(SELECT id FROM definitions WHERE position>=?)', (job, stage['position']))
+            downstream=[s['id'] for s in self._definitions(db) if s['position']>=stage['position']]
+            for sid in downstream:
+                db.execute('DELETE FROM results WHERE job=? AND revision=? AND stage=?',(job,revision,sid))
+            for sid in downstream:
+                db.execute('DELETE FROM stage_runs WHERE job=? AND stage=?',(job,sid))
             db.execute('INSERT INTO stage_runs VALUES(?,?,?,?)', (job,stage_id,revision,run_token))
             db.execute('DELETE FROM approvals WHERE job=?', (job,))
             self._event(db,job,revision,'validation_started',{'stage':stage_id,'token':run_token})
@@ -162,8 +165,9 @@ class Workflow:
             for check, status, evidence, name, version in outputs:
                 self._record(db, job, stage_id, revision, check, status, evidence, name, version)
             # Any rerun invalidates subsequent results and previous approval.
-            db.execute('DELETE FROM results WHERE job=? AND revision=? AND stage IN '
-                       '(SELECT id FROM definitions WHERE position>?)', (job, revision, stage['position']))
+            for s in self._definitions(db):
+                if s['position']>stage['position']:
+                    db.execute('DELETE FROM results WHERE job=? AND revision=? AND stage=?',(job,revision,s['id']))
             db.execute('DELETE FROM approvals WHERE job=?', (job,))
             db.execute('DELETE FROM results WHERE job=? AND stage=? AND revision=? AND validator=?',
                        (job, stage_id, revision, 'human'))
@@ -219,6 +223,6 @@ class Workflow:
         revision = row['revision']
         return {'id': job, 'revision': revision,
                 'stages': [{'id': s['id'], 'passed': self._passed(db, job, revision, s)} for s in self._definitions(db)],
-                'results': [dict(r) for r in db.execute('SELECT * FROM results WHERE job=? AND revision=?', (job, revision))],
-                'approved': db.execute('SELECT 1 FROM approvals WHERE job=? AND revision=?', (job, revision)).fetchone() is not None,
+                'results': [dict(r) for r in db.execute('SELECT * FROM results WHERE job=? AND revision=?', (job, revision)) if any(s['id']==r['stage'] and any(c['id']==r['check_id'] for c in json.loads(s['checks'])) for s in self._definitions(db))],
+                'approved': all(self._passed(db,job,revision,s) for s in self._definitions(db)) and db.execute('SELECT 1 FROM approvals WHERE job=? AND revision=?', (job, revision)).fetchone() is not None,
                 'events': [dict(r) for r in db.execute('SELECT * FROM events WHERE job=? ORDER BY id', (job,))]}

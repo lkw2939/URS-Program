@@ -21,14 +21,16 @@ def make_app(workspace, port=8795, secure_cookie=False):
         def log_message(self, *args):
             pass
 
-        def reply(self, code, body, kind='application/json; charset=utf-8', cookie=None, attachment=None):
+        def reply(self, code, body, kind='application/json; charset=utf-8', cookie=None, attachment=None, report=False):
             data = body if isinstance(body, bytes) else json.dumps(body, ensure_ascii=False).encode()
             self.send_response(code)
             self.send_header('Content-Type', kind)
             self.send_header('Content-Length', str(len(data)))
             self.send_header('Cache-Control', 'no-store')
             self.send_header('X-Content-Type-Options', 'nosniff')
-            self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
+            self.send_header('Content-Security-Policy',
+                "sandbox; default-src 'none'; img-src data: https:; style-src 'unsafe-inline' https:; font-src data: https:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'" if report else
+                "default-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
             if cookie:
                 self.send_header('Set-Cookie', cookie)
             if attachment:
@@ -88,6 +90,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                 elif post and path == '/api/logout':
                     workspace.logout(token)
                     self.reply(200, {'ok': True}, cookie=self.cookie('', True))
+                elif path == '/api/settings/report':
+                    self.reply(200,workspace.save_report_settings(owner,body['prompt']) if post else workspace.report_settings(owner))
                 elif path == '/api/projects':
                     if post:
                         self.reply(201, {'id': workspace.create_project(owner, body['title'])})
@@ -120,33 +124,32 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             self.reply(200,payload,mime,attachment=action)
                         elif not post and action == 'detail':
                             data = {'status': workspace.status(owner, document)}
-                            for kind in ('extraction','translation','verification','analysis'):
+                            for kind in ('report-metadata','image-bindings','verification','analysis'):
                                 try:
                                     data[kind] = workspace.artifact(owner, document, kind)
                                 except Blocked:
                                     pass
                             self.reply(200, data)
-                        elif not post and action.startswith('page-'):
-                            self.reply(200, workspace.page_image(owner,document,int(action[5:])), 'image/png')
+                        elif not post and action in ('report.html','report.raw.html'):
+                            from urllib.parse import parse_qs
+                            query=parse_qs(urlparse(self.path).query)
+                            revision=int(query['revision'][0]) if 'revision' in query else None
+                            self.reply(200,workspace.report_html(owner,document,action=='report.raw.html',revision),
+                                'text/html; charset=utf-8',attachment='report.raw.html' if action=='report.raw.html' else None,report=True)
                         elif not post and (action.startswith('draft-') or action.startswith('final-')):
                             final = action.startswith('final-')
                             kind = action.split('-',1)[1]
                             payload = workspace.export(owner,document,kind,final)
                             mime = 'application/pdf' if kind.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                             self.reply(200,payload,mime,attachment=action)
-                        elif post and action == 'review-extraction':
-                            self.reply(200,workspace.review_extraction(owner,document,body['revision'],body['pages'],body['note'],body.get('corrections',{}),body.get('block_corrections',{}),body.get('blank_pages',[])))
-                        elif post and action == 'edit-translation':
-                            self.reply(200,workspace.edit_translation(owner,document,body['revision'],body['changes']))
-                        elif post and action == 'edit-analysis':
-                            self.reply(200,workspace.edit_analysis(owner,document,body['revision'],body['analysis']))
-                        elif post and action == 'chat':
-                            self.reply(200,workspace.chat(owner,document,body['revision'],body['message']))
                         elif post and action == 'approve':
                             self.reply(200,workspace.approve_document(owner,document,body['revision'],body['note'],body['reviewed_outputs']))
                         elif post and action == 'run':
                             if set(body) != {'stage'}:
                                 raise ValueError('검증 상태는 서버만 기록할 수 있습니다.')
+                            if body['stage'] not in ('source','report','verify','analyze'):
+                                self.reply(404,{'error':'존재하지 않는 단계입니다.'})
+                                return
                             self.reply(200, workspace.run(owner, document, body['stage']))
                         else:
                             self.reply(404, {'error': '존재하지 않는 기능입니다.'})

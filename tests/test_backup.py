@@ -59,25 +59,20 @@ class BackupTests(unittest.TestCase):
         self.assertFalse(output.exists())
 
     def _processed_document(self):
-        from fixtures import FixtureAI,urs_pdf
-        self.w.processing.provider=FixtureAI()
-        document=self.w.upload('operator',self.project,'processed.pdf',urs_pdf())
-        self.w.run('operator',document,'extract')
-        self.w.review_extraction('operator',document,1,[1,2],'synthetic original compared',{})
-        for stage in ('translate','verify','analyze','report'):
-            state=self.w.run('operator',document,stage)
-            self.assertTrue(next(s['passed'] for s in state['stages'] if s['id']==stage))
+        from html_fixtures import ReportAI,visual_pdf,PROMPT
+        self.w.processing.provider=ReportAI()
+        self.w.save_report_settings('operator',PROMPT)
+        document=self.w.upload('operator',self.project,'processed.pdf',visual_pdf())
+        state=self.w.run('operator',document,'report')
+        self.assertTrue(next(s['passed'] for s in state['stages'] if s['id']=='report'))
         return document
 
     def _reject_damaged_assets(self,table,delete):
         document=self._processed_document()
         with self.w.workflow.connect() as db:
-            if table=='artifacts':
-                if delete:db.execute('DELETE FROM artifacts WHERE document=? AND kind=?',(document,'translation.pdf'))
-                else:db.execute('UPDATE artifacts SET payload=? WHERE document=? AND kind=?',(b'damaged PDF',document,'translation.pdf'))
-            else:
-                if delete:db.execute('DELETE FROM page_assets WHERE document=? AND page=1',(document,))
-                else:db.execute('UPDATE page_assets SET payload=? WHERE document=? AND page=1',(b'damaged PNG',document))
+            kind='report.html' if table=='artifacts' else 'report-images'
+            if delete:db.execute('DELETE FROM artifacts WHERE document=? AND kind=?',(document,kind))
+            else:db.execute('UPDATE artifacts SET payload=? WHERE document=? AND kind=?',(b'damaged bytes',document,kind))
         before=self.path.read_bytes()
         for operation in (backup_database,restore_database):
             output=self.root/(operation.__name__+'.sqlite')
@@ -91,10 +86,10 @@ class BackupTests(unittest.TestCase):
     def test_missing_report_blocks_backup_and_restore(self):
         self._reject_damaged_assets('artifacts',True)
 
-    def test_damaged_page_image_blocks_backup_and_restore(self):
+    def test_damaged_source_crops_blocks_backup_and_restore(self):
         self._reject_damaged_assets('page_assets',False)
 
-    def test_missing_page_image_blocks_backup_and_restore(self):
+    def test_missing_source_crops_blocks_backup_and_restore(self):
         self._reject_damaged_assets('page_assets',True)
 
     def test_cli_backup_restore_and_nonzero_exit_for_overwrite(self):
@@ -145,19 +140,11 @@ class BackupTests(unittest.TestCase):
             child.terminate();child.wait(timeout=10)
             child.stdout.close();child.stderr.close()
 
-    def test_processed_documents_reports_and_page_assets_survive_restore(self):
-        from fixtures import FixtureAI,urs_pdf
-        self.w.processing.provider=FixtureAI()
-        document=self.w.upload('operator',self.project,'processed.pdf',urs_pdf())
-        self.w.run('operator',document,'extract')
-        self.w.review_extraction('operator',document,1,[1,2],'synthetic original compared',{})
-        for stage in ('translate','verify','analyze','report'):
-            state=self.w.run('operator',document,stage)
-            self.assertTrue(next(s['passed'] for s in state['stages'] if s['id']==stage))
+    def test_processed_html_and_source_crops_survive_restore(self):
+        document=self._processed_document()
         snapshot=self.root/'processed-backup.sqlite';restored=self.root/'processed-restored.sqlite'
         backup_database(self.path,snapshot);restore_database(snapshot,restored)
         recovered=Workspace(restored)
-        for kind in ('translation.pdf','translation.docx','analysis.pdf','analysis.docx'):
-            self.assertEqual(recovered.export('operator',document,kind),self.w.export('operator',document,kind))
-        self.assertEqual(recovered.processing.previews(document),self.w.processing.previews(document))
+        for kind in ('report.raw.html','report.html','report-images','image-bindings','report-metadata'):
+            self.assertEqual(recovered.artifact('operator',document,kind),self.w.artifact('operator',document,kind))
         self.assertEqual(recovered.verification_record('operator',document)['record_sha256'],self.w.verification_record('operator',document)['record_sha256'])
