@@ -1,0 +1,15 @@
+{
+  "name": "URS Program — Python 3.12",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "forwardPorts": [
+    8795
+  ],
+  "portsAttributes": {
+    "8795": {
+      "label": "URS Program",
+      "onAutoForward": "openBrowser",
+      "protocol": "http"
+    }
+  },
+  "postCreateCommand": "python -m venv .venv && .venv/bin/python -m pip install -r requirements.lock && .venv/bin/python -m pip check"
+}
