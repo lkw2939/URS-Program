@@ -17,6 +17,7 @@ class Processing:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS report_timeouts(owner TEXT,version INTEGER,seconds INTEGER,PRIMARY KEY(owner,version));
             CREATE TABLE IF NOT EXISTS report_diagnostics(call_id INTEGER PRIMARY KEY,document TEXT,payload TEXT);
+            CREATE TABLE IF NOT EXISTS review_attempts(id INTEGER PRIMARY KEY,document TEXT,revision INTEGER,stage TEXT,state TEXT,status TEXT,payload TEXT,evidence TEXT,created TEXT,digest TEXT);
             CREATE TABLE IF NOT EXISTS artifacts(document TEXT,revision INTEGER,kind TEXT,payload BLOB,PRIMARY KEY(document,revision,kind));
             CREATE TABLE IF NOT EXISTS page_assets(document TEXT,page INTEGER,payload BLOB,PRIMARY KEY(document,page));
             CREATE TABLE IF NOT EXISTS ai_usage(id INTEGER PRIMARY KEY,document TEXT,task TEXT,model TEXT,reserved REAL,state TEXT,usage TEXT);
@@ -98,7 +99,7 @@ class Processing:
             raise Blocked('HTML 원본/최종본 무결성 검사 실패')
         return final
 
-    def _review(self, content, task, kind):
+    def _review(self, content, task, kind, persist=True):
         document,revision,pdf,name=self._input(content)
         config=effective(self.workflow,document=document)
         self.checked_html(document,revision)
@@ -109,10 +110,10 @@ class Processing:
         if result['status']=='PASS' and result['issues']:raise ValueError('검토 상태와 오류 목록이 모순됩니다.')
         if kind=='analysis' and any(not isinstance(result.get(k),list) for k in ('sections','conflicts','questions')):
             raise ValueError('기술 분석 형식이 올바르지 않습니다.')
-        self.put(document,revision,kind,result)
+        if persist:self.put(document,revision,kind,result)
         bindings=self.get(document,'image-bindings',revision)
         status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(result['status'])
-        return status, {'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
+        return status, {**({'review_result':result} if not persist else {}),'input_html_sha256':hashlib.sha256(raw.encode()).hexdigest(),'input_pdf_sha256':hashlib.sha256(pdf).hexdigest(),'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
             'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),'pipeline_fingerprint':fingerprint(),
             'accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
 

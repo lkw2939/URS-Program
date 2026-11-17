@@ -24,7 +24,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
         def log_message(self, *args):
             pass
 
-        def reply(self, code, body, kind='application/json; charset=utf-8', cookie=None, attachment=None, report=False):
+        def reply(self, code, body, kind='application/json; charset=utf-8', cookie=None, attachment=None, report=False, review=False):
             data = body if isinstance(body, bytes) else json.dumps(body, ensure_ascii=False).encode()
             self.send_response(code)
             self.send_header('Content-Type', kind)
@@ -33,6 +33,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
             self.send_header('X-Content-Type-Options', 'nosniff')
             self.send_header('Content-Security-Policy',
                 "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; worker-src blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; img-src data: blob: https:; style-src 'unsafe-inline' https:; font-src data: blob: https:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'" if report else
+                "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" if review else
                 "default-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
             if cookie:
                 self.send_header('Set-Cookie', cookie)
@@ -130,13 +131,26 @@ def make_app(workspace, port=8795, secure_cookie=False):
                                 payload=json.dumps(bundle,ensure_ascii=False,indent=2).encode();mime='application/json; charset=utf-8'
                             self.reply(200,payload,mime,attachment=action)
                         elif not post and action == 'detail':
-                            data = {'report_task':tasks.status(document),'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
+                            from urs.reviews import overview
+                            data = {'reviews':overview(workspace,owner,document),'report_task':tasks.status(document),'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
                             for kind in ('report-metadata','image-bindings','verification','analysis'):
                                 try:
                                     data[kind] = workspace.artifact(owner, document, kind)
                                 except Blocked:
                                     pass
+                            for stage in ('verify','analyze'):
+                                if tasks.status(document,stage)['state']=='running':data['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다. 결과가 저장될 때까지 기다려 주세요.')
                             self.reply(200, data)
+                        elif not post and action in ('review-verification.html','review-analysis.html'):
+                            from urs.reviews import result_html
+                            from urllib.parse import parse_qs
+                            query=parse_qs(urlparse(self.path).query)
+                            attempt=int(query['attempt'][0]) if 'attempt' in query else None
+                            revision=int(query['revision'][0]) if 'revision' in query else None
+                            self.reply(200,result_html(workspace,owner,document,'verify' if action=='review-verification.html' else 'analyze',attempt,revision),'text/html; charset=utf-8',review=True)
+                        elif not post and action in ('verify-task','analyze-task'):
+                            workspace.original(owner,document)
+                            self.reply(200,tasks.status(document,'verify' if action=='verify-task' else 'analyze'))
                         elif not post and action == 'stored-review.zip':
                             from urllib.parse import parse_qs
                             query=parse_qs(urlparse(self.path).query)
@@ -160,6 +174,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             workspace.original(owner,document)
                             self.reply(200,tasks.status(document))
                         elif post and action == 'run':
+                            if set(body)=={'stage','background'} and body['background'] is True and body['stage'] in ('verify','analyze'):
+                                self.reply(202,tasks.start(owner,document,body['stage']));return
                             if body=={'stage':'report','background':True}:
                                 self.reply(202,tasks.start(owner,document));return
                             if set(body) != {'stage'}:
@@ -167,7 +183,10 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             if body['stage'] not in ('source','report','verify','analyze'):
                                 self.reply(404,{'error':'존재하지 않는 단계입니다.'})
                                 return
-                            self.reply(200, workspace.run(owner, document, body['stage']))
+                            if body['stage'] in ('verify','analyze'):
+                                from urs.reviews import run
+                                self.reply(200,run(workspace,owner,document,body['stage']))
+                            else:self.reply(200, workspace.run(owner, document, body['stage']))
                         else:
                             self.reply(404, {'error': '존재하지 않는 기능입니다.'})
                     else:

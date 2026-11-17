@@ -99,6 +99,13 @@ class Workflow:
         return db.execute('SELECT * FROM definitions ORDER BY position').fetchall()
 
     def _passed(self, db, job, revision, stage):
+        if stage['id'] in ('verify','analyze') and db.execute("SELECT 1 FROM sqlite_master WHERE name='review_attempts'").fetchone():
+            latest=db.execute('SELECT * FROM review_attempts WHERE document=? AND revision=? AND stage=? ORDER BY id DESC LIMIT 1',(job,revision,stage['id'])).fetchone()
+            if stage['id']=='analyze':
+                verify=db.execute("SELECT id FROM review_attempts WHERE document=? AND revision=? AND stage='verify' ORDER BY id DESC LIMIT 1",(job,revision)).fetchone()
+                if verify and (not latest or verify['id']>latest['id']):return False
+            if latest:
+                return latest['state']=='finished' and latest['status']=='PASS' and latest['digest']==hashlib.sha256(latest['evidence'].encode()).hexdigest()
         checks = json.loads(stage['checks'])
         results = db.execute('SELECT * FROM results WHERE job=? AND stage=? AND revision=?',
                              (job, stage['id'], revision)).fetchall()
@@ -225,8 +232,13 @@ class Workflow:
     def _snapshot(self, db, job):
         row = self._job(db, job)
         revision = row['revision']
+        review_rows=[]
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='review_attempts'").fetchone():
+            for kind in ('verify','analyze'):
+                item=db.execute('SELECT * FROM review_attempts WHERE document=? AND revision=? AND stage=? ORDER BY id DESC LIMIT 1',(job,revision,kind)).fetchone()
+                if item:review_rows.append({'job':job,'revision':revision,'stage':kind,'status':item['status'],'evidence':item['evidence'],'digest':item['digest'],'check_id':'pdf-html-v1','validator':'append-only-review','version':'1','created':item['created']})
         return {'id': job, 'revision': revision,
                 'stages': [{'id': s['id'], 'passed': self._passed(db, job, revision, s)} for s in self._definitions(db)],
-                'results': [dict(r) for r in db.execute('SELECT * FROM results WHERE job=? AND revision=?', (job, revision)) if any(s['id']==r['stage'] and any(c['id']==r['check_id'] for c in json.loads(s['checks'])) for s in self._definitions(db))],
+                'results': review_rows+[dict(r) for r in db.execute('SELECT * FROM results WHERE job=? AND revision=?', (job, revision)) if r['stage'] not in {x['stage'] for x in review_rows} and any(s['id']==r['stage'] and any(c['id']==r['check_id'] for c in json.loads(s['checks'])) for s in self._definitions(db))],
                 'approved': all(self._passed(db,job,revision,s) for s in self._definitions(db)) and db.execute('SELECT 1 FROM approvals WHERE job=? AND revision=?', (job, revision)).fetchone() is not None,
                 'events': [dict(r) for r in db.execute('SELECT * FROM events WHERE job=? ORDER BY id', (job,))]}

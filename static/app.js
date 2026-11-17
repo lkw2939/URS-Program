@@ -45,7 +45,13 @@ async function waitReport(){
  while(true){const task=await api(`/api/documents/${doc.id}/report-task`);if(task.state!=='running'){if(task.state==='failed')throw new Error(task.error);if(task.state==='none')throw new Error('서버에서 작업 상태를 확인할 수 없습니다. 기존 검증 기록을 확인하세요. 자동 재시도하지 않습니다.');break;}await new Promise(resolve=>setTimeout(resolve,1500));}
  if(activeDoc?.id===doc.id)await refreshReview();
 }
-async function openReview(doc){activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});if(detail.report_task?.state==='running')await waitReport();}
+async function waitReview(stage){
+ const doc=activeDoc;if(!doc)return;
+ for(const button of $('process-buttons').querySelectorAll('button'))button.disabled=true;
+ $('process-buttons').append(element('p',stageNames[stage]+' 실행 중입니다. 상태를 조회하고 있습니다.','muted small'));
+ while(true){const task=await api(`/api/documents/${doc.id}/${stage}-task`);if(task.state!=='running'){if(activeDoc?.id===doc.id)await refreshReview();if(task.state==='failed')throw new Error(task.error);if(task.state==='none')throw new Error('작업 상태를 확인할 수 없습니다. 저장된 결과와 실패 기록을 확인하세요. 자동 재시도하지 않습니다.');break;}await new Promise(resolve=>setTimeout(resolve,1000));}
+}
+async function openReview(doc){activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.reviews?.[stage]?.running)await waitReview(stage);}
 async function refreshReview(){if(!activeDoc)return;detail=await api(`/api/documents/${activeDoc.id}/detail`);renderReview();await documents();}
 function renderReview(){
  const state=detail.status;const base=`/api/documents/${activeDoc.id}`;
@@ -58,8 +64,9 @@ function renderReview(){
   $('checklist-steps').append(element('li',`${stageNames[stage.id]} · ${stage.id==='report'&&stage.passed&&!displayPassed(stage)?'저장됨 · 끝 확인 필요':displayPassed(stage)?'완료':'확인 전'}`));
   if(stage.id==='source'||stage.id==='approval')continue;
   const button=element('button',stage.id==='report'?(detail['report-metadata']?'새 리비전 보고서 생성':'보고서 생성'):stageNames[stage.id]+' 실행');
-  button.disabled=state.stages.slice(0,index).some(s=>!s.passed)||stage.id==='report'&&detail.report_task?.state==='running';
-  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{await api(base+'/run',{stage:stage.id});await refreshReview();}});$('process-buttons').append(button);
+  const reviewInfo=detail.reviews?.[stage.id];
+  button.disabled=reviewInfo?!reviewInfo.can_run:state.stages.slice(0,index).some(s=>!s.passed)||stage.id==='report'&&detail.report_task?.state==='running';
+  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{await api(base+'/run',{stage:stage.id,background:true});await waitReview(stage.id);}});$('process-buttons').append(button);if(reviewInfo){const note=element('p',(reviewInfo.running?'실행 중 · ':reviewInfo.blocked_reason?'실행 불가 · ':'실행 가능 · ')+(reviewInfo.blocked_reason||reviewInfo.input_note),'muted small');$('process-buttons').append(note);if(reviewInfo.failure)$('process-buttons').append(element('p','최근 실패: '+reviewInfo.failure,'result'));}
  }
  for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${stageNames[result.stage]} · ${result.stage==='report'&&result.status==='PASS'&&detail.reports?.state!=='current'?'저장 성공 · 문서 끝 확인 필요':result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
  if(state.qualification?.blocked)$('check-results').append(element('p','최종 승인 조건: '+state.qualification.blocked,'muted small'));
@@ -88,8 +95,12 @@ function renderReview(){
   $('image-summary').textContent=`${reports.state==='previous'?'이전 보고서':'현재 보고서'} · 리비전 ${saved.revision} · 생성 설정: ${meta.model||'미기록'} / ${meta.reasoning_effort||'기본 또는 미기록 effort'} / ${meta.max_output_tokens?meta.max_output_tokens+' 토큰':'출력 한도 미기록'} · ${saved.integrity==='verified'?'원본/최종본 무결성 확인':'복구 파일 · 무결성 메타데이터 미기록'}`;
   $('missing-images').replaceChildren();for(const slot of bindings?.unresolved||[])$('missing-images').append(element('li',`미연결: ${slot.uri} · HTML 위치 ${slot.offset}`));
  }
- $('analysis-panel').hidden=!detail.analysis;$('analysis-content').replaceChildren();
- if(detail.analysis)for(const key of ['sections','conflicts','questions','issues']){if(detail.analysis[key]?.length){$('analysis-content').append(element('h4',({sections:'설비·공정 분석',conflicts:'사양 충돌',questions:'고객 질의',issues:'검토 항목'})[key]));for(const item of detail.analysis[key])$('analysis-content').append(element('pre',typeof item==='string'?item:JSON.stringify(item,null,2)));}}
+ for(const [stage,buttonId,noteId,endpoint] of [['verify','view-verification','verification-result-note','review-verification.html'],['analyze','view-analysis','analysis-result-note','review-analysis.html']]){
+  const info=detail.reviews?.[stage];const button=$(buttonId);button.disabled=!info?.available;button.onclick=null;
+  $(noteId).textContent=info?.available?`${info.previous?'이전 결과 · 최신 결과가 아닙니다':info.older_attempt?'같은 리비전의 이전 실행 결과 · 최근 실행 실패/진행 중':info.superseded?'보존된 기술분석 결과 · 최신 실행 조건은 충족하지 않음':'현재 결과'} · 보고서 리비전 ${info.revision} · 새 탭에서 읽기`:'저장된 결과가 없습니다. 실행 조건과 실패 이유를 확인하세요.';
+  if(info?.available){const query=info.attempt?'attempt='+info.attempt:'revision='+info.revision;button.onclick=()=>window.open(base+'/'+endpoint+'?'+query,'_blank','noopener');}
+ }
+ $('analysis-panel').hidden=true;
  $('approve-document').disabled=state.approved||state.stages.filter(s=>s.id!=='approval').some(s=>!s.passed);
 }
 function renderAISettings(config){

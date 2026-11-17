@@ -3,6 +3,8 @@ import base64
 import json
 import math
 import os
+import time
+import socket
 import urllib.error
 import urllib.request
 
@@ -38,7 +40,7 @@ class OpenAI:
         instructions = {
             'independent_verify': 'Independently compare the original PDF with the supplied HTML. Check full technical meaning, omissions, additions, negation, conditions, obligations, quantities, units, codes and table associations. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,issues:[{page,reason}]}. Do not edit or rewrite the HTML.',
             'technical_analysis': 'Analyze equipment, processes, specification conflicts and customer questions using the original PDF and supplied report. Cite original page numbers. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,sections:[],conflicts:[],questions:[],issues:[]}. Do not edit or rewrite the HTML.'}
-        return self._pdf_request(task,pdf,filename,[{'type':'input_text','text':instructions[task]},
+        return self._pdf_request(task,pdf,filename,[{'type':'input_text','text':instructions[task]+' 설명과 판단 이유는 한국어로 먼저 작성하세요. 필요한 영어 원문 근거는 source_en에 분리하세요. issues 항목에는 page, severity(오류 또는 확인 필요), reason을, questions 항목에는 question_ko, reason_ko를 포함하세요. 기존 HTML은 수정하지 말고 before/after는 제안일 때만 표시하세요.'},
             {'type':'input_text','text':html}],True)
 
     def _pdf_request(self, task, pdf, filename, texts, json_response):
@@ -76,8 +78,11 @@ class OpenAI:
         if task=='report_html':
             from urs.report_transport import request
             return request(self,req,call_id,output_limit,report_timeout)
+        started=time.monotonic();http_status=None;result=None
         try:
-            with urllib.request.urlopen(req,timeout=90) as response:result=json.load(response)
+            with urllib.request.urlopen(req,timeout=90) as response:
+                value=getattr(response,'status',None);http_status=value if type(value) is int else None
+                result=json.load(response)
             if result.get('status')!='completed':
                 if (result.get('incomplete_details') or {}).get('reason')=='max_output_tokens':
                     raise AIError(f'출력 토큰 한도({output_limit:,})에 도달했습니다. 웹의 AI 호출 설정에서 출력 한도를 조정한 뒤 다시 실행하세요.')
@@ -87,12 +92,19 @@ class OpenAI:
             if json_response and not isinstance(value,dict):raise ValueError('JSON object required')
             if not json_response and (not raw or not any(t in raw.lower() for t in ('<html','<!doctype','<body'))):
                 raise ValueError('Expected HTML; response is never unwrapped or rewritten')
-        except AIError:
+        except AIError as exc:
+            exc.diagnostics={'max_output_tokens':output_limit,'timeout_seconds':90,'elapsed_seconds':round(time.monotonic()-started,3),'http_status':http_status,'response_status':result.get('status') if isinstance(result,dict) else None,'incomplete_reason':(result.get('incomplete_details') or {}).get('reason') if isinstance(result,dict) else None}
             with self.workflow.connect() as db:db.execute('UPDATE ai_usage SET state=?,usage=? WHERE id=?',('failed',json.dumps(result.get('usage',{})),call_id))
             raise
-        except Exception:
+        except Exception as exc:
             with self.workflow.connect() as db:db.execute('UPDATE ai_usage SET state=? WHERE id=?',('failed',call_id))
-            raise AIError('OpenAI 호출 실패: 네트워크·모델 접근·응답 형식을 확인해 주세요.') from None
+            timed=isinstance(exc,(TimeoutError,socket.timeout)) or isinstance(exc,urllib.error.URLError) and isinstance(exc.reason,(TimeoutError,socket.timeout))
+            if isinstance(exc,urllib.error.HTTPError):reason=f'OpenAI HTTP 오류 ({exc.code}). API 권한·사용 한도를 확인하세요.';http_status=exc.code
+            elif timed:reason='OpenAI 검토 응답 대기시간(90초) 초과. 자동 재시도하지 않습니다.'
+            elif http_status is not None:reason='OpenAI 응답 후 검토 JSON 해석 실패. 결과 형식을 확인하세요.'
+            else:reason='OpenAI 연결/검토 응답 처리 실패. HTTP 응답 상태는 미확인입니다.'
+            error=AIError(reason);error.diagnostics={'max_output_tokens':output_limit,'timeout_seconds':90,'elapsed_seconds':round(time.monotonic()-started,3),'http_status':http_status,'response_status':result.get('status') if isinstance(result,dict) else None,'error_type':type(exc).__name__}
+            raise error from None
         with self.workflow.connect() as db:
             db.execute('UPDATE ai_usage SET state=?,usage=? WHERE id=?',('completed',json.dumps(result.get('usage',{})),call_id))
         return value

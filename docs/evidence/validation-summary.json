@@ -20,7 +20,7 @@
           "exit_code": 0,
           "tests": 7,
           "log": "foundation-1.txt",
-          "duration_seconds": 0.055
+          "duration_seconds": 0.065
         },
         {
           "command": [
@@ -37,7 +37,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "foundation-2.txt",
-          "duration_seconds": 0.833
+          "duration_seconds": 0.783
         },
         {
           "command": [
@@ -54,7 +54,7 @@
           "exit_code": 0,
           "tests": 1,
           "log": "foundation-3.txt",
-          "duration_seconds": 0.061
+          "duration_seconds": 0.058
         },
         {
           "command": [
@@ -71,7 +71,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "foundation-4.txt",
-          "duration_seconds": 0.138
+          "duration_seconds": 0.119
         }
       ]
     },
@@ -95,7 +95,7 @@
           "exit_code": 0,
           "tests": 16,
           "log": "employee-original-1.txt",
-          "duration_seconds": 3.694
+          "duration_seconds": 3.458
         },
         {
           "command": [
@@ -112,7 +112,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-2.txt",
-          "duration_seconds": 2.331
+          "duration_seconds": 2.475
         },
         {
           "command": [
@@ -129,7 +129,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-3.txt",
-          "duration_seconds": 28.29
+          "duration_seconds": 28.547
         }
       ]
     },
@@ -153,7 +153,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-1.txt",
-          "duration_seconds": 0.209
+          "duration_seconds": 0.231
         },
         {
           "command": [
@@ -170,7 +170,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-2.txt",
-          "duration_seconds": 0.22
+          "duration_seconds": 0.27
         }
       ]
     },
@@ -194,7 +194,7 @@
           "exit_code": 0,
           "tests": 11,
           "log": "technical-meaning-guards-1.txt",
-          "duration_seconds": 0.057
+          "duration_seconds": 0.059
         },
         {
           "command": [
@@ -211,7 +211,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "technical-meaning-guards-2.txt",
-          "duration_seconds": 0.209
+          "duration_seconds": 0.224
         },
         {
           "command": [
@@ -228,7 +228,7 @@
           "exit_code": 0,
           "tests": 8,
           "log": "technical-meaning-guards-3.txt",
-          "duration_seconds": 0.556
+          "duration_seconds": 0.698
         },
         {
           "command": [
@@ -245,7 +245,7 @@
           "exit_code": 0,
           "tests": 10,
           "log": "technical-meaning-guards-4.txt",
-          "duration_seconds": 1.445
+          "duration_seconds": 1.97
         },
         {
           "command": [
@@ -262,14 +262,14 @@
           "exit_code": 0,
           "tests": 9,
           "log": "technical-meaning-guards-5.txt",
-          "duration_seconds": 1.981
+          "duration_seconds": 2.085
         }
       ]
     },
     {
       "id": "document-pipeline",
       "status": "PASS",
-      "tests": 39,
+      "tests": 48,
       "commands": [
         {
           "command": [
@@ -286,7 +286,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "document-pipeline-1.txt",
-          "duration_seconds": 2.377
+          "duration_seconds": 2.598
         },
         {
           "command": [
@@ -303,7 +303,7 @@
           "exit_code": 0,
           "tests": 14,
           "log": "document-pipeline-2.txt",
-          "duration_seconds": 2.074
+          "duration_seconds": 2.546
         },
         {
           "command": [
@@ -320,7 +320,24 @@
           "exit_code": 0,
           "tests": 13,
           "log": "document-pipeline-3.txt",
-          "duration_seconds": 2.106
+          "duration_seconds": 2.371
+        },
+        {
+          "command": [
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_reviews.py",
+            "-v"
+          ],
+          "exit_code": 0,
+          "tests": 9,
+          "log": "document-pipeline-4.txt",
+          "duration_seconds": 1.773
         }
       ]
     }
@@ -334,9 +351,9 @@
         "scripts/validate_unit_stages.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 46.679,
+      "duration_seconds": 50.358,
       "log": "final-tests.txt",
-      "tests": 148
+      "tests": 157
     },
     {
       "name": "chromium",
@@ -345,8 +362,18 @@
         "tests/browser_pipeline.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 7.03,
+      "duration_seconds": 7.543,
       "log": "final-browser.txt"
+    },
+    {
+      "name": "review-browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "tests/browser_reviews.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 11.484,
+      "log": "final-review-browser.txt"
     },
     {
       "name": "report-timeout-browser",
@@ -355,7 +382,7 @@
         "tests/browser_report_timeout.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 4.901,
+      "duration_seconds": 4.976,
       "log": "final-report-timeout-browser.txt"
     },
     {
@@ -365,7 +392,7 @@
         "tests/browser_saved_reports.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 6.856,
+      "duration_seconds": 6.968,
       "log": "final-saved-html-browser.txt"
     },
     {
@@ -375,7 +402,7 @@
         "tests/html_smoke.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.371,
+      "duration_seconds": 0.366,
       "log": "final-html.txt"
     }
   ],
@@ -385,15 +412,16 @@
     "requirements.lock": "87c88485a1e6c33cf0bc24dedeab3aa0434c0c9653e413f53b6100d8384b6bd3",
     "scripts/check_api_report.py": "ac598dd77db1867adb7fb83f0440e29dba4d011d3bc4dbf0eaebe960aa8220ad",
     "scripts/inspect_saved_html.py": "4c1f506969398b07592d9114cb70ac411afcc9e2ee836038bd09321fbb7898f0",
-    "scripts/validate.py": "2c4ef367dfacd6dcc8a825ff2260d19a69427996cc94d5e956afbfd38b1b9b4e",
-    "scripts/validate_unit_stages.py": "e345bd7d28970c0ec8d04c0e53046ec430fc307496db298c71e325e82fa36903",
+    "scripts/validate.py": "afabd6671cdd225153760b8ba068c41de3f0e9d7a23487f6697679189ef82f0f",
+    "scripts/validate_unit_stages.py": "c8c048b3832ff009761073e93f3683cdcca50ccb4afc5fc8c442c55f5061bb49",
     "service.py": "999c7281c9a355bad753fd8017ce6fe435e496e24cfa358fa439b1ba32c23dd6",
     "start.py": "4ffaf2d3f973e5adbd24c61207d5693a095a189f2209fb4098b3818f593b9d99",
     "static/app.css": "41e20252a35c8a7a8fb5f97a81f00868450031cf9d1e7f16e9c127575fa22b1e",
-    "static/app.js": "74168237740c77710ca0ab80a45803f6e851f661ad0baa76f22c6cbf710dcd89",
-    "static/index.html": "275cae5a89c0dfb55a798087eb6c67ad77e7b3bfbba118e72ae85970832c8ecd",
+    "static/app.js": "c18f8a32284155eb15a95f15e5f42ab02c01dcd8cedd3090fff316b3a4ea019c",
+    "static/index.html": "edc30f001442a99bcc252093cf3808dc0abda3c57bc648c2687c10d616fd84c4",
     "tests/browser_pipeline.py": "9762e849c0a10dbbd8feb54d7bc9ad9b0eb02419246ba1ef88fa8abcf4d1f40d",
     "tests/browser_report_timeout.py": "16da1e5a439836e5e8072e4e8238f7792f771ffae768e4b26d38665b76ff323d",
+    "tests/browser_reviews.py": "b0dcac6a5d5de86966c59eb3971ce7bd54869985ee655fc63077dba8d4bba00b",
     "tests/browser_saved_reports.py": "697eba7dbc1f846b2fd489165b5581e560594a1ca52d1e02c21b755a69385ff5",
     "tests/fixtures.py": "821bc8a1d2b3c98ab1b7baf69d10691ce815dfce0d302699a7e4749240f2425f",
     "tests/html_fixtures.py": "b1477088ba2dd4e291de6c668cf77ff54aa43c9dc6ed323b3c756e02ed54bd66",
@@ -409,6 +437,7 @@
     "tests/test_quantity_units.py": "df076edbf15b7980b7bb465baf44db9f2800634afb38c25340d5cad575e2e085",
     "tests/test_report_transport.py": "d279d5cb6dfb890796f6a4c1424bd34a06703b102b276b609581a7b1639879e6",
     "tests/test_requirements.py": "8e4a59d6109cad406c8280adccfb7a709ea1d3a6fc06e754d1f068ccc9880219",
+    "tests/test_reviews.py": "e57ad40864cb36fe02574a1b772393f3a1db3e4caa6abf14134fa501be4895fa",
     "tests/test_saved_reports.py": "ad8e8fa70eb5545e2da779554b9cbfca9d17f6f17e81fc5dad0292c43e228903",
     "tests/test_service.py": "23c260d387119f1aa5931daae390706b8aa9012a2f8e642a049ae1ca8aa83e39",
     "tests/test_terminology.py": "21ae719e1e6e3653e069c89258813e9bcea8dc535c822d6bc76d0c9b2a37a241",
@@ -420,7 +449,7 @@
     "tests/vendor/pdfjs/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
     "urs/__init__.py": "7bb470b921aaedbe3f3a0532b94a66b6977ad147af205097b58f796dfe3c5224",
     "urs/__main__.py": "944c7b6e1a1db3ac08edd7ef98af52aae7c3e47c15114637f299820943073067",
-    "urs/ai.py": "10b07bdbbae19c12139fbd3e61e7517e29e18e3d880bef8080b2578b973bae1a",
+    "urs/ai.py": "70a02f7a1e556f3b0d2b21ede87a9d8e04dcce1c13050ce50f03f8ae651d6f62",
     "urs/ai_settings.py": "1362cf47586309973ba9d1a31dff037edf38e654605fc03bba000ee60a6be80c",
     "urs/audit.py": "0312bfe9e814de47bfabafa8361df600686f571abfb060708ebb84ba222a005e",
     "urs/backup.py": "d19ca817eea6969c23330900184c9d80124caa42ef89c571a7457d22ed8d382e",
@@ -428,38 +457,43 @@
     "urs/gates.py": "fc505e2d65122067b516af04a971307bbc2e8f6bbdf900886a0140863029f04a",
     "urs/images.py": "726338b4a3ae505662cec66e611f9c36b657b830fcb199e99ad97867cbe0827b",
     "urs/launcher.py": "923f92717cbfb44f2281b547f69c26353614d318f8141fa26a66fc9b05a019e3",
-    "urs/processing.py": "589b49bb0e23fa7a576592c7c8fac011767edc65b8614173d7689ad9c39f5b1a",
+    "urs/processing.py": "0444f8aec348693681146a3e5ebe3b09f73fb0432d921b8cd5437dccd527356b",
     "urs/quality.py": "14b108d963179efc85cb06903213e39d4d734955c106eb2fe756e975aa9140a5",
-    "urs/report_tasks.py": "5213b269bc4a55e7e58d5875cffcd9d76877b688aad95897c84ab78d6c479289",
+    "urs/report_tasks.py": "1cd1a79006ebddb8aa8627c5907c40cddbc84bf917f319ed3433b905455dfe4d",
     "urs/report_transport.py": "23b1afe5b2c91e030c7c3a1c1cfc6bffc1016510d4a9936bb43352263a6aba42",
+    "urs/reviews.py": "6c9a6e434b91878fafdd301e6ea0f3a85e1d3d75ce61b88b478eeb636ae58fef",
     "urs/saved_reports.py": "9622dd7ef468eeda97757a528b0adb77e1c6927b1373be819994483337c63b4a",
     "urs/server.py": "bf3c4b21705bfcd876b48631add6cabcaf51cd130b341d7268c668ef951e7e42",
     "urs/terminology.py": "8f7385954224b6ca004621d1b32ce5deec26653c282b963fc554fad910f011f7",
     "urs/verification.py": "efa63924d6e96b44655017ac104d4827c9b4a0b9d204b13a9169e62f60d78f2c",
-    "urs/web.py": "fb3ae31d5cc0efe07e04ffce481de3e95fde293e5387f7f17ba9ffc5bb51f24c",
-    "urs/workflow.py": "2383f56ca92ac46d1f5f11b7fa9cc759adae003f5efb90ca0406386faa3124a9",
-    "urs/workspace.py": "a4f00409069a2056c8b41b0ed2d17446a14cdd95ce8b7f57c6dab901499f527d"
+    "urs/web.py": "ae09bf8c750e48a58b1b8f9dc866466daf03d5b64c90f4274a528624be34059b",
+    "urs/workflow.py": "15ef7c9c446800fc7e223efe556b122316f645a1f5c2bc97c968fbce9fa68c44",
+    "urs/workspace.py": "7121c060d7e171a6cc4857ab0196488f531e30292e665f8e0839487a5b12db0a"
   },
   "evidence_sha256": {
-    "html-request-contract.json": "925464f566f33f85af21b2eee4bb06ed380d45d260f0fa40856be07cbcd6ee19",
+    "html-request-contract.json": "31c66726a7b448b70f1df4a3c33221f03b1272e87ac3c28b2196bb8542d76837",
     "report-timeout-settings.png": "02cc3171b35d5d76bb9fb6a709476ad0b684c8f020f887ea94c8244ae010fcb5",
+    "final-review-browser.txt": "f327ee8e9d33855b666b14a0eb3d8a4430b3337b1933d21182d7a4ffa12a6a2b",
     "ai-settings-desktop.png": "e7c66c86e12d28f481059b57fab2ce655edcb6c09dbe866dbed05327fecd4055",
     "ai-settings-mobile.png": "3d148539176ba13a6a9f31cc31595676c9abc9edafeb4d6d5c5337b6aba7d7f2",
     "final-report-timeout-browser.txt": "6b186198962234ea6b020fa5e5ff996a79c490f298f04379a417659abfd8d6ad",
-    "saved-html-previous.png": "1b19026d3710f2bed3a2df72d559916dd0ea5d1f40f369d49768c93853eef142",
+    "saved-html-previous.png": "0cb45bb43915347934638cced451e30865589192460973d3af8a34d77768f73f",
     "synthetic-model-final.html": "a7c95f1f6e1e49261ee251139c759cadfe7719986224f2693a665a5787cd911d",
-    "saved-html-none.png": "0a870bc45c07d884974b2b6b9f0d9dc4a16c4f36ae1a5488913f5e51c3bb38d0",
-    "saved-html-end-check.png": "64164703cc026d0f2b37eaeac016022fa7a1cba2cc8b635d1d2c700e93cd5193",
+    "saved-html-none.png": "ef31e57f435d2195221903567e6760f1e235954108f5ba873494ecc481c1f15d",
+    "saved-html-end-check.png": "5f1cd22a2417d143849dabe93d451215bb77aa63d116f609c82d4435cd0e61b4",
     "final-office.txt": "c0972375ff23124232bb122e0743bdd7ee309b516ef164e00bbab805a423ffcb",
+    "review-result-buttons.png": "47bc54ac1565047332b4231736ae291ad1a90b88c6d06477fc4820d25dd4f5a5",
     "html-comparison.json": "e49cff4855a02103c518bccc12bf02b2e6922f103b80f8a4705a68cd43dd73c6",
+    "review-verification.png": "6277badffa01c43780f3afff12252d0ca19f795cb019b97055f1dd29a5099084",
     "final-html.txt": "1c86b501cc057163a3f0fc1b63e90eb1d236b52029b273d6a8a6e8f30740aab9",
-    "html-report-mobile.png": "1b497be19780b10ab87d1b675560df7057a349f13ea11305c41b60bebadeaab3",
+    "html-report-mobile.png": "63418ac1c33b7b29253fa908bfc0287c0bd42451d6cc81949180a3e74a88f20c",
     "synthetic-model-original.html": "b52fa003521c9934af94095e72014bcbc443ed6291ab40a4f7b1dc04564c6e9f",
-    "final-tests.txt": "59ca516f0a1835365943a0efcdfa292e84e401dd62b108f70379e5077892dd34",
-    "html-report-desktop.png": "587ddb42d87a82164032012b91e843fbabe5683f63f6c54d43062729be474396",
+    "final-tests.txt": "23245cb942f2f105f469e3547f71a35aa4195d274f4f76ea64062aaddf3edfb9",
+    "html-report-desktop.png": "ca33e90e51bd7289eeaf663d42250120ea10b2219a056c082c1e92d27dc1ee97",
     "final-saved-html-browser.txt": "7025b41ed981bbc1b74ace2ffa0bb633e1b5a47df68df1570162ca93be2648b9",
+    "review-analysis.png": "8b6ee1a002d75152e5b9189fd3cbb8a56bee7b8c73661365f17070df47643a71",
     "final-browser.txt": "f3ae5c6b463bfa2940028d4621ae8057da5645316d96ed65efa26eeb89cc93ee",
-    "saved-html-current.png": "e3dffe750af5d1adf5d0484f6f658c870ee5ab372ef1c1a4f66342b7fa555efc"
+    "saved-html-current.png": "0e96b697b306918a7d0fcbea23a3212fad28845e6784728cb63d0b95ba7c5b84"
   },
   "real_openai_verified": false,
   "real_customer_urs_verified": false,

@@ -1,0 +1,14 @@
+test_fenced_stored_html_is_valid_review_input_without_a4_replacement (test_reviews.ReviewTests.test_fenced_stored_html_is_valid_review_input_without_a4_replacement) ... ok
+test_missing_preconditions_explained_and_no_provider_call (test_reviews.ReviewTests.test_missing_preconditions_explained_and_no_provider_call) ... ok
+test_needs_review_is_viewable_and_blocks_analysis_with_reason (test_reviews.ReviewTests.test_needs_review_is_viewable_and_blocks_analysis_with_reason) ... ok
+test_owner_isolation_and_xss_escaping (test_reviews.ReviewTests.test_owner_isolation_and_xss_escaping) ... ok
+test_previous_server_pending_attempt_does_not_leave_button_permanently_disabled (test_reviews.ReviewTests.test_previous_server_pending_attempt_does_not_leave_button_permanently_disabled) ... ok
+test_prior_revision_result_never_labeled_current (test_reviews.ReviewTests.test_prior_revision_result_never_labeled_current) ... ok
+test_retry_appends_and_does_not_overwrite_old_attempt_or_other_results (test_reviews.ReviewTests.test_retry_appends_and_does_not_overwrite_old_attempt_or_other_results) ... ok
+test_run_both_preserves_legacy_rows_and_uses_exact_current_raw_pdf (test_reviews.ReviewTests.test_run_both_preserves_legacy_rows_and_uses_exact_current_raw_pdf) ... ok
+test_runtime_failure_has_saved_reason_and_previous_result_is_labeled (test_reviews.ReviewTests.test_runtime_failure_has_saved_reason_and_previous_result_is_labeled) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.563s
+
+OK
