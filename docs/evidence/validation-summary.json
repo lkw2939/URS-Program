@@ -20,7 +20,7 @@
           "exit_code": 0,
           "tests": 7,
           "log": "foundation-1.txt",
-          "duration_seconds": 0.056
+          "duration_seconds": 0.054
         },
         {
           "command": [
@@ -37,7 +37,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "foundation-2.txt",
-          "duration_seconds": 0.809
+          "duration_seconds": 0.777
         },
         {
           "command": [
@@ -54,7 +54,7 @@
           "exit_code": 0,
           "tests": 1,
           "log": "foundation-3.txt",
-          "duration_seconds": 0.058
+          "duration_seconds": 0.057
         },
         {
           "command": [
@@ -71,7 +71,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "foundation-4.txt",
-          "duration_seconds": 0.127
+          "duration_seconds": 0.123
         }
       ]
     },
@@ -95,7 +95,7 @@
           "exit_code": 0,
           "tests": 16,
           "log": "employee-original-1.txt",
-          "duration_seconds": 3.369
+          "duration_seconds": 3.43
         },
         {
           "command": [
@@ -112,7 +112,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-2.txt",
-          "duration_seconds": 2.489
+          "duration_seconds": 2.471
         },
         {
           "command": [
@@ -129,7 +129,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-3.txt",
-          "duration_seconds": 28.796
+          "duration_seconds": 28.411
         }
       ]
     },
@@ -153,7 +153,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-1.txt",
-          "duration_seconds": 0.246
+          "duration_seconds": 0.262
         },
         {
           "command": [
@@ -170,7 +170,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-2.txt",
-          "duration_seconds": 0.228
+          "duration_seconds": 0.221
         }
       ]
     },
@@ -194,7 +194,7 @@
           "exit_code": 0,
           "tests": 11,
           "log": "technical-meaning-guards-1.txt",
-          "duration_seconds": 0.073
+          "duration_seconds": 0.058
         },
         {
           "command": [
@@ -211,7 +211,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "technical-meaning-guards-2.txt",
-          "duration_seconds": 0.225
+          "duration_seconds": 0.192
         },
         {
           "command": [
@@ -228,7 +228,7 @@
           "exit_code": 0,
           "tests": 8,
           "log": "technical-meaning-guards-3.txt",
-          "duration_seconds": 0.616
+          "duration_seconds": 0.522
         },
         {
           "command": [
@@ -245,7 +245,7 @@
           "exit_code": 0,
           "tests": 10,
           "log": "technical-meaning-guards-4.txt",
-          "duration_seconds": 1.614
+          "duration_seconds": 1.386
         },
         {
           "command": [
@@ -262,14 +262,14 @@
           "exit_code": 0,
           "tests": 9,
           "log": "technical-meaning-guards-5.txt",
-          "duration_seconds": 2.155
+          "duration_seconds": 1.899
         }
       ]
     },
     {
       "id": "document-pipeline",
       "status": "PASS",
-      "tests": 12,
+      "tests": 23,
       "commands": [
         {
           "command": [
@@ -286,7 +286,24 @@
           "exit_code": 0,
           "tests": 12,
           "log": "document-pipeline-1.txt",
-          "duration_seconds": 2.557
+          "duration_seconds": 2.279
+        },
+        {
+          "command": [
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_saved_reports.py",
+            "-v"
+          ],
+          "exit_code": 0,
+          "tests": 11,
+          "log": "document-pipeline-2.txt",
+          "duration_seconds": 1.713
         }
       ]
     }
@@ -300,9 +317,9 @@
         "scripts/validate_unit_stages.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 43.445,
+      "duration_seconds": 43.885,
       "log": "final-tests.txt",
-      "tests": 121
+      "tests": 132
     },
     {
       "name": "chromium",
@@ -311,8 +328,18 @@
         "tests/browser_pipeline.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 5.633,
+      "duration_seconds": 5.341,
       "log": "final-browser.txt"
+    },
+    {
+      "name": "saved-html-browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "tests/browser_saved_reports.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 5.316,
+      "log": "final-saved-html-browser.txt"
     },
     {
       "name": "html-artifacts",
@@ -321,7 +348,7 @@
         "tests/html_smoke.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 0.395,
+      "duration_seconds": 0.371,
       "log": "final-html.txt"
     }
   ],
@@ -330,14 +357,16 @@
     "prompts/user-report-ko-html.txt": "0dc8ca08ab3d927be4729e1fdf0a91a61ae69d2bd9c273ad4d71bc93bcc7f60a",
     "requirements.lock": "87c88485a1e6c33cf0bc24dedeab3aa0434c0c9653e413f53b6100d8384b6bd3",
     "scripts/check_api_report.py": "ac598dd77db1867adb7fb83f0440e29dba4d011d3bc4dbf0eaebe960aa8220ad",
-    "scripts/validate.py": "8dc0b799c000453148f19d9a889a46173962469df5d438711075022fbaff0532",
-    "scripts/validate_unit_stages.py": "760f9d9e12270a9ce83f2e8deb7d263e8c27a88b106d6969d7bb3189c7de12c8",
+    "scripts/inspect_saved_html.py": "4c1f506969398b07592d9114cb70ac411afcc9e2ee836038bd09321fbb7898f0",
+    "scripts/validate.py": "d5e70d3def15b95a686462aa5ddd8c4aca8239a3db75cae40a643378a94955e6",
+    "scripts/validate_unit_stages.py": "122b5df0b19bc46a618b4efa69d93e0634065b70f307b4167e1c7f7c5153710b",
     "service.py": "999c7281c9a355bad753fd8017ce6fe435e496e24cfa358fa439b1ba32c23dd6",
     "start.py": "4ffaf2d3f973e5adbd24c61207d5693a095a189f2209fb4098b3818f593b9d99",
     "static/app.css": "41e20252a35c8a7a8fb5f97a81f00868450031cf9d1e7f16e9c127575fa22b1e",
-    "static/app.js": "5d7f007f828caf58a5989a56d16382dae16e50389f7ab0fdbea3fb3199b97754",
-    "static/index.html": "b8179f3d8a29dfaff9a71b2d7779b0202f2a04e41f024167829b591bf0c9fe50",
+    "static/app.js": "27414fd09ce640100b79263db213a4e0bfe7300d47bb2ec1c2095d345c8bb6be",
+    "static/index.html": "962ba240cb2680068111d4947659494a5ef6df185c8a68c771655f72fdd41dd4",
     "tests/browser_pipeline.py": "9762e849c0a10dbbd8feb54d7bc9ad9b0eb02419246ba1ef88fa8abcf4d1f40d",
+    "tests/browser_saved_reports.py": "9efb5535e415ebb6b1c522296ef337035f4e2d4081eead0e2e60bc7f92b543b9",
     "tests/fixtures.py": "821bc8a1d2b3c98ab1b7baf69d10691ce815dfce0d302699a7e4749240f2425f",
     "tests/html_fixtures.py": "b1477088ba2dd4e291de6c668cf77ff54aa43c9dc6ed323b3c756e02ed54bd66",
     "tests/html_smoke.py": "c9268c4ed7228c765a9c9224c45b31222d2a3d8d47385cb65af1b3300496497c",
@@ -351,6 +380,7 @@
     "tests/test_processing.py": "f7fea67ece87db5f9a69e8b36c54d3e26a6c794379bb1f2640cb6668756b2438",
     "tests/test_quantity_units.py": "df076edbf15b7980b7bb465baf44db9f2800634afb38c25340d5cad575e2e085",
     "tests/test_requirements.py": "8e4a59d6109cad406c8280adccfb7a709ea1d3a6fc06e754d1f068ccc9880219",
+    "tests/test_saved_reports.py": "8ce7e96b4f47b865766505f26c3d0c23998cc47b2121aaaa0205d56d1f834115",
     "tests/test_service.py": "23c260d387119f1aa5931daae390706b8aa9012a2f8e642a049ae1ca8aa83e39",
     "tests/test_terminology.py": "21ae719e1e6e3653e069c89258813e9bcea8dc535c822d6bc76d0c9b2a37a241",
     "tests/test_verification.py": "54ca21aa792f6e80954492d41c5d9437345868a4633944ed6ead4a766ad587f1",
@@ -371,26 +401,31 @@
     "urs/launcher.py": "923f92717cbfb44f2281b547f69c26353614d318f8141fa26a66fc9b05a019e3",
     "urs/processing.py": "ca738620a4d0c545fca1aebc11eac672be2e3c691439d0f80471e7db4a0ae557",
     "urs/quality.py": "14b108d963179efc85cb06903213e39d4d734955c106eb2fe756e975aa9140a5",
+    "urs/saved_reports.py": "bf5120abfc308032b6117cc0e802ca5650773705b5db06065f7f513697d78da2",
     "urs/server.py": "bf3c4b21705bfcd876b48631add6cabcaf51cd130b341d7268c668ef951e7e42",
     "urs/terminology.py": "8f7385954224b6ca004621d1b32ce5deec26653c282b963fc554fad910f011f7",
     "urs/verification.py": "efa63924d6e96b44655017ac104d4827c9b4a0b9d204b13a9169e62f60d78f2c",
-    "urs/web.py": "868f9c2c6205c9009e8f1e66488c1209a2b27c88338be290941566d0b42b22ac",
+    "urs/web.py": "bb86a482546677e16a7bc25d8fa6f62ce26c68d2834edddea6f66561a2f4d4fd",
     "urs/workflow.py": "984a4a1bcb55ec8554e1e6ca3fbe823c3c3ba6335087c8bd3b179cfb4b8fc87f",
-    "urs/workspace.py": "d63456bbf1121afec85c7a28d86679b948d82d965f293841494eb638b74d131f"
+    "urs/workspace.py": "26daed4af74ac4cae20290c3ce5852deb47f56cb14746e9a006f60ff9269af98"
   },
   "evidence_sha256": {
-    "html-request-contract.json": "b33acb2e241abc4a76bc06e75959dea85a407c29220c6bed5edd5bd56658b04b",
+    "html-request-contract.json": "1a4fe97d77f7e2e536a573a6094b6f54c1e520cd9321de8eaa0409cbe1da4b38",
     "ai-settings-desktop.png": "2a77bcc4d5e48c45992431c97d612ffcb1e10127cadf31207135521d46621e57",
     "ai-settings-mobile.png": "3d148539176ba13a6a9f31cc31595676c9abc9edafeb4d6d5c5337b6aba7d7f2",
+    "saved-html-previous.png": "c8893b04845597ae21a146c1aab247a9a7c9eab28a7262b780b1bcb639456e74",
     "synthetic-model-final.html": "a7c95f1f6e1e49261ee251139c759cadfe7719986224f2693a665a5787cd911d",
+    "saved-html-none.png": "e23e84d9f7d17ae72238030b57c6387e40d24ec210e70fbf18e9200e4b6dcc25",
     "final-office.txt": "c0972375ff23124232bb122e0743bdd7ee309b516ef164e00bbab805a423ffcb",
     "html-comparison.json": "e49cff4855a02103c518bccc12bf02b2e6922f103b80f8a4705a68cd43dd73c6",
     "final-html.txt": "1c86b501cc057163a3f0fc1b63e90eb1d236b52029b273d6a8a6e8f30740aab9",
-    "html-report-mobile.png": "23be0524304175debf59f6af4c08600fab9683421f9ce1e8717615a00660c23b",
+    "html-report-mobile.png": "990476f74f854a6c692d50f2365e53dd2ad0e9de30b194b738fdf90a264b0a50",
     "synthetic-model-original.html": "b52fa003521c9934af94095e72014bcbc443ed6291ab40a4f7b1dc04564c6e9f",
-    "final-tests.txt": "3ee320fcf8ea7a3eb7da542aa28117148949f23e8a538956e8b12d4301e50a64",
-    "html-report-desktop.png": "9e7341a9dac47e06ed9be271b9294827d96c1ad448883bedb8af4ad2dec1dd63",
-    "final-browser.txt": "f3ae5c6b463bfa2940028d4621ae8057da5645316d96ed65efa26eeb89cc93ee"
+    "final-tests.txt": "63cbc4a0aea42df0b890cb87658863049e4e39637e2db1cc35ea29570d9f0801",
+    "html-report-desktop.png": "216eb30acd07659f8a3fc5cff67d0ec1862d1401d98626d9024cd5e278233304",
+    "final-saved-html-browser.txt": "7025b41ed981bbc1b74ace2ffa0bb633e1b5a47df68df1570162ca93be2648b9",
+    "final-browser.txt": "f3ae5c6b463bfa2940028d4621ae8057da5645316d96ed65efa26eeb89cc93ee",
+    "saved-html-current.png": "fc891a0763a8454c9491db0478625e501d3162a90386d0db7a0bf2bcc5868842"
   },
   "real_openai_verified": false,
   "real_customer_urs_verified": false,

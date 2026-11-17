@@ -1,0 +1,1 @@
+PASS: no-result message; current HTML opens before verification/approval; failed regeneration shows failure and explicitly previous revision; previous final/raw downloads match saved bytes; no auto generation or paid calls.

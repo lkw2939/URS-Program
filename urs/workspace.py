@@ -270,11 +270,22 @@ class Workspace:
             db.execute('INSERT INTO report_settings VALUES(?,?,?)',(owner,version,prompt))
         return {'version':version,'prompt':prompt}
 
+    def report_availability(self, owner, document):
+        self.original(owner,document)
+        from urs.saved_reports import inspect_document
+        with self.workflow.connect() as db:
+            current=self.workflow._job(db,document)['revision']
+            return inspect_document(db,document,current)
+
     def report_html(self, owner, document, raw=False, revision=None):
         self.original(owner,document)
         if revision is not None and (type(revision) is not int or revision<1):raise ValueError('리비전 오류')
         if raw:return self.processing.get(document,'report.raw.html',revision)
-        return self.processing.checked_html(document,revision)
+        from urs.saved_reports import read_final
+        with self.workflow.connect() as db:
+            current=self.workflow._job(db,document)['revision']
+            if revision is not None and revision>current:raise Blocked('존재하지 않는 리비전입니다.')
+            return read_final(db,document,revision or current)[0]
 
     def approve_document(self, owner, document, revision, note, reviewed_outputs):
         self.original(owner,document)

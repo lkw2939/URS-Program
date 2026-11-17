@@ -57,15 +57,29 @@ function renderReview(){
  }
  for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${stageNames[result.stage]} · ${result.status} · ${evidence.reason||''}`,'result');for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
  if(state.qualification?.blocked)$('check-results').append(element('p','최종 승인 조건: '+state.qualification.blocked,'muted small'));
- const ready=!!detail['report-metadata'];$('html-result').hidden=!ready;$('approval-panel').hidden=!ready;
+ const reports=detail.reports;const saved=reports?.selected;const ready=!!saved;
+ $('html-result').hidden=true;$('approval-panel').hidden=reports?.state!=='current';
  $('reviewed-html').checked=false;$('approval-note').value='';
+ $('view-html').disabled=!ready;
+ $('view-html').textContent=reports?.state==='previous'?'이전 보고서 보기':'HTML 확인';
+ $('html-availability').textContent=!ready?'아직 열 수 있는 완성 HTML이 없습니다':reports.state==='previous'?`이전 보고서 · 리비전 ${saved.revision} (현재 작업 리비전 ${state.revision}, 최신 결과가 아닙니다)`:`현재 보고서 · 리비전 ${saved.revision}`;
+ $('html-failure').textContent=[reports?.current_failure?`현재 생성 실패: ${reports.current_failure.reason}`:'',...(reports?.invalid||[]).map(x=>`리비전 ${x.revision}: ${x.reason}`)].filter(Boolean).join(' · ');
+ if(!ready)$('report-preview').removeAttribute('src');
+ $('final-html').removeAttribute('href');$('raw-html').removeAttribute('href');
+ $('view-html').onclick=null;
  if(ready){
-  const view=base+`/report.html?revision=${state.revision}`;
-  if($('report-preview').getAttribute('src')!==view)$('report-preview').src=view;
-  $('final-html').href=view;$('raw-html').href=base+`/report.raw.html?revision=${state.revision}`;
-  const bindings=detail['image-bindings'];$('image-summary').textContent=`생성 설정: ${detail['report-metadata'].model||'미기록'} / ${detail['report-metadata'].reasoning_effort||'API 기본 effort'} / ${detail['report-metadata'].max_output_tokens||5000} 토큰 · 이미지 연결 ${bindings.replacements.length}개 · 미연결 ${bindings.unresolved.length}개 · 본문/표/캡션/CSS 유지`;
-  $('missing-images').replaceChildren();for(const slot of bindings.unresolved)$('missing-images').append(element('li',`미연결: ${slot.uri} · HTML 위치 ${slot.offset}`));
- }else{$('report-preview').removeAttribute('src');}
+  const view=base+`/report.html?revision=${saved.revision}`;
+  if(reports.state==='previous'&&$('report-preview').getAttribute('src')!==view)$('report-preview').removeAttribute('src');
+  const show=()=>{$('html-result').hidden=false;if($('report-preview').getAttribute('src')!==view)$('report-preview').src=view;};
+  $('view-html').onclick=show;
+  if(reports.state==='current')show();
+  $('final-html').href=view;$('raw-html').hidden=!saved.raw_available;
+  if(saved.raw_available)$('raw-html').href=base+`/report.raw.html?revision=${saved.revision}`;
+  const meta=saved.metadata||{};
+  const bindings=reports.state==='current'?detail['image-bindings']:null;
+  $('image-summary').textContent=`${reports.state==='previous'?'이전 보고서':'현재 보고서'} · 리비전 ${saved.revision} · 생성 설정: ${meta.model||'미기록'} / ${meta.reasoning_effort||'기본 또는 미기록 effort'} / ${meta.max_output_tokens?meta.max_output_tokens+' 토큰':'출력 한도 미기록'} · ${saved.integrity==='verified'?'원본/최종본 무결성 확인':'복구 파일 · 무결성 메타데이터 미기록'}`;
+  $('missing-images').replaceChildren();for(const slot of bindings?.unresolved||[])$('missing-images').append(element('li',`미연결: ${slot.uri} · HTML 위치 ${slot.offset}`));
+ }
  $('analysis-panel').hidden=!detail.analysis;$('analysis-content').replaceChildren();
  if(detail.analysis)for(const key of ['sections','conflicts','questions','issues']){if(detail.analysis[key]?.length){$('analysis-content').append(element('h4',({sections:'설비·공정 분석',conflicts:'사양 충돌',questions:'고객 질의',issues:'검토 항목'})[key]));for(const item of detail.analysis[key])$('analysis-content').append(element('pre',typeof item==='string'?item:JSON.stringify(item,null,2)));}}
  $('approve-document').disabled=state.approved||state.stages.filter(s=>s.id!=='approval').some(s=>!s.passed);

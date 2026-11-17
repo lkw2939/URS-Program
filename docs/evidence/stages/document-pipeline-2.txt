@@ -1,0 +1,16 @@
+test_corrupt_current_final_falls_back_to_valid_old_revision (test_saved_reports.SavedReportsTests.test_corrupt_current_final_falls_back_to_valid_old_revision) ... ok
+test_current_html_readable_without_verification_or_approval (test_saved_reports.SavedReportsTests.test_current_html_readable_without_verification_or_approval) ... ok
+test_failed_first_generation_has_no_report_but_reason (test_saved_reports.SavedReportsTests.test_failed_first_generation_has_no_report_but_reason) ... ok
+test_failed_regeneration_selects_previous_bytes_and_records_failure (test_saved_reports.SavedReportsTests.test_failed_regeneration_selects_previous_bytes_and_records_failure) ... ok
+test_final_only_restored_file_can_be_viewed_with_unknown_metadata (test_saved_reports.SavedReportsTests.test_final_only_restored_file_can_be_viewed_with_unknown_metadata) ... ok
+test_never_generated_reports_none (test_saved_reports.SavedReportsTests.test_never_generated_reports_none) ... ok
+test_new_complete_revision_preferred_over_old (test_saved_reports.SavedReportsTests.test_new_complete_revision_preferred_over_old) ... ok
+test_operator_inspector_reads_existing_db_without_modification_or_prompt_leak (test_saved_reports.SavedReportsTests.test_operator_inspector_reads_existing_db_without_modification_or_prompt_leak) ... ok
+test_other_owner_cannot_discover_or_download_reports (test_saved_reports.SavedReportsTests.test_other_owner_cannot_discover_or_download_reports) ... ok
+test_raw_only_is_not_a_final_report (test_saved_reports.SavedReportsTests.test_raw_only_is_not_a_final_report) ... ok
+test_truncated_saved_final_is_not_presented_as_complete (test_saved_reports.SavedReportsTests.test_truncated_saved_final_is_not_presented_as_complete) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 1.531s
+
+OK

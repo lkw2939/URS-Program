@@ -126,7 +126,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
                                 payload=json.dumps(bundle,ensure_ascii=False,indent=2).encode();mime='application/json; charset=utf-8'
                             self.reply(200,payload,mime,attachment=action)
                         elif not post and action == 'detail':
-                            data = {'status': workspace.status(owner, document)}
+                            data = {'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
                             for kind in ('report-metadata','image-bindings','verification','analysis'):
                                 try:
                                     data[kind] = workspace.artifact(owner, document, kind)

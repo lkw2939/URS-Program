@@ -5,6 +5,6 @@ test_provenance_required_and_changes_invalidate_qualification (test_terminology.
 test_unapproved_or_missing_provenance_cannot_be_registered (test_terminology.TerminologyTests.test_unapproved_or_missing_provenance_cannot_be_registered) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.087s
+Ran 5 tests in 0.073s
 
 OK
