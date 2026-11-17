@@ -210,6 +210,7 @@ class Workspace:
             state['qualification']=require(self.workflow,effective(self.workflow,document=document)['model'])
         except (Blocked,SettingsError) as exc:
             state['qualification']={'blocked':str(exc)}
+        state['report_readability']=self.report_availability(owner,document)['state']
         return state
 
     def run(self, owner, document, stage):
@@ -279,6 +280,21 @@ class Workspace:
             version=db.execute('SELECT COALESCE(MAX(version),0)+1 FROM report_settings WHERE owner=?',(owner,)).fetchone()[0]
             db.execute('INSERT INTO report_settings VALUES(?,?,?)',(owner,version,prompt))
         return {'version':version,'prompt':prompt}
+
+    def stored_report_review(self,owner,document,revision):
+        original=self.original(owner,document)
+        if type(revision) is not int or revision<1:raise ValueError('리비전 오류')
+        from urs.saved_reports import stored_review
+        import zipfile
+        with self.workflow.connect() as db:
+            if revision>self.workflow._job(db,document)['revision']:raise Blocked('존재하지 않는 리비전입니다.')
+            files,inspection=stored_review(db,document,revision)
+        output=io.BytesIO()
+        with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr('source.original.pdf',original['original'])
+            for name,payload in files.items():archive.writestr(name,payload)
+            archive.writestr('comparison.json',json.dumps(inspection,ensure_ascii=False,indent=2))
+        return output.getvalue()
 
     def report_availability(self, owner, document):
         self.original(owner,document)

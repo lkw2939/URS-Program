@@ -99,3 +99,35 @@ class SavedReportsTests(unittest.TestCase):
         self.assertEqual(output['reports'][0]['selected']['revision'],1)
         self.assertNotIn(PROMPT,result.stdout);self.assertNotIn('image_guide',result.stdout)
         self.assertEqual(self.dump(),before)
+
+    def test_blocked_fenced_html_bundle_keeps_exact_bytes_and_compares_tails(self):
+        import io,zipfile
+        self.w.processing.provider=ReportAI('```html\n'+RAW+'\n```')
+        self.generate();before=self.dump()
+        blob=self.w.stored_report_review('alice',self.doc,1)
+        with zipfile.ZipFile(io.BytesIO(blob)) as z:
+            self.assertEqual(z.read('source.original.pdf'),self.w.original('alice',self.doc)['original'])
+            raw=z.read('report.raw.html');final=z.read('report.html');info=json.loads(z.read('comparison.json'))
+        self.assertEqual(raw,self.w.processing.provider.raw.encode())
+        self.assertEqual(final,self.w.processing.get(self.doc,'report.html',1))
+        self.assertTrue(info['only_image_addresses_changed'])
+        self.assertTrue(info['files']['report.raw.html']['has_closing_html_tag'])
+        self.assertEqual(info['files']['report.raw.html']['trailing_after_last_html_tag'],'\n```')
+        self.assertIn('미확인',info['content_completeness'])
+        self.assertEqual(self.w.report_availability('alice',self.doc)['state'],'none')
+        self.assertEqual(self.dump(),before)
+
+    def test_missing_tag_does_not_imply_body_is_complete_or_trigger_repair(self):
+        import io,zipfile
+        self.w.processing.provider=ReportAI('<html><body><p>내용이 중간')
+        self.generate();before=self.dump()
+        with zipfile.ZipFile(io.BytesIO(self.w.stored_report_review('alice',self.doc,1))) as z:
+            info=json.loads(z.read('comparison.json'))
+            self.assertEqual(z.read('report.raw.html'),b'<html><body><p>'+ '내용이 중간'.encode())
+        self.assertFalse(info['files']['report.html']['has_closing_html_tag'])
+        self.assertIn('미확인',info['content_completeness'])
+        self.assertEqual(self.dump(),before)
+
+    def test_other_owner_cannot_export_blocked_stored_html(self):
+        self.generate()
+        with self.assertRaises(AccessDenied):self.w.stored_report_review('bob',self.doc,1)

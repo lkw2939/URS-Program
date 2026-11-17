@@ -26,7 +26,7 @@ async function documents() {
     const status=await api(`/api/documents/${doc.id}/status`);if(selected?.id!==project.id)return;
     if(status.approved){approvedCount++;$('metric-approved').textContent=String(approvedCount);}const row=element('article','','document');row.append(element('h4',doc.name),element('p',`${doc.pages}페이지 · 원본 바이트 보관`,'muted small'),element('p','SHA-256 '+doc.sha256,'hash'));
     const stages=element('div','','stages');
-    for(const stage of status.stages){const result=status.results.filter(r=>r.stage===stage.id);const state=stage.passed?'PASS':result[0]?.status||'UNVERIFIED';stages.append(element('span',`${stageNames[stage.id]} · ${state}`,'stage'+(stage.passed?' pass':'')));}
+    for(const stage of status.stages){const result=status.results.filter(r=>r.stage===stage.id);const state=stage.id==='report'&&stage.passed&&status.report_readability!=='current'?'저장됨 · 끝 확인 필요':stage.passed?'PASS':result[0]?.status||'UNVERIFIED';stages.append(element('span',`${stageNames[stage.id]} · ${state}`,'stage'+(stage.passed&&(stage.id!=='report'||status.report_readability==='current')?' pass':'')));}
     row.append(stages,element('p',status.approved?'현재 리비전의 직원 승인이 완료됐습니다.':'미검증 항목을 확인하고 보고서 검토에서 다음 작업을 진행하세요.','muted small'));
     const link=element('a','원본 다운로드','download');link.href=`/api/documents/${doc.id}/original`;link.download=doc.name;row.append(link);const review=element('button','보고서 검토');review.type='button';review.onclick=()=>openReview(doc).catch(e=>message(e.message));row.append(review);$('documents').append(row);
   }
@@ -51,23 +51,26 @@ function renderReview(){
  const state=detail.status;const base=`/api/documents/${activeDoc.id}`;
  $('review-title').textContent=`${activeDoc.name} · 리비전 ${state.revision}`;
  $('record-html').href=base+'/verification.html';$('record-json').href=base+'/verification.json';
- $('checklist-summary').textContent=`완료 ${state.stages.filter(s=>s.passed).length} / ${state.stages.length} · ${state.approved?'승인 완료':'승인 전'}`;
+ const displayPassed=s=>s.passed&&(s.id!=='report'||detail.reports?.state==='current');
+ $('checklist-summary').textContent=`완료 ${state.stages.filter(displayPassed).length} / ${state.stages.length} · ${state.approved?'승인 완료':'승인 전'}`;
  $('checklist-steps').replaceChildren();$('process-buttons').replaceChildren();$('check-results').replaceChildren();
  for(const [index,stage] of state.stages.entries()){
-  $('checklist-steps').append(element('li',`${stageNames[stage.id]} · ${stage.passed?'완료':'확인 전'}`));
+  $('checklist-steps').append(element('li',`${stageNames[stage.id]} · ${stage.id==='report'&&stage.passed&&!displayPassed(stage)?'저장됨 · 끝 확인 필요':displayPassed(stage)?'완료':'확인 전'}`));
   if(stage.id==='source'||stage.id==='approval')continue;
   const button=element('button',stage.id==='report'?(detail['report-metadata']?'새 리비전 보고서 생성':'보고서 생성'):stageNames[stage.id]+' 실행');
   button.disabled=state.stages.slice(0,index).some(s=>!s.passed)||stage.id==='report'&&detail.report_task?.state==='running';
   button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{await api(base+'/run',{stage:stage.id});await refreshReview();}});$('process-buttons').append(button);
  }
- for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${stageNames[result.stage]} · ${result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
+ for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${stageNames[result.stage]} · ${result.stage==='report'&&result.status==='PASS'&&detail.reports?.state!=='current'?'저장 성공 · 문서 끝 확인 필요':result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
  if(state.qualification?.blocked)$('check-results').append(element('p','최종 승인 조건: '+state.qualification.blocked,'muted small'));
  const reports=detail.reports;const saved=reports?.selected;const ready=!!saved;
  $('html-result').hidden=true;$('approval-panel').hidden=reports?.state!=='current';
  $('reviewed-html').checked=false;$('approval-note').value='';
  $('view-html').disabled=!ready;
  $('view-html').textContent=reports?.state==='previous'?'이전 보고서 보기':'HTML 확인';
- $('html-availability').textContent=!ready?'아직 열 수 있는 완성 HTML이 없습니다':reports.state==='previous'?`이전 보고서 · 리비전 ${saved.revision} (현재 작업 리비전 ${state.revision}, 최신 결과가 아닙니다)`:`현재 보고서 · 리비전 ${saved.revision}`;
+ $('html-availability').textContent=!ready?(reports?.stored_revisions?.length?'저장된 HTML은 있으나 문서 끝·완전성 확인이 필요합니다':'아직 열 수 있는 완성 HTML이 없습니다'):reports.state==='previous'?`이전 보고서 · 리비전 ${saved.revision} (현재 작업 리비전 ${state.revision}, 최신 결과가 아닙니다)`:`현재 보고서 · 리비전 ${saved.revision}`;
+ const storedRevision=reports?.stored_revisions?.[0];$('stored-review').hidden=!storedRevision;
+ if(storedRevision)$('stored-review').href=base+`/stored-review.zip?revision=${storedRevision}`;else $('stored-review').removeAttribute('href');
  $('html-failure').textContent=[reports?.current_failure?`현재 생성 실패: ${reports.current_failure.reason}`:'',...(reports?.invalid||[]).map(x=>`리비전 ${x.revision}: ${x.reason}`)].filter(Boolean).join(' · ');
  if(!ready)$('report-preview').removeAttribute('src');
  $('final-html').removeAttribute('href');$('raw-html').removeAttribute('href');

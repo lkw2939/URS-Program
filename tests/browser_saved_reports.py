@@ -59,6 +59,22 @@ def main():
                 page.locator('#html-access').scroll_into_view_if_needed();page.screenshot(path=str(out/'saved-html-previous.png'),full_page=True)
                 assert w.report_html('fixture',doc,revision=1)==current
                 assert len(provider.calls)==1,'Read/reload/download must never generate a report'
+                # Saved PASS with closing tag followed by a code fence must not say complete.
+                fenced=ReportAI('```html\n'+RAW+'\n```');w.processing.provider=fenced;w.run('fixture',doc,'report')
+                revision=w.status('fixture',doc)['revision'];before=w.processing.get(doc,'report.html',revision)
+                page.reload();page.locator('#workspace').wait_for(state='visible');open_review()
+                assert 'HTML 보고서 · 저장됨 · 끝 확인 필요' in page.locator('#checklist-steps').inner_text()
+                assert '저장 성공 · 문서 끝 확인 필요' in page.locator('#check-results').inner_text()
+                assert '이전 보고서' in page.locator('#html-availability').inner_text()
+                with page.expect_download() as download:page.locator('#stored-review').click()
+                import zipfile,io,json
+                with zipfile.ZipFile(download.value.path()) as z:
+                    assert z.read('report.html')==before
+                    inspection=json.loads(z.read('comparison.json'))
+                    assert inspection['only_image_addresses_changed']
+                    assert inspection['files']['report.html']['trailing_after_last_html_tag']=='\n```'
+                page.locator('#review').screenshot(path=str(out/'saved-html-end-check.png'))
+                assert len(fenced.calls)==1,'Inspection/download must not regenerate'
                 assert not errors,errors
                 browser.close()
                 print('PASS: no-result message; current HTML opens before verification/approval; failed regeneration shows failure and explicitly previous revision; previous final/raw downloads match saved bytes; no auto generation or paid calls.')

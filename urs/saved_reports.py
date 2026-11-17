@@ -47,4 +47,37 @@ def inspect_document(db, document, current):
             failure={'status':row['status'],'reason':reason};break
     selected=available[0] if available else None
     return {'current_revision':current,'selected':selected,'available':available,'invalid':invalid,
-            'current_failure':failure,'state':'current' if selected and selected['revision']==current else 'previous' if selected else 'none'}
+            'stored_revisions':revisions,'current_failure':failure,'state':'current' if selected and selected['revision']==current else 'previous' if selected else 'none'}
+
+
+def stored_review(db,document,revision):
+    """Inspect exact stored bytes, including blocked files; not a quality verdict."""
+    rows={r['kind']:bytes(r['payload']) for r in db.execute(
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images')",(document,revision))}
+    if not rows:raise Blocked('저장된 HTML 결과가 없습니다.')
+    files={kind:value for kind,value in rows.items() if kind in ('report.html','report.raw.html')}
+    if not files:raise Blocked('저장된 HTML 결과가 없습니다.')
+    inspection={'revision':revision,'files':{},'only_image_addresses_changed':None,'api_diagnostics':[],
+                'content_completeness':'미확인: 원본 PDF의 마지막 내용과 대조해야 합니다. 끝 태그나 API completed만으로 판단하지 않습니다.'}
+    for kind,value in files.items():
+        text=value.decode('utf-8',errors='replace')
+        matches=list(re.finditer(r'</html\s*>',text,re.I))
+        inspection['files'][kind]={'bytes':len(value),'sha256':hashlib.sha256(value).hexdigest(),
+            'has_closing_body_tag':bool(re.search(r'</body\s*>',text,re.I)),'has_closing_html_tag':bool(matches),'passes_existing_end_check':bool(re.search(r'</html\s*>\s*$',text,re.I)),
+            'trailing_after_last_html_tag':text[matches[-1].end():] if matches else None,'tail':text[-4000:]}
+    if all(k in rows for k in ('report.html','report.raw.html','report-images')):
+        try:
+            expected,comparison=bind_images(rows['report.raw.html'].decode(),json.loads(rows['report-images']))
+            inspection['only_image_addresses_changed']=expected.encode()==rows['report.html']
+            inspection['image_replacements']=len(comparison['replacements'])
+            inspection['unresolved_images']=comparison['unresolved']
+        except (ValueError,TypeError,KeyError):inspection['comparison_error']='저장된 비교 자료를 읽지 못했습니다.'
+    exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='report_diagnostics'").fetchone()
+    if exists:
+        inspection['api_diagnostics']=[json.loads(r[0]) for r in db.execute('SELECT payload FROM report_diagnostics WHERE document=? ORDER BY call_id',(document,)) if json.loads(r[0]).get('revision')==revision]
+    if 'report-metadata' in rows:
+        try:
+            meta=json.loads(rows['report-metadata'])
+            inspection['generation_settings']={k:meta[k] for k in ('model','reasoning_effort','max_output_tokens','settings_version') if k in meta}
+        except (ValueError,TypeError):inspection['generation_settings']=None
+    return files,inspection

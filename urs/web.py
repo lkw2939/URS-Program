@@ -137,6 +137,11 @@ def make_app(workspace, port=8795, secure_cookie=False):
                                 except Blocked:
                                     pass
                             self.reply(200, data)
+                        elif not post and action == 'stored-review.zip':
+                            from urllib.parse import parse_qs
+                            query=parse_qs(urlparse(self.path).query)
+                            revision=int(query.get('revision',[workspace.status(owner,document)['revision']])[0])
+                            self.reply(200,workspace.stored_report_review(owner,document,revision),'application/zip',attachment=f'stored-html-r{revision}.zip')
                         elif not post and action in ('report.html','report.raw.html'):
                             from urllib.parse import parse_qs
                             query=parse_qs(urlparse(self.path).query)
