@@ -19,7 +19,8 @@ import urllib.request
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from dotenv import load_dotenv
-from urs.ai import OpenAI, AIBlocked, requested_effort
+from urs.ai import OpenAI, AIBlocked
+from urs.ai_settings import environment,validate,SettingsError
 from urs.workspace import Workspace
 from urs.workflow import Workflow
 
@@ -31,10 +32,14 @@ def sha(value):return hashlib.sha256(value).hexdigest()
 
 def inspect(root,document=None):
     path=Path(root)/'.runtime/workspace.sqlite'
+    environment_error=None
+    try:base=environment()
+    except SettingsError as exc:
+        environment_error=str(exc);base={'model':os.environ.get('URS_OPENAI_MODEL','').strip(),'effort':None,'max_output_tokens':5000}
     result={'scope':'configuration and existing artifacts; no API call yet',
         'api_key_present':bool(os.environ.get('URS_OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')),
-        'requested_model':os.environ.get('URS_OPENAI_MODEL','').strip() or None,
-        'requested_effort':requested_effort(),'effort_note':'explicit configured effort' if requested_effort() is not None else 'reasoning.effort is not sent; provider default, not yet observed',
+        'requested_model':base['model'] or None,'requested_effort':base['effort'],'requested_max_output_tokens':base['max_output_tokens'],'ai_settings_source':'server','ai_settings_version':0,
+        'effort_note':'explicit configured effort' if base['effort'] is not None else 'reasoning.effort is not sent; provider default, not yet observed',
         'api_call_verified':False,'html_image_only_verified':False}
     if not path.exists():result['blocked']='workspace database missing';return result,None
     with sqlite3.connect(path.as_uri()+'?mode=ro',uri=True) as db:
@@ -45,6 +50,12 @@ def inspect(root,document=None):
         selected=dict(row)
         if sha(selected['original'])!=selected['sha256']:result['blocked']='original PDF integrity mismatch';return result,None
         tables={r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        config_row=db.execute('SELECT version,payload FROM ai_settings WHERE owner=? ORDER BY version DESC LIMIT 1',(selected['owner'],)).fetchone() if 'ai_settings' in tables else None
+        config=validate(json.loads(config_row['payload'])) if config_row else base
+        selected['ai_config']=config
+        result['effort_note']='explicit configured effort' if config['effort'] is not None else 'reasoning.effort not sent; provider default not yet observed'
+        if not config_row and environment_error:result['blocked']=environment_error
+        result.update({'requested_model':config['model'] or None,'requested_effort':config['effort'],'requested_max_output_tokens':config['max_output_tokens'],'ai_settings_source':'web' if config_row else 'server','ai_settings_version':config_row['version'] if config_row else 0})
         prompt=None
         if 'report_settings' in tables:
             prompt=db.execute('SELECT prompt,version FROM report_settings WHERE owner=? ORDER BY version DESC LIMIT 1',(selected['owner'],)).fetchone()
@@ -96,7 +107,7 @@ class ResponseObserver:
 def run(root=ROOT,document=None,live=False):
     root=Path(root).resolve()
     result,source=inspect(root,document)
-    if not live or source is None:return result
+    if not live or source is None or result.get('blocked'):return result
     if not source['prompt'].strip():result['blocked']='saved report prompt missing; no report API request sent';return result
     if not result['api_key_present'] or not result['requested_model']:
         result['blocked']='API key or model setting missing; no API request sent';return result
@@ -111,6 +122,7 @@ def run(root=ROOT,document=None,live=False):
         proof['sent_verbatim_saved_prompt']=content[1]['text']==source['prompt']
         proof['only_file_prompt_image_guide']=len(content)==3 and [c['type'] for c in content]==['input_file','input_text','input_text'] and 'instructions' not in payload and 'text' not in payload
         proof['requested_effort']=(payload.get('reasoning') or {}).get('effort')
+        proof['requested_max_output_tokens']=payload.get('max_output_tokens')
         try:return ResponseObserver(real_open(request,*args,**kwargs),proof)
         except urllib.error.HTTPError as exc:
             proof['http_status']=exc.code
@@ -123,13 +135,14 @@ def run(root=ROOT,document=None,live=False):
         # Production report pipeline, isolated artifact storage; the production
         # budget and usage ledger apply to the original selected document.
         live_workflow=Workflow(root/'.runtime/workspace.sqlite')
-        live_provider=OpenAI(live_workflow,source['id'])
+        live_provider=OpenAI(live_workflow,source['id'],settings=source['ai_config'])
         with tempfile.TemporaryDirectory(prefix='urs-api-report-check-') as folder:
             w=Workspace(Path(folder)/'diagnostic.sqlite')
             w.add_user('diagnostic','temporary-diagnostic-account-123')
             project=w.create_project('diagnostic','Diagnostic only')
             doc=w.upload('diagnostic',project,source['name'],source['original'])
             w.save_report_settings('diagnostic',source['prompt'])
+            if source['ai_config']['model']:w.save_ai_settings('diagnostic',source['ai_config'])
             w.processing.provider=live_provider
             with patch('urllib.request.urlopen',side_effect=observed):
                 state=w.run('diagnostic',doc,'report')
@@ -184,7 +197,7 @@ def main():
         saved=save_prompt_file(ROOT,args.save_prompt,args.document) if args.save_prompt else None
         result=run(ROOT,args.document,args.call)
         if saved:result['prompt_saved_from_file']=saved
-    except (AIBlocked,ValueError,OSError) as exc:
+    except (AIBlocked,SettingsError,ValueError,OSError) as exc:
         result={'blocked':'configuration or prompt-file error','error_type':type(exc).__name__,'api_call_verified':False,'html_image_only_verified':False}
     print(json.dumps(result,ensure_ascii=False,indent=2))
     return 1 if result.get('blocked') else 0

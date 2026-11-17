@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from urs.workflow import Blocked
 from urs.ai import AIBlocked, AIError
+from urs.ai_settings import SettingsError
 from urs.workspace import AccessDenied, Unauthorized, MAX_PDF
 
 STATIC = Path(__file__).resolve().parents[1] / 'static'
@@ -90,6 +91,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                 elif post and path == '/api/logout':
                     workspace.logout(token)
                     self.reply(200, {'ok': True}, cookie=self.cookie('', True))
+                elif path == '/api/settings/ai':
+                    self.reply(200,workspace.save_ai_settings(owner,body) if post else workspace.ai_settings(owner))
                 elif path == '/api/settings/report':
                     self.reply(200,workspace.save_report_settings(owner,body['prompt']) if post else workspace.report_settings(owner))
                 elif path == '/api/projects':
@@ -165,6 +168,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                 self.reply(409, {'error': str(exc)})
             except AIError as exc:
                 self.reply(502, {'error': str(exc)})
+            except SettingsError as exc:
+                self.reply(400,{'error':str(exc)})
             except (ValueError, KeyError, TypeError, binascii.Error):
                 self.reply(400, {'error': '요청을 확인해 주세요. PDF 형식·크기 또는 입력이 올바르지 않습니다.'})
             except sqlite3.Error:

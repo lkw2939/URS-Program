@@ -13,6 +13,7 @@ from pypdf import PdfReader
 
 from urs.gates import Status
 from urs.workflow import Workflow, Blocked
+from urs.ai_settings import SettingsError
 
 MAX_PDF = 20 * 1024 * 1024
 PIPELINE = [
@@ -49,6 +50,7 @@ class Workspace:
             CREATE TABLE IF NOT EXISTS users(name TEXT PRIMARY KEY, salt BLOB, digest BLOB);
             CREATE TABLE IF NOT EXISTS sessions(digest TEXT PRIMARY KEY, name TEXT, csrf TEXT, expires REAL);
             CREATE TABLE IF NOT EXISTS attempts(name TEXT PRIMARY KEY, failures INTEGER, since REAL);
+            CREATE TABLE IF NOT EXISTS ai_settings(owner TEXT,version INTEGER,payload TEXT,PRIMARY KEY(owner,version));
             CREATE TABLE IF NOT EXISTS report_settings(owner TEXT,version INTEGER,prompt TEXT,PRIMARY KEY(owner,version));
             CREATE TABLE IF NOT EXISTS projects(id TEXT PRIMARY KEY, owner TEXT, title TEXT);
             CREATE TABLE IF NOT EXISTS documents(id TEXT PRIMARY KEY, project TEXT, name TEXT, original BLOB, sha256 TEXT, pages INTEGER);
@@ -204,8 +206,9 @@ class Workspace:
         state=self.workflow.snapshot(document)
         from urs.evaluation import require
         try:
-            state['qualification']=require(self.workflow,os.environ.get('URS_OPENAI_MODEL',''))
-        except Blocked as exc:
+            from urs.ai_settings import effective
+            state['qualification']=require(self.workflow,effective(self.workflow,document=document)['model'])
+        except (Blocked,SettingsError) as exc:
             state['qualification']={'blocked':str(exc)}
         return state
 
@@ -239,6 +242,21 @@ class Workspace:
         self.original(owner,document)
         return self.processing.get(document,kind)
 
+    def ai_settings(self, owner):
+        from urs.ai_settings import effective
+        try:return effective(self.workflow,owner=owner)
+        except SettingsError as exc:
+            return {'model':os.environ.get('URS_OPENAI_MODEL','').strip(),'effort':None,'max_output_tokens':5000,'version':0,'source':'invalid','configuration_error':str(exc)}
+
+    def save_ai_settings(self, owner, value):
+        from urs.ai_settings import validate
+        config=validate(value)
+        with self.workflow.connect() as db:
+            if not db.execute('SELECT 1 FROM users WHERE name=?',(owner,)).fetchone():raise AccessDenied('등록된 직원이 아닙니다.')
+            version=db.execute('SELECT COALESCE(MAX(version),0)+1 FROM ai_settings WHERE owner=?',(owner,)).fetchone()[0]
+            db.execute('INSERT INTO ai_settings VALUES(?,?,?)',(owner,version,json.dumps(config)))
+        return {**config,'version':version,'source':'web'}
+
     def report_settings(self, owner):
         with self.workflow.connect() as db:
             row=db.execute('SELECT version,prompt FROM report_settings WHERE owner=? ORDER BY version DESC LIMIT 1',(owner,)).fetchone()
@@ -263,7 +281,8 @@ class Workspace:
         if not isinstance(note,str) or not note.strip() or reviewed_outputs!=['report.html']:
             raise ValueError('최종 HTML과 검토 근거를 확인해 주세요.')
         from urs.evaluation import require
-        require(self.workflow,os.environ.get('URS_OPENAI_MODEL',''))
+        from urs.ai_settings import effective
+        require(self.workflow,effective(self.workflow,document=document)['model'])
         self._check_verification_version(document)
         self.processing.checked_html(document,revision)
         bindings=self.processing.get(document,'image-bindings',revision)
@@ -287,8 +306,9 @@ class Workspace:
         result=next((r for r in state['results'] if r['stage']=='verify' and r['status']=='PASS'),None)
         if result is None:raise Blocked('현재 리비전의 의미 검증을 완료해야 합니다.')
         evidence=json.loads(result['evidence'])
-        from urs.ai import requested_effort
-        if evidence.get('pipeline_fingerprint')!=fingerprint() or evidence.get('model')!=os.environ.get('URS_OPENAI_MODEL','') or evidence.get('reasoning_effort')!=requested_effort():
+        from urs.ai_settings import effective,signature
+        config=effective(self.workflow,document=document)
+        if evidence.get('pipeline_fingerprint')!=fingerprint() or evidence.get('ai_settings_signature')!=signature(config):
             raise Blocked('코드 또는 모델 변경 후 의미 검증을 다시 실행해야 합니다.')
 
     def verification_record(self, owner, document):

@@ -1,0 +1,14 @@
+test_budget_reservation_uses_configured_output_limit (test_ai_settings.AISettingsTests.test_budget_reservation_uses_configured_output_limit) ... ok
+test_http_settings_require_login_csrf_and_never_return_key (test_ai_settings.AISettingsTests.test_http_settings_require_login_csrf_and_never_return_key) ... ok
+test_invalid_server_defaults_can_be_repaired_in_web_settings (test_ai_settings.AISettingsTests.test_invalid_server_defaults_can_be_repaired_in_web_settings) ... ok
+test_output_limit_failure_is_visible_in_stage_evidence (test_ai_settings.AISettingsTests.test_output_limit_failure_is_visible_in_stage_evidence) ... ok
+test_owner_isolation_persistence_and_append_only_history (test_ai_settings.AISettingsTests.test_owner_isolation_persistence_and_append_only_history) ... ok
+test_running_call_keeps_its_snapshot_if_settings_change_during_network (test_ai_settings.AISettingsTests.test_running_call_keeps_its_snapshot_if_settings_change_during_network) ... ok
+test_settings_apply_to_next_call_without_restart_or_rewriting_old_html (test_ai_settings.AISettingsTests.test_settings_apply_to_next_call_without_restart_or_rewriting_old_html) ... ok
+test_validation_rejects_unknown_fields_invalid_limits_and_effort (test_ai_settings.AISettingsTests.test_validation_rejects_unknown_fields_invalid_limits_and_effort) ... ok
+test_web_values_reach_report_and_review_payload_and_metadata (test_ai_settings.AISettingsTests.test_web_values_reach_report_and_review_payload_and_metadata) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 1.833s
+
+OK

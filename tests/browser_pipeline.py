@@ -37,6 +37,14 @@ def main():
                 page.get_by_label('직원 ID').fill('browser-fixture');page.get_by_label('비밀번호',exact=True).fill(password)
                 page.get_by_role('button',name='로그인',exact=True).click()
                 page.locator('#workspace').wait_for(state='visible')
+                page.locator('#ai-model').fill('fixture-terra')
+                page.locator('#ai-effort').select_option('xhigh')
+                page.get_by_role('button',name='32,000',exact=True).click()
+                page.get_by_role('button',name='AI 설정 저장',exact=True).click()
+                page.wait_for_function("() => document.getElementById('ai-settings-summary').textContent.includes('저장 버전 1')")
+                assert workspace.ai_settings('browser-fixture')['max_output_tokens']==32000
+                assert workspace.ai_settings('browser-fixture')['model']=='fixture-terra'
+                assert provider.calls==[],'Saving settings must not invoke AI'
                 page.locator('#report-settings summary').click()
                 page.locator('#report-prompt').fill(PROMPT)
                 page.get_by_role('button',name='프롬프트 저장',exact=True).click()
@@ -86,18 +94,29 @@ def main():
                 assert [c[0] for c in provider.calls]==['report','independent_verify','technical_analysis']
                 doc=workspace.documents('browser-fixture',workspace.projects('browser-fixture')[0]['id'])[0]['id']
                 before=workspace.report_html('browser-fixture',doc)
+                metadata=workspace.artifact('browser-fixture',doc,'report-metadata')
+                assert metadata['model']=='fixture-terra' and metadata['max_output_tokens']==32000 and metadata['reasoning_effort']=='xhigh'
                 page.locator('#report-settings summary').click()
                 page.locator('#html-result').scroll_into_view_if_needed()
                 page.screenshot(path=str(evidence/'html-report-desktop.png'),full_page=True)
                 page.set_viewport_size({'width':390,'height':844})
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 page.screenshot(path=str(evidence/'html-report-mobile.png'),full_page=True)
+                page.set_viewport_size({'width':1440,'height':1080})
+                page.locator('#ai-settings').scroll_into_view_if_needed()
+                page.screenshot(path=str(evidence/'ai-settings-desktop.png'),full_page=False)
+                page.set_viewport_size({'width':390,'height':844})
+                assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                page.screenshot(path=str(evidence/'ai-settings-mobile.png'),full_page=False)
                 page.reload();page.locator('#workspace').wait_for(state='visible')
+                page.wait_for_function("() => document.getElementById('ai-output-tokens').value==='32000'")
+                assert page.locator('#ai-model').input_value()=='fixture-terra'
+                assert page.locator('#ai-effort').input_value()=='xhigh'
                 assert len(provider.calls)==3,'Reload must never regenerate reports'
                 assert workspace.report_html('browser-fixture',doc)==before
                 assert not errors,errors
                 browser.close()
-                print('PASS: login, verbatim prompt saving, original PDF upload, report generation, sandboxed final HTML with 3 original crops, model CSS/caption retained, 5 stages with no text extraction, separate verification/analysis, blocked unqualified approval, responsive desktop/mobile, reload preserves output, sandboxed inline scripts and local PDF File API and real PDF.js page rendering work without upload and parent access remains blocked; no paid API calls.')
+                print('PASS: login, employee model/effort/output settings UI and presets, persistence across reload and no call on save, verbatim prompt saving, original PDF upload, report generation, sandboxed final HTML with 3 original crops, model CSS/caption retained, 5 stages with no text extraction, separate verification/analysis, blocked unqualified approval, responsive desktop/mobile, reload preserves output, sandboxed inline scripts and local PDF File API and real PDF.js page rendering work without upload and parent access remains blocked; no paid API calls.')
         finally:
             server.shutdown();server.server_close();thread.join()
 if __name__=='__main__':main()

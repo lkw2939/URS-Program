@@ -53,6 +53,18 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(result['requested_model'],'fixture-terra');self.assertIsNone(result['requested_effort'])
         self.assertTrue(result['prompt_saved']);self.assertEqual(result['prompt_version'],1)
         self.assertNotIn(PROMPT,json.dumps(result));self.assertNotIn(SETTINGS['URS_OPENAI_API_KEY'],json.dumps(result))
+    def test_diagnostic_uses_saved_web_model_effort_limit_over_environment(self):
+        self.w.save_report_settings('fixture',PROMPT)
+        self.w.save_ai_settings('fixture',{'model':'web-model','effort':'high','max_output_tokens':32000})
+        with patch.dict(os.environ,{**SETTINGS,'URS_OPENAI_MAX_OUTPUT_TOKENS':'invalid-old-default'},clear=True),patch('urllib.request.urlopen') as network:
+            result=run(self.root)
+        network.assert_not_called()
+        self.assertEqual(result['requested_model'],'web-model')
+        self.assertEqual(result['requested_effort'],'high')
+        self.assertEqual(result['requested_max_output_tokens'],32000)
+        self.assertEqual(result['ai_settings_source'],'web')
+        self.assertNotIn('blocked',result)
+
     def test_configured_effort_is_visible_without_calling_api(self):
         self.w.save_report_settings('fixture',PROMPT)
         with patch.dict(os.environ,{**SETTINGS,'URS_OPENAI_REASONING_EFFORT':'xhigh'},clear=True),patch('urllib.request.urlopen') as network:

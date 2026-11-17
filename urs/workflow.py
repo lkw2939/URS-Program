@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from urs.gates import Status
+from urs.ai import AIBlocked,AIError
 
 
 class Blocked(ValueError):
@@ -151,6 +152,8 @@ class Workflow:
                 status = Status(status)
                 if not isinstance(evidence, dict) or not evidence:
                     raise ValueError('structured evidence required')
+            except (AIBlocked,AIError) as exc:
+                status,evidence=Status.FAIL,{'reason':str(exc),'type':type(exc).__name__}
             except Exception as exc:
                 status, evidence = Status.FAIL, {'reason': 'validator exception', 'type': type(exc).__name__}
             outputs.append((check['id'], status, evidence, name, version))

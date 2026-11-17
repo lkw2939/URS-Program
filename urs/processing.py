@@ -2,7 +2,8 @@
 import hashlib
 import json
 import os
-from urs.ai import OpenAI, requested_effort
+from urs.ai import OpenAI
+from urs.ai_settings import effective,signature
 from urs.images import crop_images, bind_images
 from urs.gates import Status
 from urs.workflow import Blocked
@@ -42,27 +43,28 @@ class Processing:
         if not row or hashlib.sha256(row['original']).hexdigest()!=row['sha256']:raise Blocked('원본 무결성 검사 실패')
         return document,revision,bytes(row['original']),row['name']
 
-    def provider_for(self, document):
-        return self.provider or OpenAI(self.workflow,document)
+    def provider_for(self, document, config=None):
+        return self.provider or OpenAI(self.workflow,document,settings=config)
 
     def report(self, content):
         document,revision,pdf,name=self._input(content)
         # Read no legacy text/translation artifact. Prompt content is not stripped.
         with self.workflow.connect() as db:
             owner=db.execute('SELECT p.owner FROM documents d JOIN projects p ON p.id=d.project WHERE d.id=?',(document,)).fetchone()[0]
+        config=effective(self.workflow,document=document)
         settings=self.workspace.report_settings(owner)
         prompt=settings['prompt']
         if not prompt.strip():raise Blocked('웹 설정에서 보고서 프롬프트를 먼저 저장해 주세요.')
         assets=crop_images(pdf)
         inventory=[{k:a[k] for k in ('uri','page','index','bbox')} for a in assets]
         guide='Image address mapping only: use <img src="urs-image:PAGE:INDEX"> for a source picture/diagram at the corresponding original PDF page and region. Available image addresses and bounding boxes (PDF points from top-left):\n'+json.dumps(inventory,ensure_ascii=False)
-        raw=self.provider_for(document).report_html(pdf,name,prompt,guide)
+        raw=self.provider_for(document,config).report_html(pdf,name,prompt,guide)
         if not isinstance(raw,str) or not raw:raise ValueError('HTML 응답이 없습니다.')
         final,comparison=bind_images(raw,assets)
         data={'report.raw.html':raw.encode(),'report.html':final.encode(),
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
-                  'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':os.environ.get('URS_OPENAI_MODEL',''),'reasoning_effort':requested_effort(),
+                  'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
                   'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
         # Append-only report artifacts. Retries/regeneration must use a new revision.
         with self.workflow.connect() as db:
@@ -87,9 +89,10 @@ class Processing:
 
     def _review(self, content, task, kind):
         document,revision,pdf,name=self._input(content)
+        config=effective(self.workflow,document=document)
         self.checked_html(document,revision)
         raw=self.get(document,'report.raw.html',revision).decode()
-        result=self.provider_for(document).review_pdf(task,pdf,name,raw)
+        result=self.provider_for(document,config).review_pdf(task,pdf,name,raw)
         if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):
             raise ValueError('검토 응답 형식이 올바르지 않습니다.')
         if result['status']=='PASS' and result['issues']:raise ValueError('검토 상태와 오류 목록이 모순됩니다.')
@@ -99,7 +102,7 @@ class Processing:
         bindings=self.get(document,'image-bindings',revision)
         status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(result['status'])
         return status, {'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
-            'model':os.environ.get('URS_OPENAI_MODEL',''),'reasoning_effort':requested_effort(),'pipeline_fingerprint':fingerprint(),
+            'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),'pipeline_fingerprint':fingerprint(),
             'accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
 
     def verify(self, content):return self._review(content,'independent_verify','verification')
