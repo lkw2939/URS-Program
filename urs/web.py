@@ -20,6 +20,8 @@ STATIC = Path(__file__).resolve().parents[1] / 'static'
 def make_app(workspace, port=8795, secure_cookie=False):
     from urs.report_tasks import ReportTasks
     tasks=ReportTasks(workspace)
+    from urs import targets
+    target_tasks=targets.Tasks(workspace)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
@@ -132,7 +134,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             self.reply(200,payload,mime,attachment=action)
                         elif not post and action == 'detail':
                             from urs.reviews import overview
-                            data = {'reviews':overview(workspace,owner,document),'report_task':tasks.status(document),'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
+                            data = {'targets':targets.listing(workspace,owner,document),'reviews':overview(workspace,owner,document),'report_task':tasks.status(document),'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
                             for kind in ('report-metadata','image-bindings','verification','analysis'):
                                 try:
                                     data[kind] = workspace.artifact(owner, document, kind)
@@ -141,6 +143,32 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             for stage in ('verify','analyze'):
                                 if tasks.status(document,stage)['state']=='running':data['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다. 결과가 저장될 때까지 기다려 주세요.')
                             self.reply(200, data)
+                        elif not post and action=='usage-preview':
+                            from urs.usage_audit import server_preview
+                            self.reply(200,server_preview(workspace,owner,document))
+                        elif action=='review-targets':
+                            if post:
+                                payload=base64.b64decode(body['content'],validate=True)
+                                ident=targets.register(workspace,owner,document,body['parent_revision'],body['name'],payload)
+                                self.reply(201,{'id':ident})
+                            else:self.reply(200,targets.listing(workspace,owner,document))
+                        elif not post and action=='target-status':
+                            from urllib.parse import parse_qs
+                            target=parse_qs(urlparse(self.path).query)['target'][0]
+                            self.reply(200,target_tasks.status(owner,document,target))
+                        elif post and action=='target-run':
+                            if body['stage'] not in ('verify','analyze'):raise ValueError('검토 단계를 확인하세요.')
+                            self.reply(202,target_tasks.start(owner,document,body['target'],body['stage']))
+                        elif not post and action in ('target.html','target-result.html'):
+                            from urllib.parse import parse_qs
+                            q=parse_qs(urlparse(self.path).query);ident=q['target'][0]
+                            if action=='target.html':
+                                row,_=targets.get(workspace,owner,document,ident)
+                                self.reply(200,bytes(row['payload']),'text/html; charset=utf-8',attachment='registered-a4.html',report=True)
+                            else:
+                                stage=q['stage'][0]
+                                if stage not in ('verify','analyze'):raise ValueError('검토 단계를 확인하세요.')
+                                self.reply(200,targets.result_html(workspace,owner,document,ident,stage,int(q['attempt'][0])),'text/html; charset=utf-8',review=True)
                         elif not post and action in ('review-verification.html','review-analysis.html'):
                             from urs.reviews import result_html
                             from urllib.parse import parse_qs

@@ -18,6 +18,10 @@ class Processing:
             CREATE TABLE IF NOT EXISTS report_timeouts(owner TEXT,version INTEGER,seconds INTEGER,PRIMARY KEY(owner,version));
             CREATE TABLE IF NOT EXISTS report_diagnostics(call_id INTEGER PRIMARY KEY,document TEXT,payload TEXT);
             CREATE TABLE IF NOT EXISTS review_attempts(id INTEGER PRIMARY KEY,document TEXT,revision INTEGER,stage TEXT,state TEXT,status TEXT,payload TEXT,evidence TEXT,created TEXT,digest TEXT);
+            CREATE TABLE IF NOT EXISTS review_targets(id TEXT PRIMARY KEY,document TEXT,parent_revision INTEGER,name TEXT,payload BLOB,sha256 TEXT,source_sha256 TEXT,owner TEXT,created TEXT);
+            CREATE TRIGGER IF NOT EXISTS immutable_review_targets_update BEFORE UPDATE ON review_targets BEGIN SELECT RAISE(ABORT,'immutable review target'); END;
+            CREATE TRIGGER IF NOT EXISTS immutable_review_targets_delete BEFORE DELETE ON review_targets BEGIN SELECT RAISE(ABORT,'immutable review target'); END;
+            CREATE TABLE IF NOT EXISTS target_reviews(id INTEGER PRIMARY KEY,target TEXT,stage TEXT,state TEXT,status TEXT,payload TEXT,evidence TEXT,created TEXT);
             CREATE TABLE IF NOT EXISTS artifacts(document TEXT,revision INTEGER,kind TEXT,payload BLOB,PRIMARY KEY(document,revision,kind));
             CREATE TABLE IF NOT EXISTS page_assets(document TEXT,page INTEGER,payload BLOB,PRIMARY KEY(document,page));
             CREATE TABLE IF NOT EXISTS ai_usage(id INTEGER PRIMARY KEY,document TEXT,task TEXT,model TEXT,reserved REAL,state TEXT,usage TEXT);

@@ -13,6 +13,6 @@ test_token_limit_is_distinct_and_incomplete_html_not_saved (test_report_transpor
 test_web_accepts_and_polls_while_openai_pending_without_second_paid_request (test_report_transport.ReportTransportTests.test_web_accepts_and_polls_while_openai_pending_without_second_paid_request) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 2.373s
+Ran 13 tests in 1.966s
 
 OK

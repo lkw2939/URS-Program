@@ -1,0 +1,147 @@
+"""Immutable imported review targets. Never replace report revisions or generate HTML."""
+import hashlib,json,uuid,io,zipfile,os,math
+from datetime import datetime,timezone
+from html import escape
+from urs.workflow import Blocked
+
+MAX_HTML=12*1024*1024
+
+def register(workspace,owner,document,parent_revision,name,payload):
+    original=workspace.original(owner,document)
+    if type(parent_revision) is not int or parent_revision<1:raise ValueError('부모 리비전을 선택하세요.')
+    if not isinstance(payload,bytes) or not 0<len(payload)<=MAX_HTML:raise ValueError('HTML은 최대 12MB입니다.')
+    try:text=payload.decode('utf-8')
+    except UnicodeError:raise ValueError('UTF-8 HTML 파일이 필요합니다.') from None
+    if '<html' not in text.lower() or '</html>' not in text.lower():raise ValueError('HTML 문서 시작과 끝 표시를 확인하세요. 파일을 자동 보정하지 않습니다.')
+    if not isinstance(name,str) or not name.lower().endswith('.html') or len(name)>160:raise ValueError('HTML 파일명을 확인하세요.')
+    digest=hashlib.sha256(payload).hexdigest()
+    with workspace.workflow.connect() as db:
+        parent=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind='report.html'",(document,parent_revision)).fetchone()
+        if not parent:raise Blocked('선택한 부모 리비전의 저장 보고서가 없습니다. 보고서를 재생성하지 말고 기존 리비전을 확인하세요.')
+        existing=db.execute('SELECT id FROM review_targets WHERE document=? AND parent_revision=? AND sha256=?',(document,parent_revision,digest)).fetchone()
+        if existing:return existing['id']
+        target=uuid.uuid4().hex
+        db.execute('INSERT INTO review_targets VALUES(?,?,?,?,?,?,?,?,?)',(target,document,parent_revision,name,payload,digest,original['sha256'],owner,datetime.now(timezone.utc).isoformat()))
+    return target
+
+def get(workspace,owner,document,target):
+    original=workspace.original(owner,document)
+    with workspace.workflow.connect() as db:row=db.execute('SELECT * FROM review_targets WHERE id=? AND document=?',(target,document)).fetchone()
+    if row is None:raise Blocked('등록된 검증 대상을 찾을 수 없습니다.')
+    row=dict(row)
+    if row['source_sha256']!=original['sha256'] or hashlib.sha256(row['payload']).hexdigest()!=row['sha256']:raise Blocked('등록된 검증 대상/원본 PDF 무결성 검사 실패')
+    return row,original
+
+def listing(workspace,owner,document):
+    workspace.original(owner,document)
+    with workspace.workflow.connect() as db:return [dict(r) for r in db.execute('SELECT id,parent_revision,name,sha256,source_sha256,created,length(payload) AS bytes FROM review_targets WHERE document=? ORDER BY rowid',(document,))]
+
+def overview(workspace,owner,document,target):
+    row,original=get(workspace,owner,document,target)
+    from urs.reviews import INSTANCE
+    with workspace.workflow.connect() as db:
+        attempts=[dict(r) for r in db.execute('SELECT * FROM target_reviews WHERE target=? ORDER BY id DESC',(target,))]
+    budget={}
+    try:
+        from urs.ai_settings import effective
+        from urs.ai import review_text
+        config=effective(workspace.workflow,document=document)
+        limit=float(os.environ.get('URS_AI_BUDGET_USD','0'));ir=float(os.environ.get('URS_AI_INPUT_USD_PER_MILLION','0'));outr=float(os.environ.get('URS_AI_OUTPUT_USD_PER_MILLION','0'))
+        if all(math.isfinite(v) and v>0 for v in (limit,ir,outr)):
+            with workspace.workflow.connect() as db:total,calls=db.execute('SELECT COALESCE(SUM(reserved),0),COUNT(*) FROM ai_usage WHERE document=?',(document,)).fetchone()
+            for stage in ('verify','analyze'):
+                estimate=((len(original['original'])+len(row['payload'])+len(review_text('independent_verify' if stage=='verify' else 'technical_analysis').encode()))*ir+config['max_output_tokens']*outr)/1000000
+                budget[stage]={'request_count':calls,'request_limit':120,'reserved_usd':total,'next_reservation_usd':estimate,'budget_usd':limit,'blocked':calls>=120 or total+estimate>limit}
+    except (ValueError,TypeError,KeyError):pass
+    info={k:row[k] for k in ('id','parent_revision','name','sha256','source_sha256','created')};info['bytes']=len(row['payload']);info['reviews']={}
+    for stage in ('verify','analyze'):
+        current=next((r for r in attempts if r['stage']==stage),None)
+        stored=next((r for r in attempts if r['stage']==stage and r['payload']),None)
+        running=bool(current and current['state']=='running' and json.loads(current['evidence']).get('server_instance')==INSTANCE)
+        verification=next((r for r in attempts if r['stage']=='verify'),None)
+        blocked='실행 중입니다. 자동 재실행하지 않습니다.' if running else ''
+        if stage=='analyze' and (not verification or verification['state']!='finished' or verification['status']!='PASS'):blocked='이 A4 대상의 독립검증이 PASS여야 합니다. 기존 Terra HTML 검증 결과는 재사용하지 않습니다.'
+        failure=json.loads(current['evidence']).get('reason') if current and current['state']=='failed' else None
+        if current and current['state']=='running' and not running:failure='이전 서버 작업의 완료 여부가 미확인입니다. API 사용 내역 확인 후 필요할 때만 수동 실행하세요.'
+        if budget.get(stage,{}).get('blocked'):
+            blocked=(blocked+' · ' if blocked else '')+'문서의 요청/예약 예산 상한입니다. 등록은 완료됐으며 실제 검토는 사용량·단가 정산 확인 후 실행하세요. 자동으로 예산을 올리거나 초기화하지 않습니다.'
+        info['reviews'][stage]={'budget_preview':budget.get(stage),'status':current['status'] if current else 'UNVERIFIED','can_run':not blocked,'blocked_reason':blocked,'running':running,'failure':failure,'available':stored is not None,'attempt':stored['id'] if stored else None,'older_attempt':bool(current and stored and current['id']!=stored['id'])}
+    return info
+
+def run(workspace,owner,document,target,stage):
+    import threading,time
+    from urs.ai_settings import effective,signature
+    from urs.ai import AIError,AIBlocked
+    from urs.reviews import INSTANCE
+    from urs.evaluation import fingerprint
+    row,original=get(workspace,owner,document,target)
+    with workspace._locks_guard:lock=workspace._run_locks.setdefault(document,threading.Lock())
+    if not lock.acquire(False):raise Blocked('같은 문서의 다른 처리가 진행 중입니다. 완료 후 확인하세요.')
+    try:
+        ready=overview(workspace,owner,document,target)['reviews'][stage]
+        if not ready['can_run']:raise Blocked(ready['blocked_reason'])
+        with workspace.workflow.connect() as db:
+            attempt=db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(target,stage,'running','UNVERIFIED',None,json.dumps({'server_instance':INSTANCE}),datetime.now(timezone.utc).isoformat())).lastrowid
+        start=time.monotonic();result=None
+        evidence={'target_id':target,'input_kind':'A4 imported HTML','input_revision':row['parent_revision'],'input_html_sha256':row['sha256'],'input_pdf_sha256':row['source_sha256']}
+        try:
+            config=effective(workspace.workflow,document=document)
+        except Exception:
+            config=None
+        if config:evidence.update(model=config['model'],reasoning_effort=config['effort'],max_output_tokens=config['max_output_tokens'],ai_settings_signature=signature(config),pipeline_fingerprint=fingerprint())
+        try:
+            if config is None:raise AIBlocked('모델·effort·출력 한도 설정을 확인하세요. 유료 호출하지 않았습니다.')
+            result=workspace.processing.provider_for(document,config).review_pdf('independent_verify' if stage=='verify' else 'technical_analysis',original['original'],original['name'],row['payload'].decode())
+            if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):raise ValueError('검토 JSON의 status/issues 형식이 올바르지 않습니다.')
+            if result['status']=='PASS' and result['issues']:raise ValueError('PASS와 오류 목록이 모순됩니다.')
+            if stage=='analyze' and any(not isinstance(result.get(k),list) for k in ('sections','conflicts','questions')):raise ValueError('분석 JSON의 sections/conflicts/questions 목록이 필요합니다.')
+            status=result['status'];state='finished'
+        except Exception as exc:
+            result=None;status='FAIL';state='failed'
+            evidence['reason']=str(exc) if isinstance(exc,(AIError,AIBlocked,Blocked)) else '검토 결과 처리 실패: '+type(exc).__name__
+            if getattr(exc,'diagnostics',None):evidence['api_diagnostics']=exc.diagnostics
+        evidence['elapsed_seconds']=round(time.monotonic()-start,3)
+        with workspace.workflow.connect() as db:db.execute('UPDATE target_reviews SET state=?,status=?,payload=?,evidence=? WHERE id=?',(state,status,json.dumps(result,ensure_ascii=False) if result is not None else None,json.dumps(evidence,ensure_ascii=False),attempt))
+    finally:lock.release()
+    return overview(workspace,owner,document,target)
+
+class Tasks:
+    def __init__(self,workspace):self.workspace=workspace;self.lock=__import__('threading').Lock();self.active=set();self.errors={}
+    def start(self,owner,document,target,stage):
+        self.workspace.original(owner,document)
+        key=(document,target,stage)
+        with self.lock:
+            if key in self.active:return {'state':'running'}
+            info=overview(self.workspace,owner,document,target)['reviews'][stage]
+            if not info['can_run']:raise Blocked(info['blocked_reason'])
+            self.active.add(key);self.errors.pop(key,None)
+        def worker():
+            try:run(self.workspace,owner,document,target,stage)
+            except Exception as exc:
+                with self.lock:self.errors[key]=str(exc) if isinstance(exc,Blocked) else '작업을 접수했으나 실행에 실패했습니다. 상태/실패 기록을 확인하세요.'
+            finally:
+                with self.lock:self.active.discard(key)
+        __import__('threading').Thread(target=worker,daemon=True).start()
+        return {'state':'running'}
+    def status(self,owner,document,target):
+        info=overview(self.workspace,owner,document,target)
+        with self.lock:
+            for stage in ('verify','analyze'):
+                if (document,target,stage) in self.errors:info['reviews'][stage]['failure']=self.errors[(document,target,stage)]
+                if (document,target,stage) in self.active:info['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다.')
+        return info
+
+def result_html(workspace,owner,document,target,stage,attempt):
+    from urs.reviews import readable,NAMES
+    target_row,_=get(workspace,owner,document,target)
+    with workspace.workflow.connect() as db:
+        row=db.execute('SELECT * FROM target_reviews WHERE id=? AND target=? AND stage=?',(attempt,target,stage)).fetchone()
+        latest=db.execute('SELECT id FROM target_reviews WHERE target=? AND stage=? ORDER BY id DESC LIMIT 1',(target,stage)).fetchone()
+    if row is None or not row['payload']:raise Blocked('저장된 A4 검토 결과가 없습니다. 실패 이유를 확인하세요.')
+    body=json.loads(row['payload']);ev=json.loads(row['evidence'])
+    s='<h1>A4 '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>원본 PDF + 등록 A4 HTML을 사용했습니다. 기존 Terra 원본 HTML의 검토 결과가 아닙니다.</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(row['status'])+'</p>'
+    if latest['id']!=attempt:s+='<p>이전 실행 결과입니다. 최신 결과가 아닙니다.</p>'
+    s+='<p>보고서를 수정하지 않았습니다. 수정 전후는 제안이며 실제 적용되지 않았습니다.</p>'
+    for key,title in [('issues','발견 사항'),('sections','주요 사양'),('conflicts','조건 충돌'),('questions','고객 질문과 필요한 이유')]:
+        if key in body:s+='<h2>'+title+'</h2>'+readable(body[key])
+    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><title>A4 '+NAMES[stage]+'</title><style>body{font:16px/1.7 sans-serif;max-width:1000px;margin:32px auto;padding:24px;color:#21405a}dt{font-weight:bold}dd{margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere}</style>'+s+'</html>').encode()

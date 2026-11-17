@@ -1,0 +1,1 @@
+PASS: failed current r2 preserved; r1 parent A4 import/select/download byte-exact and zero AI; separate A4 verify/analyze mock execution and HTML results; raw report/legacy records/budget untouched; paid calls=0.

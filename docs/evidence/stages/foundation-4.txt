@@ -5,6 +5,6 @@ test_skipped_checks_do_not_unlock_next_stage (test_verification.DevelopmentGateT
 test_zero_test_run_cannot_unlock_next_stage (test_verification.DevelopmentGateTests.test_zero_test_run_cannot_unlock_next_stage) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.078s
+Ran 5 tests in 0.079s
 
 OK

@@ -7,3 +7,5 @@
 #report-preview{display:block;width:100%;height:78vh;border:1px solid #dce3e8;background:#fff} #report-settings{margin-bottom:24px} #analysis-content pre{white-space:pre-wrap;overflow-wrap:anywhere}
 
 #ai-settings{margin-bottom:20px}.ai-settings-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(140px,1fr) minmax(160px,1fr);gap:16px}#ai-settings .actions{align-items:center}@media(max-width:700px){.ai-settings-fields{grid-template-columns:1fr}}
+
+#usage-preview{overflow-x:auto;margin:16px 0;padding:12px;background:#f5f9fc}#usage-preview table{width:100%;min-width:640px;border-collapse:collapse;font-size:13px}#usage-preview th,#usage-preview td{padding:9px;border:1px solid #ccd8df;text-align:left;vertical-align:top}#usage-preview th{background:#e7f0f6}#a4-target-panel label{display:block;margin:12px 0}#a4-target-panel select{max-width:100%}

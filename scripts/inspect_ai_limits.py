@@ -2,15 +2,14 @@
 import argparse,ast,json,math,os,sqlite3,sys
 from pathlib import Path
 from dotenv import dotenv_values
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+from urs.usage_audit import preview
 ROOT=Path(__file__).resolve().parents[1]
 KEYS=('URS_AI_BUDGET_USD','URS_AI_INPUT_USD_PER_MILLION','URS_AI_OUTPUT_USD_PER_MILLION','URS_OPENAI_MAX_OUTPUT_TOKENS')
 
 def instruction(stage):
-    function=next(n for n in ast.walk(ast.parse((ROOT/'urs/ai.py').read_text())) if isinstance(n,ast.FunctionDef) and n.name=='review_pdf')
-    assignment=next(n for n in function.body if isinstance(n,ast.Assign))
-    base=ast.literal_eval(assignment.value)['independent_verify' if stage=='verify' else 'technical_analysis']
-    suffix=next((n.right.value for n in ast.walk(function) if isinstance(n,ast.BinOp) and isinstance(n.op,ast.Add) and isinstance(n.right,ast.Constant) and isinstance(n.right.value,str)), '')
-    return base+suffix
+    from urs.ai import review_text
+    return review_text('independent_verify' if stage=='verify' else 'technical_analysis')
 
 def audit(root,data,document,revision=None,stage='verify'):
     config=dotenv_values(root/'.env',interpolate=False)
@@ -29,6 +28,8 @@ def audit(root,data,document,revision=None,stage='verify'):
         counts=[dict(r) for r in db.execute('SELECT state,COUNT(*) AS calls,COALESCE(SUM(reserved),0) AS reserved_usd FROM ai_usage WHERE document=? GROUP BY state',(document,))]
         calls=sum(x['calls'] for x in counts);reserved=sum(x['reserved_usd'] for x in counts)
         reserve=((len(doc['original'])+len(bytes(raw[0]))+len(instruction(stage).encode()))*ir+tokens*out)/1_000_000 if raw else None
+        if db.execute("SELECT 1 FROM pragma_table_info('ai_usage') WHERE name='usage'").fetchone():result['settlement_preview']=preview(db,document,ir,out)
+        else:result['settlement_preview']={'applied':False,'reason':'usage 필드가 없어 정산 자료를 확인할 수 없습니다.'}
         result.update(current_revision=current,target_revision=target,target_is_previous=target!=current,target_raw_html_exists=bool(raw),stage=stage,max_output_tokens=tokens,output_setting_source='web' if web else 'environment/default',
             budget_usd=budget,input_usd_per_million=ir,output_usd_per_million=out,request_count=calls,request_count_limit=120,reserved_usd=reserved,ledger_by_state=counts,
             next_reservation_usd=reserve,request_count_limit_reached=calls>=120,budget_limit_for_target=(reserved+reserve>budget) if reserve is not None else None,

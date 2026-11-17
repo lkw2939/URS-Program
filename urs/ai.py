@@ -37,10 +37,7 @@ class OpenAI:
             [{'type':'input_text','text':prompt}, {'type':'input_text','text':image_guide}], False)
 
     def review_pdf(self, task, pdf, filename, html):
-        instructions = {
-            'independent_verify': 'Independently compare the original PDF with the supplied HTML. Check full technical meaning, omissions, additions, negation, conditions, obligations, quantities, units, codes and table associations. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,issues:[{page,reason}]}. Do not edit or rewrite the HTML.',
-            'technical_analysis': 'Analyze equipment, processes, specification conflicts and customer questions using the original PDF and supplied report. Cite original page numbers. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,sections:[],conflicts:[],questions:[],issues:[]}. Do not edit or rewrite the HTML.'}
-        return self._pdf_request(task,pdf,filename,[{'type':'input_text','text':instructions[task]+' 설명과 판단 이유는 한국어로 먼저 작성하세요. 필요한 영어 원문 근거는 source_en에 분리하세요. issues 항목에는 page, severity(오류 또는 확인 필요), reason을, questions 항목에는 question_ko, reason_ko를 포함하세요. 기존 HTML은 수정하지 말고 before/after는 제안일 때만 표시하세요.'},
+        return self._pdf_request(task,pdf,filename,[{'type':'input_text','text':review_text(task)},
             {'type':'input_text','text':html}],True)
 
     def _pdf_request(self, task, pdf, filename, texts, json_response):
@@ -108,3 +105,9 @@ class OpenAI:
         with self.workflow.connect() as db:
             db.execute('UPDATE ai_usage SET state=?,usage=? WHERE id=?',('completed',json.dumps(result.get('usage',{})),call_id))
         return value
+
+def review_text(task):
+    instructions = {
+        'independent_verify': 'Independently compare the original PDF with the supplied HTML. Check full technical meaning, omissions, additions, negation, conditions, obligations, quantities, units, codes and table associations. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,issues:[{page,reason}]}. Do not edit or rewrite the HTML.',
+        'technical_analysis': 'Analyze equipment, processes, specification conflicts and customer questions using the original PDF and supplied report. Cite original page numbers. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,sections:[],conflicts:[],questions:[],issues:[]}. Do not edit or rewrite the HTML.'}
+    return instructions[task]+' 설명과 판단 이유는 한국어로 먼저 작성하세요. 필요한 영어 원문 근거는 source_en에 분리하세요. issues 항목에는 page, severity(오류 또는 확인 필요), reason을, questions 항목에는 question_ko, reason_ko를 포함하세요. 기존 HTML은 수정하지 말고 before/after는 제안일 때만 표시하세요.'
