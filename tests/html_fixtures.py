@@ -5,7 +5,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 
 PROMPT='  내 프롬프트 원문\nHTML/CSS와 번역은 직접 작성하세요.\n  '
-RAW='''<!doctype html>\r\n<html><head><style>body { font-family: serif; margin: 23px; } .p { break-after:page; }</style></head><body><h1>모델 제목 &amp; 원문</h1><table><tr><td>120 mm</td></tr></table><!-- urs-image:1:2 --><figure><img alt='two' src = "urs-image:1:2"><figcaption>모델 캡션 B</figcaption></figure><p>Literal urs-image:1:1</p><img src='urs-image:1:1' alt="first"><img src=urs-image:9:8><script>const x="urs-image:1:1";</script></body></html>'''
+RAW='''<!doctype html>\r\n<html><head><style>body { font-family: serif; margin: 23px; } .p { break-after:page; } [data-urs-page]{width:210mm;height:297mm;box-sizing:border-box;padding:12mm;font-size:14px;line-height:1.4}img{width:100px;height:auto}table{font-size:14px}</style></head><body><section data-urs-page="1"><h1>모델 제목 &amp; 원문</h1><table><tr><td>120 mm</td></tr></table><!-- urs-image:1:2 --><figure><img alt='two' src = "urs-image:1:2"><figcaption>모델 캡션 B</figcaption></figure><p>Literal urs-image:1:1</p><img src='urs-image:1:1' alt="first"><img src=urs-image:9:8><script>const x="urs-image:1:1";</script></section></body></html>'''
 
 def visual_pdf(blank=False, vector=False):
     out=io.BytesIO();c=canvas.Canvas(out,pagesize=(400,400))

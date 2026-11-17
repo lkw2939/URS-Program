@@ -22,6 +22,11 @@ def main():
         subprocess.run([str(python), "-m", "pip", "install", "-r", "requirements.lock"], check=True)
         subprocess.run([str(python), "-m", "pip", "check"], check=True)
         marker.write_text(digest)
+    import shutil
+    if os.name=='posix' and not (shutil.which('chromium') or shutil.which('chromium-browser')):
+        cache=Path(os.environ.get('PLAYWRIGHT_BROWSERS_PATH',str(Path.home()/'.cache/ms-playwright')))
+        if not any(cache.glob('chromium*')):
+            subprocess.run([str(python),'-m','playwright','install','--with-deps','chromium'],check=True)
     data = ROOT / ".runtime/workspace.sqlite"
     needs_user = True
     if data.exists():

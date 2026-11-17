@@ -77,11 +77,19 @@ class Processing:
                 with self.workflow.connect() as db:db.execute('UPDATE report_diagnostics SET payload=? WHERE call_id=?',(json.dumps(info),info['call_id']))
                 exc.diagnostics=info
             raise exc from None
-        data={'report.raw.html':raw.encode(),'report.html':final.encode(),
+        from urs.layout_audit import inspect
+        from urs.report_contract import VERSION
+        from pypdf import PdfReader
+        import io
+        layout=inspect(final,len(PdfReader(io.BytesIO(pdf)).pages))
+        layout['source_image_candidates']=len(assets);layout['bound_image_slots']=len(comparison['replacements'])
+        if assets and not comparison['replacements']:
+            layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).append('원본 그림 후보가 있으나 최종 HTML에 연결된 그림이 없습니다.')
+        data={'layout-audit':layout,'report.raw.html':raw.encode(),'report.html':final.encode(),
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
                   'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
-                  'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
+                  'layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
         # Append-only report artifacts. Retries/regeneration must use a new revision.
         with self.workflow.connect() as db:
             if self.workflow._job(db,document)['revision']!=revision:raise Blocked('보고서 생성 중 문서가 변경되었습니다.')

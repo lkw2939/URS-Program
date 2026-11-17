@@ -140,9 +140,26 @@ def make_app(workspace, port=8795, secure_cookie=False):
                                     data[kind] = workspace.artifact(owner, document, kind)
                                 except Blocked:
                                     pass
+                            selected=data['reports']['selected']
+                            data['current_report']=selected
+                            data['current_review']=target_tasks.status(owner,document,f"displayed:{document}:{selected['revision']}") if selected else None
+                            try:data['latest_layout']=workspace.processing.get(document,'layout-audit',data['status']['revision'])
+                            except Blocked:data['latest_layout']=None
+                            data['generation_contract']=__import__('urs.report_contract',fromlist=['TEXT']).TEXT
+                            try:data['current_layout']=workspace.processing.get(document,'layout-audit',selected['revision']) if selected else None
+                            except Blocked:data['current_layout']={'status':'UNVERIFIED','reason':'기존 보고서는 A4 화면 검사를 받지 않았습니다. 사진 표시·배치를 점검해야 합니다.'}
                             for stage in ('verify','analyze'):
                                 if tasks.status(document,stage)['state']=='running':data['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다. 결과가 저장될 때까지 기다려 주세요.')
                             self.reply(200, data)
+                        elif post and action=='current-review-run':
+                            selected=workspace.report_availability(owner,document)['selected']
+                            if not selected:raise Blocked('정상 저장된 보고서가 없습니다. 생성 실패 또는 배치 확인 이력을 확인하세요.')
+                            if body['stage'] not in ('verify','analyze'):raise ValueError('검토 단계를 확인하세요.')
+                            ident=f"displayed:{document}:{selected['revision']}"
+                            visible,_=targets.get(workspace,owner,document,ident)
+                            if body.get('expected_revision')!=selected['revision'] or body.get('expected_sha256')!=visible['sha256']:raise Blocked('보고서가 갱신됐거나 화면과 다릅니다. 새로고침해 현재 보고서를 확인한 뒤 실행하세요. API를 호출하지 않았습니다.')
+                            result=target_tasks.start(owner,document,ident,body['stage'])
+                            self.reply(202,{**result,'target':ident})
                         elif not post and action=='usage-preview':
                             from urs.usage_audit import server_preview
                             self.reply(200,server_preview(workspace,owner,document))
@@ -164,7 +181,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             q=parse_qs(urlparse(self.path).query);ident=q['target'][0]
                             if action=='target.html':
                                 row,_=targets.get(workspace,owner,document,ident)
-                                self.reply(200,bytes(row['payload']),'text/html; charset=utf-8',attachment='registered-a4.html',report=True)
+                                self.reply(200,bytes(row['payload']),'text/html; charset=utf-8',attachment=('stored-r'+str(row['parent_revision'])+'.raw.html' if row['kind']=='stored_revision' else 'registered-a4.html'),report=True)
                             else:
                                 stage=q['stage'][0]
                                 if stage not in ('verify','analyze'):raise ValueError('검토 단계를 확인하세요.')

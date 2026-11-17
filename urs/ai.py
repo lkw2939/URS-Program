@@ -32,9 +32,9 @@ class OpenAI:
         self.settings=dict(settings) if settings is not None else None
 
     def report_html(self, pdf, filename, prompt, image_guide):
-        """Report authoring: the saved prompt is the sole authoring instruction."""
+        """Report authoring: saved prompt plus the user-authorized A4 output contract."""
         return self._pdf_request('report_html', pdf, filename,
-            [{'type':'input_text','text':prompt}, {'type':'input_text','text':image_guide}], False)
+            [{'type':'input_text','text':prompt}, {'type':'input_text','text':image_guide}, {'type':'input_text','text':__import__('urs.report_contract',fromlist=['TEXT']).TEXT}], False)
 
     def review_pdf(self, task, pdf, filename, html):
         return self._pdf_request(task,pdf,filename,[{'type':'input_text','text':review_text(task)},

@@ -58,7 +58,7 @@ class ProcessingTests(unittest.TestCase):
         self.assertEqual(set(payload),{'model','input','max_output_tokens','store'})
         self.assertEqual(payload['model'],SETTINGS['URS_OPENAI_MODEL'])
         content=payload['input'][0]['content']
-        self.assertEqual([c['type'] for c in content],['input_file','input_text','input_text'])
+        self.assertEqual([c['type'] for c in content],['input_file','input_text','input_text','input_text'])
         self.assertEqual(base64.b64decode(content[0]['file_data'].split(',')[1]),self.pdf)
         self.assertEqual(content[1]['text'],PROMPT)
         self.assertEqual(content[2]['text'],self.w.artifact('alice',self.doc,'report-metadata')['image_guide'])

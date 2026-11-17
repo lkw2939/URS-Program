@@ -120,7 +120,9 @@ def run(root=ROOT,document=None,live=False):
         payload=json.loads(request.data);content=payload['input'][0]['content']
         proof['sent_original_pdf']=content[0]['type']=='input_file' and base64.b64decode(content[0]['file_data'].split(',')[1])==source['original']
         proof['sent_verbatim_saved_prompt']=content[1]['text']==source['prompt']
-        proof['only_file_prompt_image_guide']=len(content)==3 and [c['type'] for c in content]==['input_file','input_text','input_text'] and 'instructions' not in payload and 'text' not in payload
+        proof['only_file_prompt_image_guide']=False # The user now explicitly requires an additional A4 output contract.
+        proof['file_prompt_image_guide_and_a4_contract_only']=len(content)==4 and [c['type'] for c in content]==['input_file','input_text','input_text','input_text'] and 'instructions' not in payload and 'text' not in payload
+        proof['a4_contract_sent']=len(content)==4 and content[3]['text']==__import__('urs.report_contract',fromlist=['TEXT']).TEXT
         proof['requested_effort']=(payload.get('reasoning') or {}).get('effort')
         proof['requested_max_output_tokens']=payload.get('max_output_tokens')
         try:return ResponseObserver(real_open(request,*args,**kwargs),proof)

@@ -9,7 +9,7 @@ ENV={'URS_OPENAI_API_KEY':'PRIVATE-KEY-SHOULD-NOT-LOG','URS_OPENAI_MODEL':'mock-
 class Reply(io.BytesIO):
     status=200
     def __init__(self,value):super().__init__(json.dumps(value).encode())
-def good():return Reply({'status':'completed','usage':{'input_tokens':12,'output_tokens':9},'output':[{'content':[{'type':'output_text','text':RAW}]}]})
+def good(html=RAW):return Reply({'status':'completed','usage':{'input_tokens':12,'output_tokens':9},'output':[{'content':[{'type':'output_text','text':html}]}]})
 class ReportTransportTests(unittest.TestCase):
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
@@ -84,7 +84,7 @@ class ReportTransportTests(unittest.TestCase):
             conn.request('GET' if data is None else 'POST',path,body=None if data is None else json.dumps(data),headers={'Content-Type':'application/json','Cookie':cookie,'X-CSRF-Token':csrf})
             r=conn.getresponse();status=r.status;headers=r.getheader('Set-Cookie');body=json.loads(r.read());conn.close();return status,body,headers
         def pending(req,**kwargs):
-            calls.append((json.loads(req.data),kwargs));entered.set();gate.wait(5);return good()
+            calls.append((json.loads(req.data),kwargs));entered.set();gate.wait(5);return good(RAW.replace('src=urs-image:9:8','src=urs-image:1:1'))
         try:
             status,login,header=http('/api/login',{'username':'alice','password':'fixture-password-123'})
             cookie=header.split(';')[0];_,me,_=http('/api/me');csrf=me['csrf']

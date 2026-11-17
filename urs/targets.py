@@ -26,9 +26,16 @@ def register(workspace,owner,document,parent_revision,name,payload):
 
 def get(workspace,owner,document,target):
     original=workspace.original(owner,document)
+    if target.startswith(('stored:','displayed:')):
+        parts=target.split(':')
+        if len(parts)!=3 or parts[1]!=document or not parts[2].isdigit():raise Blocked('저장 리비전 식별자를 확인하세요.')
+        revision=int(parts[2])
+        workspace.processing.checked_html(document,revision)
+        raw=workspace.processing.get(document,'report.html' if parts[0]=='displayed' else 'report.raw.html',revision)
+        return {'id':target,'document':document,'parent_revision':revision,'name':f'URS 저장 리비전 {revision} · '+('사진 삽입 최종 HTML' if parts[0]=='displayed' else 'Terra 원본 HTML'),'payload':raw,'sha256':hashlib.sha256(raw).hexdigest(),'source_sha256':original['sha256'],'created':'기존 저장 파일','kind':'stored_final' if parts[0]=='displayed' else 'stored_revision'},original
     with workspace.workflow.connect() as db:row=db.execute('SELECT * FROM review_targets WHERE id=? AND document=?',(target,document)).fetchone()
     if row is None:raise Blocked('등록된 검증 대상을 찾을 수 없습니다.')
-    row=dict(row)
+    row=dict(row);row['kind']='a4_import'
     if row['source_sha256']!=original['sha256'] or hashlib.sha256(row['payload']).hexdigest()!=row['sha256']:raise Blocked('등록된 검증 대상/원본 PDF 무결성 검사 실패')
     return row,original
 
@@ -51,19 +58,23 @@ def overview(workspace,owner,document,target):
             with workspace.workflow.connect() as db:total,calls=db.execute('SELECT COALESCE(SUM(reserved),0),COUNT(*) FROM ai_usage WHERE document=?',(document,)).fetchone()
             for stage in ('verify','analyze'):
                 estimate=((len(original['original'])+len(row['payload'])+len(review_text('independent_verify' if stage=='verify' else 'technical_analysis').encode()))*ir+config['max_output_tokens']*outr)/1000000
-                budget[stage]={'request_count':calls,'request_limit':120,'reserved_usd':total,'next_reservation_usd':estimate,'budget_usd':limit,'blocked':calls>=120 or total+estimate>limit}
+                budget[stage]={'request_count':calls,'request_limit':120,'reserved_usd':total,'next_reservation_usd':estimate,'budget_usd':limit,'blocked':calls>=120 or total+estimate>limit,'additional_budget_needed_usd':max(0,total+estimate-limit),'minimum_budget_for_this_call_usd':total+estimate}
     except (ValueError,TypeError,KeyError):pass
-    info={k:row[k] for k in ('id','parent_revision','name','sha256','source_sha256','created')};info['bytes']=len(row['payload']);info['reviews']={}
+    info={k:row[k] for k in ('id','parent_revision','name','sha256','source_sha256','created','kind')};info['bytes']=len(row['payload']);info['reviews']={}
+    import re
+    text=row['payload'].decode('utf-8',errors='replace');ends=list(re.finditer(r'</html\s*>',text,re.I))
+    suffix=text[ends[-1].end():].strip() if ends else None
+    info['document_end']={'closing_html_present':bool(ends),'trailing_code_fence_only':bool(ends and suffix=='```'),'trailing_text':suffix,'content_omission':'미확인 · 원본 PDF와 대조할 독립검증 대상입니다.'}
     for stage in ('verify','analyze'):
         current=next((r for r in attempts if r['stage']==stage),None)
         stored=next((r for r in attempts if r['stage']==stage and r['payload']),None)
         running=bool(current and current['state']=='running' and json.loads(current['evidence']).get('server_instance')==INSTANCE)
         verification=next((r for r in attempts if r['stage']=='verify'),None)
         blocked='실행 중입니다. 자동 재실행하지 않습니다.' if running else ''
-        if stage=='analyze' and (not verification or verification['state']!='finished' or verification['status']!='PASS'):blocked='이 A4 대상의 독립검증이 PASS여야 합니다. 기존 Terra HTML 검증 결과는 재사용하지 않습니다.'
+        if stage=='analyze' and (not verification or verification['state']!='finished' or verification['status']!='PASS'):blocked='이 선택 대상의 독립검증이 PASS여야 합니다. 다른 보고서·다른 리비전 결과는 재사용하지 않습니다.'
         failure=json.loads(current['evidence']).get('reason') if current and current['state']=='failed' else None
         if current and current['state']=='running' and not running:failure='이전 서버 작업의 완료 여부가 미확인입니다. API 사용 내역 확인 후 필요할 때만 수동 실행하세요.'
-        if budget.get(stage,{}).get('blocked'):
+        if not running and budget.get(stage,{}).get('blocked'):
             blocked=(blocked+' · ' if blocked else '')+'문서의 요청/예약 예산 상한입니다. 등록은 완료됐으며 실제 검토는 사용량·단가 정산 확인 후 실행하세요. 자동으로 예산을 올리거나 초기화하지 않습니다.'
         info['reviews'][stage]={'budget_preview':budget.get(stage),'status':current['status'] if current else 'UNVERIFIED','can_run':not blocked,'blocked_reason':blocked,'running':running,'failure':failure,'available':stored is not None,'attempt':stored['id'] if stored else None,'older_attempt':bool(current and stored and current['id']!=stored['id'])}
     return info
@@ -83,7 +94,7 @@ def run(workspace,owner,document,target,stage):
         with workspace.workflow.connect() as db:
             attempt=db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(target,stage,'running','UNVERIFIED',None,json.dumps({'server_instance':INSTANCE}),datetime.now(timezone.utc).isoformat())).lastrowid
         start=time.monotonic();result=None
-        evidence={'target_id':target,'input_kind':'A4 imported HTML','input_revision':row['parent_revision'],'input_html_sha256':row['sha256'],'input_pdf_sha256':row['source_sha256']}
+        evidence={'target_id':target,'input_kind':'URS final HTML with source images' if row['kind']=='stored_final' else 'stored Terra raw HTML' if row['kind']=='stored_revision' else 'A4 imported HTML','input_revision':row['parent_revision'],'input_html_sha256':row['sha256'],'input_pdf_sha256':row['source_sha256']}
         try:
             config=effective(workspace.workflow,document=document)
         except Exception:
@@ -139,9 +150,11 @@ def result_html(workspace,owner,document,target,stage,attempt):
         latest=db.execute('SELECT id FROM target_reviews WHERE target=? AND stage=? ORDER BY id DESC LIMIT 1',(target,stage)).fetchone()
     if row is None or not row['payload']:raise Blocked('저장된 A4 검토 결과가 없습니다. 실패 이유를 확인하세요.')
     body=json.loads(row['payload']);ev=json.loads(row['evidence'])
-    s='<h1>A4 '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>원본 PDF + 등록 A4 HTML을 사용했습니다. 기존 Terra 원본 HTML의 검토 결과가 아닙니다.</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(row['status'])+'</p>'
+    label='저장 리비전' if target_row['kind'] in ('stored_revision','stored_final') else 'A4'
+    input_note=('화면에서 열람한 URS 최종 HTML(사진 포함)과 원본 PDF를 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.' if target_row['kind']=='stored_final' else '선택 리비전의 원본 PDF + 저장 Terra 원본 HTML을 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.') if target_row['kind'] in ('stored_revision','stored_final') else '원본 PDF + 등록 A4 HTML을 사용했습니다. 기존 Terra 원본 HTML의 검토 결과가 아닙니다.'
+    s='<h1>'+label+' '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(row['status'])+'</p>'
     if latest['id']!=attempt:s+='<p>이전 실행 결과입니다. 최신 결과가 아닙니다.</p>'
     s+='<p>보고서를 수정하지 않았습니다. 수정 전후는 제안이며 실제 적용되지 않았습니다.</p>'
     for key,title in [('issues','발견 사항'),('sections','주요 사양'),('conflicts','조건 충돌'),('questions','고객 질문과 필요한 이유')]:
         if key in body:s+='<h2>'+title+'</h2>'+readable(body[key])
-    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><title>A4 '+NAMES[stage]+'</title><style>body{font:16px/1.7 sans-serif;max-width:1000px;margin:32px auto;padding:24px;color:#21405a}dt{font-weight:bold}dd{margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere}</style>'+s+'</html>').encode()
+    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><title>'+label+' '+NAMES[stage]+'</title><style>body{font:16px/1.7 sans-serif;max-width:1000px;margin:32px auto;padding:24px;color:#21405a}dt{font-weight:bold}dd{margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere}</style>'+s+'</html>').encode()

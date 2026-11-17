@@ -13,7 +13,7 @@ def main():
     calls=[]
     def mock(req,**kwargs):
         calls.append((json.loads(req.data),kwargs))
-        body=io.BytesIO(json.dumps({'status':'completed','output':[{'content':[{'type':'output_text','text':RAW}]}]}).encode());body.status=200;return body
+        body=io.BytesIO(json.dumps({'status':'completed','output':[{'content':[{'type':'output_text','text':RAW.replace('src=urs-image:9:8','src=urs-image:1:1')}]}]}).encode());body.status=200;return body
     with tempfile.TemporaryDirectory() as tmp,patch.dict('os.environ',env,clear=True),patch('urllib.request.urlopen',side_effect=mock):
         w=Workspace(Path(tmp)/'fixture.sqlite');w.add_user('fixture','fixture-password-123');p=w.create_project('fixture','Mock timeout audit')
         doc=w.upload('fixture',p,'fixture.pdf',visual_pdf());w.save_report_settings('fixture',PROMPT)

@@ -9,3 +9,7 @@
 #ai-settings{margin-bottom:20px}.ai-settings-fields{display:grid;grid-template-columns:minmax(0,2fr) minmax(140px,1fr) minmax(160px,1fr);gap:16px}#ai-settings .actions{align-items:center}@media(max-width:700px){.ai-settings-fields{grid-template-columns:1fr}}
 
 #usage-preview{overflow-x:auto;margin:16px 0;padding:12px;background:#f5f9fc}#usage-preview table{width:100%;min-width:640px;border-collapse:collapse;font-size:13px}#usage-preview th,#usage-preview td{padding:9px;border:1px solid #ccd8df;text-align:left;vertical-align:top}#usage-preview th{background:#e7f0f6}#a4-target-panel label{display:block;margin:12px 0}#a4-target-panel select{max-width:100%}
+
+#generation-contract{white-space:pre-wrap}
+
+#current-report-context,#a4-target-info{white-space:normal;overflow-wrap:anywhere;word-break:break-word;min-width:0}#current-layout-status{overflow-wrap:anywhere}

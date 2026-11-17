@@ -1,0 +1,13 @@
+test_actual_final_with_images_measures_a4 (test_layout_flow.LayoutFlowTests.test_actual_final_with_images_measures_a4) ... ok
+test_bad_new_layout_does_not_displace_old_report (test_layout_flow.LayoutFlowTests.test_bad_new_layout_does_not_displace_old_report) ... ok
+test_closing_tag_followed_by_code_fence_does_not_change_original_bytes (test_layout_flow.LayoutFlowTests.test_closing_tag_followed_by_code_fence_does_not_change_original_bytes) ... ok
+test_failed_attempt_keeps_previous_visible_final_as_review_input (test_layout_flow.LayoutFlowTests.test_failed_attempt_keeps_previous_visible_final_as_review_input) ... ok
+test_forced_scale_and_model_unfit_pages_are_flagged (test_layout_flow.LayoutFlowTests.test_forced_scale_and_model_unfit_pages_are_flagged) ... ok
+test_hidden_embedded_images_are_rejected (test_layout_flow.LayoutFlowTests.test_hidden_embedded_images_are_rejected) ... ok
+test_overflow_is_reported_not_clipped_or_reflowed (test_layout_flow.LayoutFlowTests.test_overflow_is_reported_not_clipped_or_reflowed) ... ok
+test_print_rule_alone_is_not_a4_screen (test_layout_flow.LayoutFlowTests.test_print_rule_alone_is_not_a4_screen) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 11.270s
+
+OK

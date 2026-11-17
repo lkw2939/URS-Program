@@ -15,7 +15,7 @@ class SavedReportsTests(unittest.TestCase):
         self.w.add_user('alice','fixture-password-123');self.w.add_user('bob','fixture-password-456')
         self.project=self.w.create_project('alice','Stored HTML fixture')
         self.doc=self.w.upload('alice',self.project,'fixture.pdf',visual_pdf())
-        self.w.save_report_settings('alice',PROMPT);self.w.processing.provider=ReportAI()
+        self.w.save_report_settings('alice',PROMPT);self.w.processing.provider=ReportAI(RAW.replace('src=urs-image:9:8','src=urs-image:1:1'))
 
     def generate(self):self.w.run('alice',self.doc,'report')
 

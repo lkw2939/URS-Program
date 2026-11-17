@@ -21,16 +21,18 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
    with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});page.goto(f'http://127.0.0.1:{server.server_port}')
     page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='A4 registration fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
+    page.locator('#advanced-targets > summary').click()
+    page.locator('#a4-import-options summary').click()
     page.locator('#a4-parent').select_option('1');page.locator('#a4-file').set_input_files({'name':'report-a4.html','mimeType':'text/html','buffer':a4});page.get_by_role('button',name='A4 검증 대상 등록',exact=True).click()
     page.wait_for_function("() => document.querySelector('#a4-target-info').textContent.includes('부모 리비전 1')")
     assert '현재 작업 리비전 2와 별도' in page.locator('#a4-target-info').inner_text()
     page.get_by_role('button',name='예약액·실사용량 확인 (조회만)',exact=True).click();page.locator('#usage-preview').wait_for(state='visible')
     assert '정산을 적용하지 않았습니다' in page.locator('#usage-preview').inner_text()
     assert len(provider.calls)==1,'Registration must not call report/review AI'
-    with page.expect_download() as download:page.get_by_role('link',name='등록 A4 HTML 다운로드',exact=True).click()
+    with page.expect_download() as download:page.get_by_role('link',name='선택 보고서 HTML 내려받기',exact=True).click()
     assert Path(download.value.path()).read_bytes()==a4
     with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
-    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_disabled()
+    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_enabled()
     assert page.get_by_role('button',name='A4 독립검증 실행',exact=True).is_enabled()
     assert page.get_by_role('button',name='A4 기술분석 실행',exact=True).is_disabled()
     page.locator('#a4-target-panel').screenshot(path=str(ROOT/'docs/evidence/a4-target-registration.png'))

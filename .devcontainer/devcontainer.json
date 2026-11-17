@@ -11,6 +11,6 @@
       "protocol": "http"
     }
   },
-  "postCreateCommand": "python -m venv .venv && .venv/bin/python -m pip install -r requirements.lock && .venv/bin/python -m pip check",
+  "postCreateCommand": "python -m venv .venv && .venv/bin/python -m pip install -r requirements.lock && .venv/bin/python -m pip check && .venv/bin/python -m playwright install --with-deps chromium",
   "postStartCommand": ".venv/bin/python service.py autostart"
 }
