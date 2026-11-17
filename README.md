@@ -1,4 +1,4 @@
-> 기본 실행을 기존 터미널 방식으로 복구했습니다. `git pull && python start.py`로 적용합니다. 기존 백그라운드 서버는 자동 종료하며 같은 계정/DB/보고서를 유지합니다. [복구 안내](GITHUB-START.md). 외부 포트 접속의 404 원인은 아직 미확인입니다.
+> Linux/Codespaces 실행을 단일 서비스 관리 경로로 통일했습니다. `git pull && python start.py`로 적용합니다. 터미널 종료 후 유지, 서버 종료/연속 HTTP 실패 복구, 수동 종료 상태 보존을 지원합니다. [실행 안내](GITHUB-START.md). 실제 사용자 환경의 외부 접속은 별도 확인이 필요합니다.
 
 # URS AI REPORT SYSTEM — 직접 HTML 보고서
 

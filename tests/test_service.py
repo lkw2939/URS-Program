@@ -107,15 +107,15 @@ class ServiceTests(unittest.TestCase):
         self.addCleanup(cleanup)
         return process,path
 
-    def test_normal_launcher_stops_supervisor_and_confirms_real_http_before_success(self):
+    def test_normal_launcher_restarts_supervisor_and_detaches_after_real_http_success(self):
         self.assertEqual(self.command('start').returncode,0)
         old=json.loads(self.service.state.read_text())['server_pid']
         before=self.w.verification_record('fixture',self.doc)['record_sha256']
         process,log=self.spawn_launcher()
         from urs.launcher import owned_listener_pids
-        self.wait(lambda:process.poll() is None and self.service.healthy() and old not in owned_listener_pids(self.root,self.port) and 'HTTP 200' in log.read_text())
-        self.assertFalse(self.service.running())
-        self.assertTrue(self.service.disabled.exists())
+        self.wait(lambda:process.poll()==0 and self.service.healthy() and old not in owned_listener_pids(self.root,self.port) and 'HTTP 200' in log.read_text())
+        self.assertTrue(self.service.running())
+        self.assertFalse(self.service.disabled.exists())
         self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],before)
         self.assertEqual(self.w.session(self.token)[0],'fixture')
 
@@ -123,7 +123,7 @@ class ServiceTests(unittest.TestCase):
         old=self.spawn_foreground();self.wait(self.service.healthy)
         before=self.w.verification_record('fixture',self.doc)['record_sha256']
         process,log=self.spawn_launcher()
-        self.wait(lambda:old.poll() is not None and process.poll() is None and self.service.healthy() and 'HTTP 200' in log.read_text())
+        self.wait(lambda:old.poll() is not None and process.poll()==0 and self.service.healthy() and 'HTTP 200' in log.read_text())
         self.assertNotIn('Address already in use',log.read_text())
         self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],before)
         self.assertEqual(self.w.session(self.token)[0],'fixture')
@@ -142,6 +142,45 @@ class ServiceTests(unittest.TestCase):
         process,log=self.spawn_launcher();process.wait(timeout=10)
         self.assertEqual(process.returncode,1);self.assertIsNone(other.poll())
         self.assertIn('자동 종료하지 않았습니다',log.read_text())
+
+    def test_concurrent_starts_share_one_supervisor_and_listener(self):
+        args=[sys.executable,str(ROOT/'service.py'),'start','--root',str(self.root),'--port',str(self.port)]
+        children=[subprocess.Popen(args,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True) for _ in range(3)]
+        for child in children:
+            out,err=child.communicate(timeout=35)
+            self.assertEqual(child.returncode,0,out+err)
+        from urs.launcher import owned_listener_pids
+        state=json.loads(self.service.state.read_text())
+        self.assertEqual(owned_listener_pids(self.root,self.port),{state['server_pid']})
+        self.assertTrue(self.service.running());self.assertTrue(self.service.healthy())
+
+    def test_unresponsive_server_is_recovered_without_losing_original_or_session(self):
+        self.assertEqual(self.command('start').returncode,0)
+        before=self.w.verification_record('fixture',self.doc)['record_sha256']
+        old=json.loads(self.service.state.read_text())['server_pid']
+        os.kill(old,signal.SIGSTOP)
+        deadline=time.monotonic()+30
+        recovered=False
+        while time.monotonic()<deadline:
+            try:
+                recovered=json.loads(self.service.state.read_text())['server_pid']!=old and self.service.healthy()
+            except (OSError,ValueError):pass
+            if recovered:break
+            time.sleep(.2)
+        self.assertTrue(recovered,'Supervisor did not recover the frozen HTTP server')
+        self.assertIn('health checks failed three times',self.service.log.read_text())
+        self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],before)
+        self.assertEqual(self.w.session(self.token)[0],'fixture')
+
+    def test_restart_command_preserves_data_and_manual_stop_survives_autostart(self):
+        self.assertEqual(self.command('start').returncode,0)
+        old=json.loads(self.service.state.read_text())['server_pid']
+        self.assertEqual(self.command('restart').returncode,0)
+        self.assertNotEqual(json.loads(self.service.state.read_text())['server_pid'],old)
+        self.assertEqual(self.w.original('fixture',self.doc)['original'],self.pdf)
+        self.assertEqual(self.command('stop').returncode,0)
+        self.assertEqual(self.command('autostart').returncode,0)
+        self.assertFalse(self.service.running());self.assertFalse(self.service.healthy())
 
     def test_stop_does_not_claim_it_stopped_a_nonexistent_server(self):
         import contextlib,io

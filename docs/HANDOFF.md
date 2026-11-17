@@ -1,3 +1,22 @@
+# 실행 유지·재시작 경로 통일 (2026-11-17)
+
+| 항목 | 상태 |
+|---|---|
+| Linux/Codespaces 기본 실행을 동일 서비스 경로로 통일 | 구현 / 임시 DB 실제 프로세스 시험 |
+| 터미널 종료 후 유지, 중복 시작 방지, 기존 전경 서버 이관 | 실제 프로세스 시험 통과 |
+| 서버 종료 / HTTP 무응답 3회 후 자식 서버 복구 | SIGTERM / SIGSTOP 주입 시험 통과 |
+| 명시적 수동 종료 상태 / 계정·원본·세션 유지 | 임시 DB 시험 통과 |
+| 유료 API·실제 고객 품질 | 이번 작업 미실행 |
+| 사용자 Codespaces 504 / 외부 URL 정상 접속 | 미확인, 해결 완료로 판정하지 않음 |
+
+`start.py`의 POSIX 경로는 동일 Service.restart를 사용합니다. 서비스의 start/stop/restart를 제어 잠금으로 직렬화하고, 시작 완료는 해당 서비스의 리스닝 PID와 실제 HTTP 200을 함께 확인합니다. 헬스체크는 프록시를 거치지 않고 루프백에 직접 요청합니다. Codespaces postStartCommand는 수동 종료 플래그를 존중하는 autostart입니다. 기존 Codespace에 postStartCommand 적용은 컨테이너 설정 반영이 별도로 필요합니다.
+
+수동 실행: `git pull && python start.py`. 종료: `python service.py stop`. 재시작: `python service.py restart`. 프로세스 유지 기능은 Codespace 자체 정지/절전 중에는 동작하지 않습니다. 유료 API 요청 재실행이나 기존 보고서 재생성은 하지 않습니다. 운영 DB/키 접근 없음.
+
+집중 시험: 서비스 수명주기 12개. 전체 최신 검사 결과와 소스 해시는 docs/evidence/validation-summary.json을 기준으로 합니다. 이전 전경 실행 안내는 이 항목으로 대체합니다.
+
+---
+
 # 8795 포트 중복 실행 복구 (2026-11-17)
 
 - 사용자 로그의 `OSError: [Errno 98] Address already in use`를 기존 전경 URS 서버로 재현했습니다. 이전 실행기는 감독 프로세스만 중지해 전경 서버가 남았고, 종료하지 않아도 종료 메시지를 표시했습니다.

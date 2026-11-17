@@ -11,5 +11,6 @@
       "protocol": "http"
     }
   },
-  "postCreateCommand": "python -m venv .venv && .venv/bin/python -m pip install -r requirements.lock && .venv/bin/python -m pip check"
+  "postCreateCommand": "python -m venv .venv && .venv/bin/python -m pip install -r requirements.lock && .venv/bin/python -m pip check",
+  "postStartCommand": ".venv/bin/python service.py autostart"
 }

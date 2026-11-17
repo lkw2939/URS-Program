@@ -43,15 +43,12 @@ def run_server(root, python, data, port=8795):
     lock=None;child=None
     try:
         if os.name=='posix':
-            import fcntl
-            runtime=Path(root)/'.runtime';runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
-            lock=(runtime/'launcher.lock').open('a+')
-            try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-            except BlockingIOError:
-                print('다른 실행 명령이 서버를 시작 중입니다. 잠시 기다려 주세요.');return 1
             from service import Service
-            if Service(root,port).stop():return 1
-        elif port_busy(port):
+            result=Service(root,port).restart()
+            if result==0 and not os.environ.get('CODESPACES'):
+                webbrowser.open(f'http://127.0.0.1:{port}')
+            return result
+        if port_busy(port):
             raise StartupError(f'{port} 포트를 사용 중입니다. 기존 서버 창을 먼저 종료해 주세요.')
         child=subprocess.Popen([str(python),'-m','urs','--data',str(data),'serve','--port',str(port)],cwd=root)
         wait_ready(child,port)
