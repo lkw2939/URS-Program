@@ -10,6 +10,6 @@ test_no_image_slots_is_reported_as_binding_not_exercised (test_api_diagnostic.Di
 test_prompt_save_does_not_create_a_database_or_invent_a_document (test_api_diagnostic.DiagnosticTests.test_prompt_save_does_not_create_a_database_or_invent_a_document) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 1.169s
+Ran 10 tests in 1.183s
 
 OK

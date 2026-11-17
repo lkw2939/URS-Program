@@ -18,6 +18,8 @@ STATIC = Path(__file__).resolve().parents[1] / 'static'
 
 
 def make_app(workspace, port=8795, secure_cookie=False):
+    from urs.report_tasks import ReportTasks
+    tasks=ReportTasks(workspace)
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
@@ -93,6 +95,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                     self.reply(200, {'ok': True}, cookie=self.cookie('', True))
                 elif path == '/api/settings/ai':
                     self.reply(200,workspace.save_ai_settings(owner,body) if post else workspace.ai_settings(owner))
+                elif path == '/api/settings/report-timeout':
+                    self.reply(200,workspace.report_timeout(owner,body['timeout_seconds']) if post else workspace.report_timeout(owner))
                 elif path == '/api/settings/report':
                     self.reply(200,workspace.save_report_settings(owner,body['prompt']) if post else workspace.report_settings(owner))
                 elif path == '/api/projects':
@@ -126,7 +130,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
                                 payload=json.dumps(bundle,ensure_ascii=False,indent=2).encode();mime='application/json; charset=utf-8'
                             self.reply(200,payload,mime,attachment=action)
                         elif not post and action == 'detail':
-                            data = {'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
+                            data = {'report_task':tasks.status(document),'status': workspace.status(owner, document), 'reports': workspace.report_availability(owner,document)}
                             for kind in ('report-metadata','image-bindings','verification','analysis'):
                                 try:
                                     data[kind] = workspace.artifact(owner, document, kind)
@@ -147,7 +151,12 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             self.reply(200,payload,mime,attachment=action)
                         elif post and action == 'approve':
                             self.reply(200,workspace.approve_document(owner,document,body['revision'],body['note'],body['reviewed_outputs']))
+                        elif not post and action == 'report-task':
+                            workspace.original(owner,document)
+                            self.reply(200,tasks.status(document))
                         elif post and action == 'run':
+                            if body=={'stage':'report','background':True}:
+                                self.reply(202,tasks.start(owner,document));return
                             if set(body) != {'stage'}:
                                 raise ValueError('검증 상태는 서버만 기록할 수 있습니다.')
                             if body['stage'] not in ('source','report','verify','analyze'):

@@ -154,6 +154,7 @@ class Workflow:
                     raise ValueError('structured evidence required')
             except (AIBlocked,AIError) as exc:
                 status,evidence=Status.FAIL,{'reason':str(exc),'type':type(exc).__name__}
+                if getattr(exc,'diagnostics',None):evidence['api_diagnostics']=exc.diagnostics
             except Exception as exc:
                 status, evidence = Status.FAIL, {'reason': 'validator exception', 'type': type(exc).__name__}
             outputs.append((check['id'], status, evidence, name, version))

@@ -19,7 +19,7 @@
         "exit_code": 0,
         "tests": 7,
         "log": "foundation-1.txt",
-        "duration_seconds": 0.054
+        "duration_seconds": 0.066
       },
       {
         "command": [
@@ -36,7 +36,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "foundation-2.txt",
-        "duration_seconds": 0.777
+        "duration_seconds": 0.816
       },
       {
         "command": [
@@ -53,7 +53,7 @@
         "exit_code": 0,
         "tests": 1,
         "log": "foundation-3.txt",
-        "duration_seconds": 0.057
+        "duration_seconds": 0.066
       },
       {
         "command": [
@@ -70,7 +70,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "foundation-4.txt",
-        "duration_seconds": 0.123
+        "duration_seconds": 0.132
       }
     ]
   },
@@ -94,7 +94,7 @@
         "exit_code": 0,
         "tests": 16,
         "log": "employee-original-1.txt",
-        "duration_seconds": 3.43
+        "duration_seconds": 3.403
       },
       {
         "command": [
@@ -111,7 +111,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-2.txt",
-        "duration_seconds": 2.471
+        "duration_seconds": 2.495
       },
       {
         "command": [
@@ -128,7 +128,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-3.txt",
-        "duration_seconds": 28.411
+        "duration_seconds": 28.372
       }
     ]
   },
@@ -152,7 +152,7 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-1.txt",
-        "duration_seconds": 0.262
+        "duration_seconds": 0.213
       },
       {
         "command": [
@@ -169,7 +169,7 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-2.txt",
-        "duration_seconds": 0.221
+        "duration_seconds": 0.21
       }
     ]
   },
@@ -193,7 +193,7 @@
         "exit_code": 0,
         "tests": 11,
         "log": "technical-meaning-guards-1.txt",
-        "duration_seconds": 0.058
+        "duration_seconds": 0.06
       },
       {
         "command": [
@@ -210,7 +210,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "technical-meaning-guards-2.txt",
-        "duration_seconds": 0.192
+        "duration_seconds": 0.189
       },
       {
         "command": [
@@ -227,7 +227,7 @@
         "exit_code": 0,
         "tests": 8,
         "log": "technical-meaning-guards-3.txt",
-        "duration_seconds": 0.522
+        "duration_seconds": 0.508
       },
       {
         "command": [
@@ -244,7 +244,7 @@
         "exit_code": 0,
         "tests": 10,
         "log": "technical-meaning-guards-4.txt",
-        "duration_seconds": 1.386
+        "duration_seconds": 1.384
       },
       {
         "command": [
@@ -261,14 +261,14 @@
         "exit_code": 0,
         "tests": 9,
         "log": "technical-meaning-guards-5.txt",
-        "duration_seconds": 1.899
+        "duration_seconds": 1.892
       }
     ]
   },
   {
     "id": "document-pipeline",
     "status": "PASS",
-    "tests": 23,
+    "tests": 36,
     "commands": [
       {
         "command": [
@@ -285,7 +285,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "document-pipeline-1.txt",
-        "duration_seconds": 2.279
+        "duration_seconds": 2.356
       },
       {
         "command": [
@@ -302,7 +302,24 @@
         "exit_code": 0,
         "tests": 11,
         "log": "document-pipeline-2.txt",
-        "duration_seconds": 1.713
+        "duration_seconds": 1.739
+      },
+      {
+        "command": [
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_report_transport.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 13,
+        "log": "document-pipeline-3.txt",
+        "duration_seconds": 2.276
       }
     ]
   }

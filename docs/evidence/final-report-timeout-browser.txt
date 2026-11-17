@@ -1,0 +1,1 @@
+PASS: actual browser button -> asynchronous HTTP -> real OpenAI adapter -> mock wire max_output_tokens=16000, timeout=900; prompt exact; no API call on settings save; paid calls=0

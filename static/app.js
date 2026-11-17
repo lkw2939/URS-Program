@@ -11,7 +11,7 @@ async function api(path, data) {
 }
 function signedOut() {csrf='';selected=null;activeDoc=null;detail=null;$('workspace').hidden=true;$('identity').hidden=true;$('login-panel').hidden=false;$('review').hidden=true;$('report-preview').removeAttribute('src');$('report-prompt').value='';$('ai-model').value='';$('ai-effort').value='';$('ai-output-tokens').value='5000';$('ai-settings-summary').textContent='';$('documents').replaceChildren();$('project-list').replaceChildren();$('project-body').hidden=true;}
 function element(tag,text,cls) { const node=document.createElement(tag);node.textContent=text;if(cls)node.className=cls;return node; }
-async function signedIn() { const me=await api('/api/me');csrf=me.csrf;$('username').textContent=me.username;$('login-panel').hidden=true;$('workspace').hidden=false;$('identity').hidden=false;await projects();renderAISettings(await api('/api/settings/ai'));const settings=await api('/api/settings/report');$('report-prompt').value=settings.prompt;$('prompt-version').textContent=settings.version?`저장 버전 ${settings.version}`:'저장 전'; }
+async function signedIn() { const me=await api('/api/me');csrf=me.csrf;$('username').textContent=me.username;$('login-panel').hidden=true;$('workspace').hidden=false;$('identity').hidden=false;await projects();renderReportTimeout(await api('/api/settings/report-timeout'));renderAISettings(await api('/api/settings/ai'));const settings=await api('/api/settings/report');$('report-prompt').value=settings.prompt;$('prompt-version').textContent=settings.version?`저장 버전 ${settings.version}`:'저장 전'; }
 async function projects() {
   const list=await api('/api/projects');$('metric-projects').textContent=String(list.length);$('project-list').replaceChildren();
   if(!list.length)$('project-list').append(element('p','프로젝트가 없습니다. 새 프로젝트를 만들어 주세요.','muted small'));
@@ -40,7 +40,12 @@ $('logout').onclick=()=>submit($('identity'),async()=>{await api('/api/logout',{
 
 let activeDoc=null,detail=null;
 async function busy(button, fn){button.disabled=true;message('처리 중입니다.');try{await fn();message('처리를 완료했습니다.');}catch(e){message(e.message);}finally{button.disabled=false;}}
-async function openReview(doc){activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});}
+async function waitReport(){
+ const doc=activeDoc;if(!doc)return;
+ while(true){const task=await api(`/api/documents/${doc.id}/report-task`);if(task.state!=='running'){if(task.state==='failed')throw new Error(task.error);if(task.state==='none')throw new Error('서버에서 작업 상태를 확인할 수 없습니다. 기존 검증 기록을 확인하세요. 자동 재시도하지 않습니다.');break;}await new Promise(resolve=>setTimeout(resolve,1500));}
+ if(activeDoc?.id===doc.id)await refreshReview();
+}
+async function openReview(doc){activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});if(detail.report_task?.state==='running')await waitReport();}
 async function refreshReview(){if(!activeDoc)return;detail=await api(`/api/documents/${activeDoc.id}/detail`);renderReview();await documents();}
 function renderReview(){
  const state=detail.status;const base=`/api/documents/${activeDoc.id}`;
@@ -52,10 +57,10 @@ function renderReview(){
   $('checklist-steps').append(element('li',`${stageNames[stage.id]} · ${stage.passed?'완료':'확인 전'}`));
   if(stage.id==='source'||stage.id==='approval')continue;
   const button=element('button',stage.id==='report'?(detail['report-metadata']?'새 리비전 보고서 생성':'보고서 생성'):stageNames[stage.id]+' 실행');
-  button.disabled=state.stages.slice(0,index).some(s=>!s.passed);
-  button.onclick=()=>busy(button,async()=>{await api(base+'/run',{stage:stage.id});await refreshReview();});$('process-buttons').append(button);
+  button.disabled=state.stages.slice(0,index).some(s=>!s.passed)||stage.id==='report'&&detail.report_task?.state==='running';
+  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{await api(base+'/run',{stage:stage.id});await refreshReview();}});$('process-buttons').append(button);
  }
- for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${stageNames[result.stage]} · ${result.status} · ${evidence.reason||''}`,'result');for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
+ for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${stageNames[result.stage]} · ${result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
  if(state.qualification?.blocked)$('check-results').append(element('p','최종 승인 조건: '+state.qualification.blocked,'muted small'));
  const reports=detail.reports;const saved=reports?.selected;const ready=!!saved;
  $('html-result').hidden=true;$('approval-panel').hidden=reports?.state!=='current';
@@ -97,3 +102,6 @@ $('save-report-prompt').onsubmit=e=>{e.preventDefault();submit(e.target,async()=
 $('close-review').onclick=()=>{$('review').hidden=true;activeDoc=null;$('report-preview').removeAttribute('src');};
 $('approve-document').onclick=()=>busy($('approve-document'),async()=>{if(!$('reviewed-html').checked)throw new Error('최종 HTML 검토를 확인해 주세요.');await api(`/api/documents/${activeDoc.id}/approve`,{revision:detail.status.revision,note:$('approval-note').value,reviewed_outputs:['report.html']});await refreshReview();});
 (async()=>{try{await signedIn();}catch(e){signedOut();if(!e.message.includes('로그인'))message(e.message);}})();
+
+function renderReportTimeout(config){$('report-timeout').value=config.timeout_seconds;$('timeout-summary').textContent=`보고서 API 대기시간 ${config.timeout_seconds}초 · ${config.source==='web'?'웹 저장값':'서버 기본값'}`;}
+$('save-report-timeout').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{renderReportTimeout(await api('/api/settings/report-timeout',{timeout_seconds:Number($('report-timeout').value)}));message('대기시간을 저장했습니다. 출력 토큰 설정은 변경하지 않았습니다.');});};

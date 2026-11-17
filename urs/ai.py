@@ -46,6 +46,11 @@ class OpenAI:
         try:
             config=validate({k:self.settings[k] for k in ('model','effort','max_output_tokens')}) if self.settings is not None else effective(self.workflow,document=self.document)
         except SettingsError as exc:raise AIBlocked(str(exc)) from None
+        report_timeout=None
+        if task=='report_html':
+            from urs.report_transport import settings
+            try:report_timeout=settings(self.workflow,document=self.document)['timeout_seconds']
+            except (ValueError,TypeError):raise AIBlocked('보고서 API 대기시간 설정을 확인해 주세요.') from None
         model=config['model'];effort=config['effort'];output_limit=config['max_output_tokens']
         try:
             budget=float(os.environ.get('URS_AI_BUDGET_USD','0'))
@@ -68,6 +73,9 @@ class OpenAI:
         if json_response:payload['text']={'format':{'type':'json_object'}}
         req=urllib.request.Request('https://api.openai.com/v1/responses',data=json.dumps(payload).encode(),
             headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')
+        if task=='report_html':
+            from urs.report_transport import request
+            return request(self,req,call_id,output_limit,report_timeout)
         try:
             with urllib.request.urlopen(req,timeout=90) as response:result=json.load(response)
             if result.get('status')!='completed':

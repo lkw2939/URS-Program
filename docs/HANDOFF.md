@@ -1,3 +1,28 @@
+# 보고서 API 대기시간 / 비동기 웹 접수 / 안전한 실패 기록 (2026-11-17)
+
+| 항목 | 상태 |
+|---|---|
+| 기존 90초 경로 확인 | report→OpenAI→urlopen의 소켓 I/O 대기 제한. 브라우저 fetch에 별도 타이머 없음 |
+| 보고서 API 대기시간 조정 | 보고서 전용 기본600초, 웹 직원별 버전 저장10~3600초, 환경변수 선택 지원 |
+| 긴 웹 연결 제거 | 웹 버튼은 202 접수 후 1.5초 간격 상태 조회. 동시 접수는 진행 중 작업 재사용 |
+| 출력 한도·프롬프트·이미지·검토 입력 유지 | 기존 설정 전달 유지, 모의 브라우저 실제 요청16000/900초 확인 |
+| 원인별 기록 / 기존 HTML 보존 | 임시 DB·모의 HTTP 시험, 운영/유료 호출0회 |
+| 실제 25쪽 생성 / 실제 Codespaces 적용 | 미실행 / 별도 확인 필요 |
+
+보고서 전용 대기시간 우선순위는 웹 report_timeouts 최신값 > URS_OPENAI_REPORT_TIMEOUT_SECONDS > 600초입니다. 기존 ai_settings 출력 토큰/모델/effort 및 보고서 프롬프트는 수정하거나 덮어쓰지 않습니다. 독립검증·기술분석의 기존90초 호출은 유지합니다. urllib timeout은 소켓 연결/읽기 대기 제한이며 전체 작업의 절대 실행시간 상한이 아닙니다.
+
+웹 생성 버튼은 background:true로 접수하고 완료까지 조회합니다. 자동 유료 재시도는 없습니다. 웹 새로고침은 같은 서버의 실행 중 작업 조회만 재개합니다. 서버 재시작 등으로 메모리 작업 상태가 사라지면 완료/실패를 추정하거나 다시 생성하지 않고 기존 기록 확인을 안내합니다. 진단의 waiting_response는 완료 기록을 못 받은 상태이며 실제 공급자 처리 여부는 미확인입니다.
+
+검증 기록 JSON의 record.api_diagnostics와 report FAIL evidence.api_diagnostics에서 call_id/revision/max_output_tokens/timeout_seconds/elapsed_seconds/http_status/response_status/incomplete_reason/outcome/error_type을 봅니다. elapsed_scope=api_exchange, timeout_kind=socket_io. 보고서 작업 전체 시간은 기존 시작/결과 이벤트로 대조합니다. outcome은 timeout_before_response, timeout_reading_response, http_error, connection_error, response_parse_error, response_read_error, max_output_tokens, incomplete_response, html_processing_error, completed로 구분합니다. 없는 HTTP/응답 정보는 null이며 API 키·원본·프롬프트·모델 본문·예외 메시지는 진단에 기록하지 않습니다. 과거 실패의 사라진 값은 복원/추정하지 않습니다.
+
+report_diagnostics는 시도별 추가 기록입니다. 기존 report HTML/프롬프트/설정/결과는 덮어쓰지 않습니다. 검증 JSON에 새 시도가 추가되면 기록 전체 해시는 바뀝니다. 기존 진단 CLI도 API 호출 시 원장과 이 진단에 새 행을 기록하므로 읽기 전용 명령이 아닙니다.
+
+전체 단위/HTTP145개와 기존/대기시간/저장 HTML 브라우저·HTML 재열기를 검증합니다. 현재 시험은 실제 고객 PDF가 아닌 fixture입니다. 브라우저에서 로그인→출력16000 저장→대기900초 저장→보고서 버튼→202→생산용OpenAI 어댑터→모의 HTTP를 검사했습니다. 정상 저장, 응답 전/중 타임아웃, HTTP429, 불완전 응답, JSON오류, HTML오류, 이미지 연결 예외, 기존 리비전 보존, 비밀 비기록을 시험합니다. 설정 저장 자체는 API를 호출하지 않습니다.
+
+적용: git pull && python start.py. 웹의 “보고서 OpenAI 응답 대기시간 (초)”에서 변경합니다. 이 명령으로 보고서를 생성하지는 않습니다. 운영 사용자 API/DB 접근이나 유료 호출은 이번 작업에 없습니다.
+
+---
+
 # 저장된 HTML 열람 / 이전 리비전 복구 (2026-11-17)
 
 | 항목 | 상태 |

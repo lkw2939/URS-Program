@@ -85,7 +85,11 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(result['live_request']['returned_effort'],'medium')
         self.assertIsNone(result['live_request']['requested_effort'])
         self.assertTrue(result['live_request']['sent_original_pdf']);self.assertTrue(result['live_request']['sent_verbatim_saved_prompt'])
-        self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],evidence)
+        after=self.w.verification_record('fixture',self.doc)
+        self.assertEqual(len(after['record']['api_diagnostics']),1)
+        after['record']['api_diagnostics']=[]
+        from urs.audit import envelope
+        self.assertEqual(envelope(after['record'])['record_sha256'],evidence)
         with self.w.workflow.connect() as db:
             self.assertEqual(db.execute('SELECT state FROM ai_usage').fetchone()[0],'completed')
         raw=(self.root/result['diagnostic_files']/'report.raw.html').read_bytes();self.assertEqual(raw,RAW.encode())

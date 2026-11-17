@@ -257,6 +257,16 @@ class Workspace:
             db.execute('INSERT INTO ai_settings VALUES(?,?,?)',(owner,version,json.dumps(config)))
         return {**config,'version':version,'source':'web'}
 
+    def report_timeout(self,owner,seconds=None):
+        from urs.report_transport import settings,timeout_value
+        with self.workflow.connect() as db:
+            if not db.execute('SELECT 1 FROM users WHERE name=?',(owner,)).fetchone():raise AccessDenied('등록된 직원이 아닙니다.')
+            if seconds is not None:
+                seconds=timeout_value(seconds)
+                version=db.execute('SELECT COALESCE(MAX(version),0)+1 FROM report_timeouts WHERE owner=?',(owner,)).fetchone()[0]
+                db.execute('INSERT INTO report_timeouts VALUES(?,?,?)',(owner,version,seconds))
+        return settings(self.workflow,owner=owner)
+
     def report_settings(self, owner):
         with self.workflow.connect() as db:
             row=db.execute('SELECT version,prompt FROM report_settings WHERE owner=? ORDER BY version DESC LIMIT 1',(owner,)).fetchone()
@@ -335,7 +345,7 @@ class Workspace:
             artifacts=[{'revision':r['revision'],'kind':r['kind'],'sha256':hashlib.sha256(r['payload']).hexdigest()} for r in db.execute('SELECT revision,kind,payload FROM artifacts WHERE document=? ORDER BY revision,kind',(document,))]
             bundle=envelope({'schema_version':1,'document_id':document,
                 'original':{'name':row['name'],'sha256':row['sha256'],'pages':row['pages']},
-                'snapshot':snapshot,'all_results':results,'verification_history':verification_history,'artifact_hashes':artifacts,
+                'api_diagnostics':[json.loads(r[0]) for r in db.execute('SELECT payload FROM report_diagnostics WHERE document=? ORDER BY call_id',(document,))],'snapshot':snapshot,'all_results':results,'verification_history':verification_history,'artifact_hashes':artifacts,
                 'scope':'Document evidence only. No process environment, application authentication credential tables, raw original binary or app payment configuration is included. No inferred accuracy score.'})
             bundle['exported_at_kst']=datetime.now(timezone(timedelta(hours=9))).isoformat()
             return bundle

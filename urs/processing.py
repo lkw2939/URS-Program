@@ -2,7 +2,7 @@
 import hashlib
 import json
 import os
-from urs.ai import OpenAI
+from urs.ai import OpenAI,AIError
 from urs.ai_settings import effective,signature
 from urs.images import crop_images, bind_images
 from urs.gates import Status
@@ -15,6 +15,8 @@ class Processing:
         self.workspace,self.workflow,self.provider=workspace,workspace.workflow,provider
         with self.workflow.connect() as db:
             db.executescript('''
+            CREATE TABLE IF NOT EXISTS report_timeouts(owner TEXT,version INTEGER,seconds INTEGER,PRIMARY KEY(owner,version));
+            CREATE TABLE IF NOT EXISTS report_diagnostics(call_id INTEGER PRIMARY KEY,document TEXT,payload TEXT);
             CREATE TABLE IF NOT EXISTS artifacts(document TEXT,revision INTEGER,kind TEXT,payload BLOB,PRIMARY KEY(document,revision,kind));
             CREATE TABLE IF NOT EXISTS page_assets(document TEXT,page INTEGER,payload BLOB,PRIMARY KEY(document,page));
             CREATE TABLE IF NOT EXISTS ai_usage(id INTEGER PRIMARY KEY,document TEXT,task TEXT,model TEXT,reserved REAL,state TEXT,usage TEXT);
@@ -60,7 +62,16 @@ class Processing:
         guide='Image address mapping only: use <img src="urs-image:PAGE:INDEX"> for a source picture/diagram at the corresponding original PDF page and region. Available image addresses and bounding boxes (PDF points from top-left):\n'+json.dumps(inventory,ensure_ascii=False)
         raw=self.provider_for(document,config).report_html(pdf,name,prompt,guide)
         if not isinstance(raw,str) or not raw:raise ValueError('HTML 응답이 없습니다.')
-        final,comparison=bind_images(raw,assets)
+        try:final,comparison=bind_images(raw,assets)
+        except Exception as error:
+            from urs.report_transport import diagnostics
+            records=diagnostics(self.workflow,document)
+            exc=AIError('OpenAI 응답 후 이미지 연결 처리 실패.')
+            if records and records[-1]['revision']==revision:
+                info={**records[-1],'outcome':'html_processing_error','processing_phase':'image_binding','error_type':type(error).__name__}
+                with self.workflow.connect() as db:db.execute('UPDATE report_diagnostics SET payload=? WHERE call_id=?',(json.dumps(info),info['call_id']))
+                exc.diagnostics=info
+            raise exc from None
         data={'report.raw.html':raw.encode(),'report.html':final.encode(),
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
