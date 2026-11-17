@@ -1,7 +1,7 @@
 foundation PASS (22 tests)
 employee-original PASS (40 tests)
 pdf-source PASS (4 tests)
-technical-meaning-guards PASS (43 tests)
+technical-meaning-guards PASS (47 tests)
 document-pipeline PASS (48 tests)
-Ran 157 tests
+Ran 161 tests
 OK

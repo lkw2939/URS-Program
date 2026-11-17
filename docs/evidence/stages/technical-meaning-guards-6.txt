@@ -1,0 +1,9 @@
+test_budget_only_and_failed_calls_count (test_ai_limits_inspector.LimitInspectorTests.test_budget_only_and_failed_calls_count) ... ok
+test_count_only (test_ai_limits_inspector.LimitInspectorTests.test_count_only) ... ok
+test_current_revision_without_html_is_not_switched_automatically (test_ai_limits_inspector.LimitInspectorTests.test_current_revision_without_html_is_not_switched_automatically) ... ok
+test_instruction_matches_actual_adapter_literals (test_ai_limits_inspector.LimitInspectorTests.test_instruction_matches_actual_adapter_literals) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.087s
+
+OK
