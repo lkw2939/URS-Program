@@ -83,31 +83,71 @@ class ServiceTests(unittest.TestCase):
             self.assertFalse(service.running())
             self.assertFalse((Path(folder)/'.runtime/workspace.sqlite').exists())
 
-    def test_normal_launcher_stops_background_service_then_uses_original_foreground_path(self):
-        import hashlib
-        import start
-        from unittest.mock import patch
+    def spawn_foreground(self,data=None,module='urs'):
+        output=(self.root/('listener-'+str(time.time_ns())+'.log')).open('wb')
+        args=[sys.executable,'-m',module]
+        args+=['--data',str(data or self.root/'.runtime/workspace.sqlite'),'serve','--port',str(self.port)] if module=='urs' else [str(self.port),'--bind','127.0.0.1']
+        process=subprocess.Popen(args,cwd=self.root,stdout=output,stderr=output)
+        def cleanup():
+            if process.poll() is None:process.terminate()
+            process.wait(timeout=10);output.close()
+        self.addCleanup(cleanup)
+        return process
+
+    def spawn_launcher(self):
+        path=self.root/('launcher-'+str(time.time_ns())+'.log');output=path.open('wb')
+        code="from pathlib import Path; import sys; sys.path.insert(0,sys.argv[1]); from start import run_server; raise SystemExit(run_server(Path(sys.argv[2]),Path(sys.executable),Path(sys.argv[2])/'.runtime/workspace.sqlite',int(sys.argv[3])))"
+        process=subprocess.Popen([sys.executable,'-c',code,str(ROOT),str(self.root),str(self.port)],cwd=self.root,stdout=output,stderr=output,env={**os.environ,'CODESPACES':'true'})
+        def cleanup():
+            self.service.stop()
+            if process.poll() is None:
+                try:process.wait(timeout=5)
+                except subprocess.TimeoutExpired:process.terminate();process.wait(timeout=5)
+            output.close()
+        self.addCleanup(cleanup)
+        return process,path
+
+    def test_normal_launcher_stops_supervisor_and_confirms_real_http_before_success(self):
         self.assertEqual(self.command('start').returncode,0)
-        self.assertTrue(self.service.running())
+        old=json.loads(self.service.state.read_text())['server_pid']
         before=self.w.verification_record('fixture',self.doc)['record_sha256']
-        venv=self.root/'.venv';(venv/'bin').mkdir(parents=True)
-        (venv/'bin/python').symlink_to(sys.executable)
-        lock=(ROOT/'requirements.lock').read_bytes()
-        (self.root/'requirements.lock').write_bytes(lock)
-        (venv/'urs-requirements.sha256').write_text(hashlib.sha256(lock).hexdigest())
-        cwd=Path.cwd()
-        try:
-            with patch.object(start,'ROOT',self.root),patch.dict(os.environ,{'CODESPACES':'true'}),patch('start.subprocess.call',return_value=0) as foreground,patch('start.webbrowser.open') as browser:
-                self.assertEqual(start.main(),0)
-                args=foreground.call_args.args[0]
-                self.assertEqual(args[1:3],['-m','urs'])
-                self.assertEqual(args[-3:],['serve','--port','8795'])
-                self.assertEqual(args[4],str(self.root/'.runtime/workspace.sqlite'))
-                browser.assert_not_called()
-        finally:os.chdir(cwd)
+        process,log=self.spawn_launcher()
+        from urs.launcher import owned_listener_pids
+        self.wait(lambda:process.poll() is None and self.service.healthy() and old not in owned_listener_pids(self.root,self.port) and 'HTTP 200' in log.read_text())
         self.assertFalse(self.service.running())
         self.assertTrue(self.service.disabled.exists())
         self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],before)
         self.assertEqual(self.w.session(self.token)[0],'fixture')
+
+    def test_existing_foreground_listener_is_restarted_without_address_in_use(self):
+        old=self.spawn_foreground();self.wait(self.service.healthy)
+        before=self.w.verification_record('fixture',self.doc)['record_sha256']
+        process,log=self.spawn_launcher()
+        self.wait(lambda:old.poll() is not None and process.poll() is None and self.service.healthy() and 'HTTP 200' in log.read_text())
+        self.assertNotIn('Address already in use',log.read_text())
+        self.assertEqual(self.w.verification_record('fixture',self.doc)['record_sha256'],before)
+        self.assertEqual(self.w.session(self.token)[0],'fixture')
+
+    def test_foreign_application_on_port_is_not_terminated_or_reported_as_started(self):
+        other=self.spawn_foreground(module='http.server')
+        from urs.launcher import port_busy
+        self.wait(lambda:port_busy(self.port))
+        process,log=self.spawn_launcher();process.wait(timeout=10)
+        self.assertEqual(process.returncode,1);self.assertIsNone(other.poll())
+        self.assertIn('자동 종료하지 않았습니다',log.read_text())
+        self.assertNotIn('HTTP 200',log.read_text())
+
+    def test_same_project_with_another_database_is_not_terminated(self):
+        other=self.spawn_foreground(data=self.root/'other.sqlite');self.wait(self.service.healthy)
+        process,log=self.spawn_launcher();process.wait(timeout=10)
+        self.assertEqual(process.returncode,1);self.assertIsNone(other.poll())
+        self.assertIn('자동 종료하지 않았습니다',log.read_text())
+
+    def test_stop_does_not_claim_it_stopped_a_nonexistent_server(self):
+        import contextlib,io
+        output=io.StringIO()
+        with contextlib.redirect_stdout(output):self.assertEqual(self.service.stop(),0)
+        self.assertIn('종료할 URS 서버가 없습니다',output.getvalue())
+        self.assertNotIn('웹을 종료했습니다',output.getvalue())
 
 if __name__=='__main__':unittest.main()

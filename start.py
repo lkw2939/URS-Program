@@ -4,7 +4,6 @@ from pathlib import Path
 import subprocess
 import sys
 import webbrowser
-import threading
 
 ROOT = Path(__file__).resolve().parent
 
@@ -36,21 +35,45 @@ def main():
         if not username:
             raise SystemExit("Employee ID is required.")
         subprocess.run([str(python), "-m", "urs", "--data", str(data), "add-user", username], check=True)
-    if os.name == 'posix':
-        # Recover the original foreground path and stop any detached supervisor.
-        # The persistent stop flag also disables an old cached Codespaces hook.
-        from service import Service
-        if Service(ROOT).stop():
-            return 1
-    print("Open http://127.0.0.1:8795 — press Ctrl+C to stop.")
-    if not os.environ.get('CODESPACES'):
-        timer = threading.Timer(2, lambda: webbrowser.open("http://127.0.0.1:8795"))
-        timer.daemon = True
-        timer.start()
+    return run_server(ROOT,python,data)
+
+
+def run_server(root, python, data, port=8795):
+    from urs.launcher import StartupError,wait_ready,port_busy
+    lock=None;child=None
     try:
-        return subprocess.call([str(python), "-m", "urs", "--data", str(data), "serve", "--port", "8795"])
+        if os.name=='posix':
+            import fcntl
+            runtime=Path(root)/'.runtime';runtime.mkdir(parents=True,exist_ok=True,mode=0o700)
+            lock=(runtime/'launcher.lock').open('a+')
+            try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+            except BlockingIOError:
+                print('다른 실행 명령이 서버를 시작 중입니다. 잠시 기다려 주세요.');return 1
+            from service import Service
+            if Service(root,port).stop():return 1
+        elif port_busy(port):
+            raise StartupError(f'{port} 포트를 사용 중입니다. 기존 서버 창을 먼저 종료해 주세요.')
+        child=subprocess.Popen([str(python),'-m','urs','--data',str(data),'serve','--port',str(port)],cwd=root)
+        wait_ready(child,port)
+        print(f'로컬 웹 서버 응답 확인: http://127.0.0.1:{port} (HTTP 200). 종료: Ctrl+C',flush=True)
+        if not os.environ.get('CODESPACES'):webbrowser.open(f'http://127.0.0.1:{port}')
+        if lock is not None:lock.close();lock=None
+        return child.wait()
+    except StartupError as exc:
+        print(str(exc),flush=True)
+        if child is not None and child.poll() is None:
+            child.terminate()
+            try:child.wait(timeout=10)
+            except subprocess.TimeoutExpired:print('서버 프로세스 종료가 지연되고 있습니다.',flush=True)
+        return 1
     except KeyboardInterrupt:
+        if child is not None and child.poll() is None:
+            child.send_signal(__import__('signal').SIGINT)
+            try:child.wait(timeout=10)
+            except subprocess.TimeoutExpired:child.terminate()
         return 0
+    finally:
+        if lock is not None:lock.close()
 
 if __name__ == "__main__":
     raise SystemExit(main())

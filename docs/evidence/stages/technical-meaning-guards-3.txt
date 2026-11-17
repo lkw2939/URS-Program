@@ -8,6 +8,6 @@ test_qualification_threshold_critical_errors_and_model_binding (test_ai_and_eval
 test_response_transport_contract_and_usage_storage (test_ai_and_evaluation.AIAndEvaluationTests.test_response_transport_contract_and_usage_storage) ... ok
 
 ----------------------------------------------------------------------
-Ran 8 tests in 0.342s
+Ran 8 tests in 0.409s
 
 OK

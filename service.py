@@ -78,12 +78,19 @@ class Service:
         return 1
 
     def stop(self):
+        supervised=self.running()
         self.disabled.touch(mode=0o600,exist_ok=True)
         deadline=time.monotonic()+12
         while self.running() and time.monotonic()<deadline:time.sleep(.1)
         if self.running():
             print('종료가 지연되고 있습니다. 상태와 로그를 확인하세요.');return 1
-        print('웹을 종료했습니다. start 명령 전까지 자동으로 켜지지 않습니다.');return 0
+        from urs.launcher import release_owned_port,StartupError
+        try:stopped=release_owned_port(self.root,self.port)
+        except StartupError as exc:
+            print(str(exc));return 1
+        if supervised or stopped:print('기존 URS 서버 종료를 확인했습니다. 자동 시작은 비활성화했습니다.')
+        else:print('종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.')
+        return 0
 
     def supervise(self):
         with self.lockfile.open('a+') as lock:
