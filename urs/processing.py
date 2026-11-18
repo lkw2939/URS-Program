@@ -96,7 +96,7 @@ class Processing:
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
                   'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
-                  'layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
+                  'api_timeout_seconds':None,'api_wait_policy':'unlimited','layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
         # Append-only report artifacts. Retries/regeneration must use a new revision.
         with self.workflow.connect() as db:
             if self.workflow._job(db,document)['revision']!=revision:raise Blocked('보고서 생성 중 문서가 변경되었습니다.')
@@ -135,7 +135,7 @@ class Processing:
         status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(result['status'])
         return status, {**({'review_result':result} if not persist else {}),'input_html_sha256':hashlib.sha256(raw.encode()).hexdigest(),'input_pdf_sha256':hashlib.sha256(pdf).hexdigest(),'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
             'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),'pipeline_fingerprint':fingerprint(),
-            'accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
+            'api_timeout_seconds':None,'api_wait_policy':'unlimited','accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
 
     def verify(self, content):return self._review(content,'independent_verify','verification')
     def analyze(self, content):return self._review(content,'technical_analysis','analysis')

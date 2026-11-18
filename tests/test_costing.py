@@ -20,6 +20,7 @@ class CostTests(unittest.TestCase):
  def test_count_endpoint_uses_exact_model_input_and_format_without_inference(self):
   request=self.request()
   with patch('urllib.request.urlopen',return_value=self.reply({'input_tokens':20000})) as net:q=costing.quote(self.w.workflow,request,True)
+  self.assertIsNone(net.call_args.kwargs['timeout'])
   sent=json.loads(net.call_args.args[0].data);self.assertTrue(net.call_args.args[0].full_url.endswith('/responses/input_tokens'));self.assertEqual(sent['input'],request['input']);self.assertEqual(sent['model'],request['model']);self.assertEqual(sent['reasoning'],request['reasoning']);self.assertNotIn('max_output_tokens',sent);self.assertAlmostEqual(q['input_cost_usd'],.02);self.assertAlmostEqual(q['estimated_max_usd'],.10);self.assertIsNone(q['provider_balance_usd']);self.assertEqual(self.costs()['calls'],[])
  def test_status_query_does_not_contact_network(self):
   with patch('urllib.request.urlopen',side_effect=AssertionError('network forbidden')):self.assertEqual(costing.quote(self.w.workflow,self.request())['status'],'UNVERIFIED')

@@ -1,18 +1,18 @@
 test_connection_lost_after_headers_is_not_json_or_before_response_error (test_report_transport.ReportTransportTests.test_connection_lost_after_headers_is_not_json_or_before_response_error) ... ok
-test_default_and_env_timeout_report_only (test_report_transport.ReportTransportTests.test_default_and_env_timeout_report_only) ... ok
+test_default_and_legacy_environment_both_wait_without_deadline (test_report_transport.ReportTransportTests.test_default_and_legacy_environment_both_wait_without_deadline) ... ok
 test_http_error_records_status_without_body (test_report_transport.ReportTransportTests.test_http_error_records_status_without_body) ... ok
 test_image_binding_failure_recorded_without_mutating_old_report (test_report_transport.ReportTransportTests.test_image_binding_failure_recorded_without_mutating_old_report) ... ok
-test_independent_review_retains_original_timeout (test_report_transport.ReportTransportTests.test_independent_review_retains_original_timeout) ... ok
+test_legacy_web_timeout_cannot_reenable_a_deadline (test_report_transport.ReportTransportTests.test_legacy_web_timeout_cannot_reenable_a_deadline) ... ok
 test_read_timeout_after_headers_is_not_response_before_timeout (test_report_transport.ReportTransportTests.test_read_timeout_after_headers_is_not_response_before_timeout) ... ok
 test_response_completed_but_html_unusable (test_report_transport.ReportTransportTests.test_response_completed_but_html_unusable) ... ok
 test_response_received_but_json_unreadable (test_report_transport.ReportTransportTests.test_response_received_but_json_unreadable) ... ok
 test_timeout_before_response_preserves_old_files_and_exports_diagnostics (test_report_transport.ReportTransportTests.test_timeout_before_response_preserves_old_files_and_exports_diagnostics) ... ok
-test_timeout_setting_applies_to_adapter_without_changing_output_or_prompt (test_report_transport.ReportTransportTests.test_timeout_setting_applies_to_adapter_without_changing_output_or_prompt) ... ok
 test_timeout_validation_owner_isolation_and_existing_output_unchanged (test_report_transport.ReportTransportTests.test_timeout_validation_owner_isolation_and_existing_output_unchanged) ... ok
 test_token_limit_is_distinct_and_incomplete_html_not_saved (test_report_transport.ReportTransportTests.test_token_limit_is_distinct_and_incomplete_html_not_saved) ... ok
+test_verification_and_analysis_use_unlimited_wait (test_report_transport.ReportTransportTests.test_verification_and_analysis_use_unlimited_wait) ... ok
 test_web_accepts_and_polls_while_openai_pending_without_second_paid_request (test_report_transport.ReportTransportTests.test_web_accepts_and_polls_while_openai_pending_without_second_paid_request) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 10.357s
+Ran 13 tests in 9.960s
 
 OK

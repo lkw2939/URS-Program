@@ -22,22 +22,26 @@ class ReportTransportTests(unittest.TestCase):
             state=self.w.run('alice',self.doc,'report')
         return state,network
     def record(self):return diagnostics(self.w.workflow,self.doc)[-1]
-    def test_timeout_setting_applies_to_adapter_without_changing_output_or_prompt(self):
-        self.w.report_timeout('alice',900)
+    def test_legacy_web_timeout_cannot_reenable_a_deadline(self):
+        config=self.w.report_timeout('alice',900)
+        self.assertTrue(config['unlimited']);self.assertFalse(config['legacy_value_applied']);self.assertEqual(config['legacy_timeout_seconds'],900)
+        self.assertEqual(set(config['scope']),{'report_html','independent_verify','technical_analysis','input_token_count'})
         state,net=self.run_report();wire=json.loads(net.call_args.args[0].data)
-        self.assertEqual(net.call_args.kwargs['timeout'],900);self.assertEqual(wire['max_output_tokens'],16000)
+        self.assertIsNone(net.call_args.kwargs['timeout']);self.assertEqual(wire['max_output_tokens'],16000)
         self.assertEqual(wire['input'][0]['content'][1]['text'],PROMPT)
         self.assertEqual(self.record()['outcome'],'completed');self.assertEqual(self.record()['http_status'],200)
         self.assertEqual(self.w.report_html('alice',self.doc,True),RAW.encode())
-    def test_default_and_env_timeout_report_only(self):
-        with patch.dict(os.environ,ENV,clear=True):self.assertEqual(self.w.report_timeout('alice')['timeout_seconds'],600)
-        with patch.dict(os.environ,{**ENV,'URS_OPENAI_REPORT_TIMEOUT_SECONDS':'1200'},clear=True):self.assertEqual(self.w.report_timeout('alice')['timeout_seconds'],1200)
-        self.run_report();self.assertEqual(self.record()['timeout_seconds'],600)
+        with self.w.workflow.connect() as db:self.assertEqual(db.execute('SELECT seconds FROM report_timeouts WHERE owner=?',('alice',)).fetchone()[0],900)
+    def test_default_and_legacy_environment_both_wait_without_deadline(self):
+        with patch.dict(os.environ,ENV,clear=True):self.assertIsNone(self.w.report_timeout('alice')['timeout_seconds'])
+        with patch.dict(os.environ,{**ENV,'URS_OPENAI_REPORT_TIMEOUT_SECONDS':'1200'},clear=True):self.assertIsNone(self.w.report_timeout('alice')['timeout_seconds'])
+        self.run_report();self.assertIsNone(self.record()['timeout_seconds']);self.assertEqual(self.record()['timeout_policy'],'unlimited')
     def test_timeout_before_response_preserves_old_files_and_exports_diagnostics(self):
         self.run_report();old=self.w.report_html('alice',self.doc,revision=1)
         state,net=self.run_report(error=TimeoutError('PRIVATE-KEY-SHOULD-NOT-LOG + DOCUMENT BODY'))
         d=self.record();self.assertEqual(d['outcome'],'timeout_before_response');self.assertIsNone(d['http_status'])
         self.assertEqual(d['max_output_tokens'],16000);self.assertGreaterEqual(d['elapsed_seconds'],0)
+        self.assertIsNone(d['timeout_seconds']);self.assertEqual(d['timeout_origin'],'upstream_or_network')
         self.assertEqual(self.w.report_html('alice',self.doc,revision=1),old)
         with self.w.workflow.connect() as db:self.assertEqual(db.execute("SELECT COUNT(*) FROM artifacts WHERE revision=2").fetchone()[0],0)
         evidence=json.loads(next(r['evidence'] for r in state['results'] if r['stage']=='report'))
@@ -101,7 +105,7 @@ class ReportTransportTests(unittest.TestCase):
                 gate.set();deadline=time.monotonic()+5
                 while http(path+'/report-task')[1]['state']=='running' and time.monotonic()<deadline:time.sleep(.05)
                 self.assertEqual(http(path+'/report-task')[1]['state'],'finished')
-                self.assertEqual(len(calls),1);self.assertEqual(calls[0][0]['max_output_tokens'],16000);self.assertEqual(calls[0][1]['timeout'],900)
+                self.assertEqual(len(calls),1);self.assertEqual(calls[0][0]['max_output_tokens'],16000);self.assertIsNone(calls[0][1]['timeout'])
                 self.assertEqual(http(path+'/detail')[1]['reports']['state'],'current')
         finally:gate.set();server.shutdown();server.server_close();thread.join()
     def test_timeout_validation_owner_isolation_and_existing_output_unchanged(self):
@@ -112,15 +116,16 @@ class ReportTransportTests(unittest.TestCase):
         with self.assertRaises(AccessDenied):self.w.report_timeout('missing',900)
         self.w.report_timeout('alice',900)
         with patch.dict(os.environ,ENV,clear=True):
-            self.assertEqual(self.w.report_timeout('bob')['timeout_seconds'],600)
+            self.assertIsNone(self.w.report_timeout('bob')['timeout_seconds'])
         self.assertEqual(self.w.ai_settings('alice')['max_output_tokens'],16000)
         self.assertEqual(self.w.report_settings('alice')['prompt'],PROMPT)
-    def test_independent_review_retains_original_timeout(self):
+    def test_verification_and_analysis_use_unlimited_wait(self):
         from urs.ai import OpenAI
         self.w.report_timeout('alice',900)
-        with patch.dict(os.environ,ENV,clear=True),patch('urllib.request.urlopen',return_value=Reply({'status':'completed','output':[{'content':[{'type':'output_text','text':'{}'}]}]})) as network:
-            OpenAI(self.w.workflow,self.doc).review_pdf('independent_verify',b'%PDF','source.pdf','<html>same</html>')
-        self.assertEqual(network.call_args.kwargs['timeout'],90)
+        for task in ('independent_verify','technical_analysis'):
+            with self.subTest(task=task),patch.dict(os.environ,ENV,clear=True),patch('urllib.request.urlopen',return_value=Reply({'status':'completed','output':[{'content':[{'type':'output_text','text':'{}'}]}]})) as network:
+                OpenAI(self.w.workflow,self.doc).review_pdf(task,b'%PDF','source.pdf','<html>same</html>')
+            self.assertIsNone(network.call_args.kwargs['timeout'])
         self.assertEqual(diagnostics(self.w.workflow,self.doc),[])
 
     def test_connection_lost_after_headers_is_not_json_or_before_response_error(self):

@@ -46,11 +46,8 @@ class OpenAI:
         try:
             config=validate({k:self.settings[k] for k in ('model','effort','max_output_tokens')}) if self.settings is not None else effective(self.workflow,document=self.document)
         except SettingsError as exc:raise AIBlocked(str(exc)) from None
-        report_timeout=None
-        if task=='report_html':
-            from urs.report_transport import settings
-            try:report_timeout=settings(self.workflow,document=self.document)['timeout_seconds']
-            except (ValueError,TypeError):raise AIBlocked('보고서 API 대기시간 설정을 확인해 주세요.') from None
+        from urs.report_transport import settings
+        api_timeout=settings(self.workflow,document=self.document)['timeout_seconds']
         model=config['model'];effort=config['effort'];output_limit=config['max_output_tokens']
         from urs import costing
         if not key:raise AIBlocked('API 연결 설정을 확인하세요. 유료 호출하지 않았습니다.')
@@ -66,10 +63,10 @@ class OpenAI:
             headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')
         if task=='report_html':
             from urs.report_transport import request
-            return request(self,req,call_id,output_limit,report_timeout)
+            return request(self,req,call_id,output_limit,api_timeout)
         started=time.monotonic();http_status=None;result=None
         try:
-            with urllib.request.urlopen(req,timeout=90) as response:
+            with urllib.request.urlopen(req,timeout=api_timeout) as response:
                 value=getattr(response,'status',None);http_status=value if type(value) is int else None
                 result=json.load(response)
             if result.get('status')!='completed':
@@ -82,17 +79,17 @@ class OpenAI:
             if not json_response and (not raw or not any(t in raw.lower() for t in ('<html','<!doctype','<body'))):
                 raise ValueError('Expected HTML; response is never unwrapped or rewritten')
         except AIError as exc:
-            exc.diagnostics={'max_output_tokens':output_limit,'timeout_seconds':90,'elapsed_seconds':round(time.monotonic()-started,3),'http_status':http_status,'response_status':result.get('status') if isinstance(result,dict) else None,'incomplete_reason':(result.get('incomplete_details') or {}).get('reason') if isinstance(result,dict) else None}
+            exc.diagnostics={'max_output_tokens':output_limit,'timeout_seconds':api_timeout,'timeout_policy':'unlimited','elapsed_seconds':round(time.monotonic()-started,3),'http_status':http_status,'response_status':result.get('status') if isinstance(result,dict) else None,'incomplete_reason':(result.get('incomplete_details') or {}).get('reason') if isinstance(result,dict) else None}
             costing.finish(self.workflow,call_id,'failed',result)
             raise
         except Exception as exc:
             costing.finish(self.workflow,call_id,'failed',result)
             timed=isinstance(exc,(TimeoutError,socket.timeout)) or isinstance(exc,urllib.error.URLError) and isinstance(exc.reason,(TimeoutError,socket.timeout))
             if isinstance(exc,urllib.error.HTTPError):reason=f'OpenAI HTTP 오류 ({exc.code}). API 권한·사용 한도를 확인하세요.';http_status=exc.code
-            elif timed:reason='OpenAI 검토 응답 대기시간(90초) 초과. 자동 재시도하지 않습니다.'
+            elif timed:reason='연결/제공자 측 시간 초과 또는 연결 종료입니다. 앱의 검토 응답 대기 제한은 없습니다. 자동 재시도하지 않습니다.'
             elif http_status is not None:reason='OpenAI 응답 후 검토 JSON 해석 실패. 결과 형식을 확인하세요.'
             else:reason='OpenAI 연결/검토 응답 처리 실패. HTTP 응답 상태는 미확인입니다.'
-            error=AIError(reason);error.diagnostics={'max_output_tokens':output_limit,'timeout_seconds':90,'elapsed_seconds':round(time.monotonic()-started,3),'http_status':http_status,'response_status':result.get('status') if isinstance(result,dict) else None,'error_type':type(exc).__name__}
+            error=AIError(reason);error.diagnostics={'max_output_tokens':output_limit,'timeout_seconds':api_timeout,'timeout_policy':'unlimited','elapsed_seconds':round(time.monotonic()-started,3),'http_status':http_status,'response_status':result.get('status') if isinstance(result,dict) else None,'error_type':type(exc).__name__}
             raise error from None
         costing.finish(self.workflow,call_id,'completed',result)
         return value

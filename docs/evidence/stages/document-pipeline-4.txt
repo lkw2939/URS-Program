@@ -9,6 +9,6 @@ test_run_both_preserves_legacy_rows_and_uses_exact_current_raw_pdf (test_reviews
 test_runtime_failure_has_saved_reason_and_previous_result_is_labeled (test_reviews.ReviewTests.test_runtime_failure_has_saved_reason_and_previous_result_is_labeled) ... ok
 
 ----------------------------------------------------------------------
-Ran 9 tests in 16.072s
+Ran 9 tests in 15.147s
 
 OK

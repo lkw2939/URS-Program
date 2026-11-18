@@ -1,3 +1,4 @@
+function failureText(reason){return reason.includes('대기시간(90초)')?'이전 실행 실패 기록 (당시 90초 제한): '+reason+' 다음 실행부터는 무제한 대기 정책을 적용합니다.':'최근 실패: '+reason;}
 let reportCost=null;
 function costText(q){if(!q||q.status!=='READY')return '예상 비용 미확인 · '+(q?.reason||'먼저 무료 비용 계산을 누르세요.')+' 입력 토큰 계산만 하며 보고서를 생성하지 않습니다.';
 return `이번 1회 (설정 단가 기준): 입력 ${q.input_tokens.toLocaleString()} 토큰 $${q.input_cost_usd.toFixed(6)} + 최대 출력 ${q.max_output_tokens.toLocaleString()} 토큰 $${q.max_output_cost_usd.toFixed(6)} = 예상 상한 $${q.estimated_max_usd.toFixed(6)} / 1회 실행 한도 $${q.cap_usd.toFixed(2)}${q.blocked?' · 한도 초과':''}. 문서 누적액과 OpenAI 잔액은 별개이며 계정 잔액은 자동 조회하지 않습니다. 캐시 할인 전 예상 상한이며 실제 사용액은 응답 사용량으로 정산합니다.`;}
@@ -90,7 +91,7 @@ function renderReview(){
   estimate.onclick=()=>busy(estimate,async()=>{const result=await api(base+'/cost-preview',{stage:stage.id});if(stage.id==='report')reportCost=result;await refreshReview();});controls.append(estimate);
   button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{const accepted=await api(base+'/current-review-run',{stage:stage.id,expected_revision:current.revision,expected_sha256:currentReview.sha256});await waitCurrentReview(stage.id,accepted.target);}});controls.append(button);
   group.append(element('p',costText(q),'muted small'));
-  if(reviewInfo){group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason?'실행 불가 · '+reviewInfo.blocked_reason:q?.status==='READY'?'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.':'비용 확인 후 실행할 수 있습니다.','muted small'));if(reviewInfo.failure)group.append(element('p','최근 실패: '+reviewInfo.failure,'result'));}
+  if(reviewInfo){group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason?'실행 불가 · '+reviewInfo.blocked_reason:q?.status==='READY'?'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.':'비용 확인 후 실행할 수 있습니다.','muted small'));if(reviewInfo.failure)group.append(element('p',failureText(reviewInfo.failure),'result'));}
 
  }
  for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${result.stage==='report'&&current&&state.revision!==current.revision?'최근 생성 시도 (현재 보고서 유지)':stageNames[result.stage]} · ${result.stage==='report'&&result.status==='PASS'&&detail.reports?.state!=='current'?'저장 성공 · A4 배치/문서 끝 확인 필요':result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
@@ -143,8 +144,11 @@ $('close-review').onclick=()=>{$('review').hidden=true;activeDoc=null;$('report-
 $('approve-document').onclick=()=>busy($('approve-document'),async()=>{if(!$('reviewed-html').checked)throw new Error('최종 HTML 검토를 확인해 주세요.');await api(`/api/documents/${activeDoc.id}/approve`,{revision:detail.status.revision,note:$('approval-note').value,reviewed_outputs:['report.html']});await refreshReview();});
 (async()=>{try{await signedIn();}catch(e){signedOut();if(!e.message.includes('로그인'))message(e.message);}})();
 
-function renderReportTimeout(config){$('report-timeout').value=config.timeout_seconds;$('timeout-summary').textContent=`보고서 API 대기시간 ${config.timeout_seconds}초 · ${config.source==='web'?'웹 저장값':'서버 기본값'}`;}
-$('save-report-timeout').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{renderReportTimeout(await api('/api/settings/report-timeout',{timeout_seconds:Number($('report-timeout').value)}));message('대기시간을 저장했습니다. 출력 토큰 설정은 변경하지 않았습니다.');});};
+function renderReportTimeout(config){
+ if(config.unlimited!==true||config.timeout_seconds!==null){$('timeout-summary').textContent='현재 연결된 서버에서 무제한 대기 적용이 확인되지 않았습니다.';$('timeout-description').textContent='서버를 최신 버전으로 다시 시작한 뒤 새로고침해 주세요.';return;}
+ $('timeout-summary').textContent='무제한 · HTML 보고서 생성·독립검증·기술분석·무료 비용 계산 전체 적용'+(config.legacy_timeout_seconds!==null?` · 이전 ${config.legacy_timeout_seconds}초 설정은 대기 한도로 사용하지 않습니다.`:'');
+ $('timeout-description').textContent='완료 응답까지 기다리며 웹은 진행 상태를 계속 조회합니다. 연결/제공자 오류는 기록하고 자동 유료 재시도는 하지 않습니다.';
+}
 
 
 function renderTargets(){
@@ -174,7 +178,7 @@ async function loadTarget(){
   const estimate=element('button',`${targetLabel} ${label} 비용 확인 (무료)`);estimate.type='button';estimate.onclick=()=>busy(estimate,async()=>{await api(base+'/target-cost-preview',{target,stage});await loadTarget();});$('a4-target-actions').append(estimate);
   button.onclick=()=>busy(button,async()=>{await api(base+'/target-run',{target,stage});$('a4-target-state').textContent=`${targetLabel} ${label} 실행 중입니다.`;await loadTarget();});$('a4-target-actions').append(button);
   if(state.budget_preview)notes.push(costText(state.budget_preview));
-  if(state.blocked_reason)notes.push(label+': '+state.blocked_reason);if(state.failure)notes.push(label+' 실패/미확인: '+state.failure);
+  if(state.blocked_reason)notes.push(label+': '+state.blocked_reason);if(state.failure)notes.push(label+': '+failureText(state.failure));
   const view=element('button',`${targetLabel} ${label} 결과 보기`);view.type='button';view.disabled=!state.available;
   if(state.available)view.onclick=()=>window.open(base+`/target-result.html?target=${target}&stage=${stage}&attempt=${state.attempt}`,'_blank','noopener');$('a4-target-results').append(view);
   if(state.older_attempt)notes.push(label+': 이전 실행 결과를 보존하고 있습니다. 최신 실행과 구분해 확인하세요.');

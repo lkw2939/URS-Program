@@ -9,6 +9,6 @@ test_register_preserves_revisions_and_bytes_and_does_not_call_ai (test_targets.T
 test_settlement_preview_never_refunds_unknown_usage_or_rewrites_ledger (test_targets.TargetTests.test_settlement_preview_never_refunds_unknown_usage_or_rewrites_ledger) ... ok
 
 ----------------------------------------------------------------------
-Ran 9 tests in 15.650s
+Ran 9 tests in 15.000s
 
 OK

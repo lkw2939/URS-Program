@@ -64,7 +64,8 @@ def count_input_tokens(request):
     body={k:request[k] for k in ('model','input','reasoning','text') if k in request}
     req=urllib.request.Request('https://api.openai.com/v1/responses/input_tokens',data=json.dumps(body).encode(),headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')
     try:
-        with urllib.request.urlopen(req,timeout=90) as response:result=json.load(response)
+        from urs.report_transport import NETWORK_TIMEOUT
+        with urllib.request.urlopen(req,timeout=NETWORK_TIMEOUT) as response:result=json.load(response)
         tokens=result.get('input_tokens')
         if type(tokens) is not int or tokens<0:raise ValueError()
         return tokens

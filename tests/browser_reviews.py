@@ -14,9 +14,11 @@ def main():
   w=Workspace(Path(tmp)/'fixture.sqlite');w.add_user('fixture','fixture-password-123');p=w.create_project('fixture','Review fixture');pdf=visual_pdf();doc=w.upload('fixture',p,'fixture.pdf',pdf);w.save_report_settings('fixture',PROMPT)
   w.processing.provider=ReportAI(RAW.replace('src=urs-image:9:8','src=urs-image:1:1'));w.run('fixture',doc,'report');raw=w.processing.get(doc,'report.raw.html');final=w.processing.get(doc,'report.html');w.processing.provider=None
   w.save_ai_settings('fixture',{'model':'mock-terra','effort':None,'max_output_tokens':16000})
+  with w.workflow.connect() as db:db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(f'displayed:{doc}:1','verify','failed','FAIL',None,json.dumps({'reason':'OpenAI 검토 응답 대기시간(90초) 초과. 자동 재시도하지 않습니다.'}),'fixture-history'))
   with w.workflow.connect() as db:before={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in ('artifacts','results','events','approvals','documents','report_settings')}
   server=make_app(w,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start();gate=threading.Event();calls=[]
   def mock(req,**kwargs):
+   assert kwargs['timeout'] is None
    body=json.loads(req.data);content=body['input'][0]['content'];assert base64.b64decode(content[0]['file_data'].split(',')[1])==pdf;from urs.costing import review_parts
    assert content[1:]==review_parts('independent_verify' if 'Independently' in content[1]['text'] else 'technical_analysis',final.decode());calls.append(body)
    if 'Independently' in content[1]['text']:
@@ -30,6 +32,7 @@ def main():
     page.get_by_role('button',name='Review fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
     assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_disabled();assert page.get_by_role('button',name='기술 분석 실행',exact=True).is_disabled()
     assert '독립검증' in page.locator('#process-buttons').inner_text()
+    assert '이전 실행 실패 기록 (당시 90초 제한)' in page.locator('#process-buttons').inner_text()
     page.get_by_role('button',name='독립 검증 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='독립 검증 실행').disabled")
     # A stale/different screen identity must be rejected before any model request.
     rejected=page.evaluate('''async (doc) => {const me=await (await fetch('/api/me')).json();const r=await fetch('/api/documents/'+doc+'/current-review-run',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':me.csrf},body:JSON.stringify({stage:'verify',expected_revision:99,expected_sha256:'wrong'})});return {status:r.status,body:await r.json()};}''',doc)

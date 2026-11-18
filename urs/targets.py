@@ -91,7 +91,7 @@ def run(workspace,owner,document,target,stage):
         with workspace.workflow.connect() as db:
             attempt=db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(target,stage,'running','UNVERIFIED',None,json.dumps({'server_instance':INSTANCE}),datetime.now(timezone.utc).isoformat())).lastrowid
         start=time.monotonic();result=None
-        evidence={'target_id':target,'input_kind':'URS final HTML with source images' if row['kind']=='stored_final' else 'stored Terra raw HTML' if row['kind']=='stored_revision' else 'A4 imported HTML','input_revision':row['parent_revision'],'input_html_sha256':row['sha256'],'input_pdf_sha256':row['source_sha256']}
+        evidence={'api_timeout_seconds':None,'api_wait_policy':'unlimited','target_id':target,'input_kind':'URS final HTML with source images' if row['kind']=='stored_final' else 'stored Terra raw HTML' if row['kind']=='stored_revision' else 'A4 imported HTML','input_revision':row['parent_revision'],'input_html_sha256':row['sha256'],'input_pdf_sha256':row['source_sha256']}
         try:
             config=effective(workspace.workflow,document=document)
         except Exception:

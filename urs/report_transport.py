@@ -1,8 +1,11 @@
-"""Report-only timeout settings and safe per-attempt diagnostics; no body logging."""
+"""Unlimited AI response waiting and safe per-attempt diagnostics; no body logging."""
 import json,os,time,socket,urllib.request,urllib.error,http.client
 from urs.ai import AIError,AIBlocked
 
+NETWORK_TIMEOUT=None # Explicit None disables the client socket deadline on every OpenAI route.
+
 def timeout_value(value):
+    if value is None:return None
     if type(value) is not int or not 10<=value<=3600:raise ValueError('보고서 API 대기시간은 10~3600초의 정수입니다.')
     return value
 
@@ -12,8 +15,14 @@ def settings(workflow,owner=None,document=None):
             row=db.execute('SELECT p.owner FROM documents d JOIN projects p ON p.id=d.project WHERE d.id=?',(document,)).fetchone()
             owner=row[0] if row else None
         row=db.execute('SELECT version,seconds FROM report_timeouts WHERE owner=? ORDER BY version DESC LIMIT 1',(owner,)).fetchone()
-    seconds=timeout_value(row['seconds'] if row else int(os.environ.get('URS_OPENAI_REPORT_TIMEOUT_SECONDS','').strip() or '600'))
-    return {'timeout_seconds':seconds,'version':row['version'] if row else 0,'source':'web' if row else 'server'}
+    legacy=row['seconds'] if row else None
+    if row is None:
+        raw=os.environ.get('URS_OPENAI_REPORT_TIMEOUT_SECONDS','').strip()
+        legacy=int(raw) if raw.isdigit() else None
+    return {'timeout_seconds':NETWORK_TIMEOUT,'unlimited':True,'version':row['version'] if row else 0,
+            'source':'unlimited_policy','scope':['report_html','independent_verify','technical_analysis','input_token_count'],
+            'legacy_timeout_seconds':legacy,'legacy_source':'web' if row else 'server','legacy_value_applied':False}
+
 
 def diagnostics(workflow,document):
     with workflow.connect() as db:
@@ -25,7 +34,7 @@ def request(client,req,call_id,limit,timeout):
         row=db.execute('SELECT revision FROM jobs WHERE id=?',(client.document,)).fetchone()
         revision=row[0] if row else None
     d={'call_id':call_id,'revision':revision,'max_output_tokens':limit,'timeout_seconds':timeout,'started_at':datetime.now(timezone.utc).isoformat(),
-       'elapsed_seconds':0,'elapsed_scope':'api_exchange','timeout_kind':'socket_io','http_status':None,'response_status':None,'incomplete_reason':None,'outcome':'waiting_response','error_type':None}
+       'elapsed_seconds':0,'elapsed_scope':'api_exchange','timeout_kind':'none' if timeout is None else 'socket_io','timeout_policy':'unlimited' if timeout is None else 'finite','http_status':None,'response_status':None,'incomplete_reason':None,'outcome':'waiting_response','error_type':None}
     def save():
         with client.workflow.connect() as db:db.execute('INSERT OR REPLACE INTO report_diagnostics VALUES(?,?,?)',(call_id,client.document,json.dumps(d)))
     save();start=time.monotonic();result=None;phase='waiting_response';error=None
@@ -55,7 +64,8 @@ def request(client,req,call_id,limit,timeout):
         d['error_type']=type(exc).__name__
         if timed:
             d['outcome']='timeout_before_response' if d['http_status'] is None else 'timeout_reading_response'
-            error='OpenAI 응답 전 대기시간 초과.' if d['http_status'] is None else 'OpenAI 응답 수신 중 대기시간 초과.'
+            d['timeout_origin']='upstream_or_network' if timeout is None else 'unverified'
+            error=('연결/제공자 측 시간 초과 또는 연결 종료입니다. 앱의 응답 대기 제한은 없습니다. 자동 재시도하지 않습니다.' if timeout is None else 'OpenAI 응답 전 대기시간 초과.' if d['http_status'] is None else 'OpenAI 응답 수신 중 대기시간 초과.')
         elif phase=='reading_response' and isinstance(exc,(ConnectionError,http.client.IncompleteRead)):
             d['outcome']='response_read_error';error='OpenAI 응답 수신 도중 연결이 끊겼습니다.'
         elif phase=='html_processing':d['outcome']='html_processing_error';error='OpenAI 응답 후 HTML 형식 처리 실패.'
