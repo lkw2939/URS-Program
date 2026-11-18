@@ -1,0 +1,1 @@
+PASS: login -> one report generation(mock) -> original PDF crop binding -> final save -> HTML 확인 click; 2 source photos with distinct red/blue pixels + source vector diagram visibly rendered in correct slots; byte-identical downloaded HTML renders in an offline browser document with JavaScript disabled and no PDF selection/PDF.js; raw HTML/prompt preserved, paid calls=0.

@@ -26,7 +26,8 @@ def main():
                   'URS_AI_BUDGET_USD':'50','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'2'}
         with patch.dict(os.environ,settings,clear=True),patch('urllib.request.urlopen',return_value=io.BytesIO(json.dumps(response).encode())) as network:
             state=w.run('fixture',doc,'report')
-        assert next(s['passed'] for s in state['stages'] if s['id']=='report')
+        assert not next(s['passed'] for s in state['stages'] if s['id']=='report')
+        assert next(r['status'] for r in state['results'] if r['stage']=='report')=='NEEDS_REVIEW'
         payload=json.loads(network.call_args.args[0].data)
         assert payload['input'][0]['content'][1]['text']==PROMPT
         assert set(payload)=={'model','input','max_output_tokens','store'}
@@ -41,5 +42,5 @@ def main():
         comparison=w.artifact('fixture',doc,'image-bindings')
         (root/'html-comparison.json').write_text(json.dumps(comparison,ensure_ascii=False,indent=2)+'\n')
         assert comparison['only_image_addresses_changed'] and len(comparison['replacements'])==2 and len(comparison['unresolved'])==1
-    print('PASS: exact mocked PDF/prompt/image-guide request retained; model HTML preserved byte-for-byte, self-contained HTML reopened, 2 distinct source PNG crops decoded, only image addresses replaced; 1 unresolved slot retained and recorded. No paid API calls; no Word/PDF regeneration.')
+    print('PASS: exact mocked PDF/prompt/image-guide request retained; model HTML preserved byte-for-byte, inspection HTML reopened, 2 distinct source PNG crops decoded, only image addresses replaced; 1 unresolved slot retained and recorded, completion blocked as NEEDS_REVIEW. No paid API calls; no Word/PDF regeneration.')
 if __name__=='__main__':main()

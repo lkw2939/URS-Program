@@ -75,15 +75,16 @@ class DiagnosticTests(unittest.TestCase):
     def test_completed_response_yields_independent_image_only_comparison_and_preserves_reports(self):
         self.w.save_report_settings('fixture',PROMPT)
         self.w.processing.put(self.doc,1,'translation.pdf',b'old report must stay')
+        complete_raw=RAW.replace('src=urs-image:9:8','src=urs-image:1:1')
         previous_costs=self.w.verification_record('fixture',self.doc)['record']['ai_cost_history']
         evidence=self.w.verification_record('fixture',self.doc)['record_sha256']
         body={'id':'fixture-response','model':'fixture-model-resolved','status':'completed',
               'reasoning':{'effort':'medium'},'usage':{'input_tokens':10,'output_tokens':20},
-              'output':[{'content':[{'type':'output_text','text':RAW}]}]}
+              'output':[{'content':[{'type':'output_text','text':complete_raw}]}]}
         with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',return_value=Response(json.dumps(body).encode())) as network:
             result=run(self.root,live=True)
         network.assert_called_once();self.assertTrue(result['api_call_verified']);self.assertTrue(result['html_image_only_verified'])
-        self.assertTrue(result['existing_reports_and_stages_unchanged']);self.assertEqual(result['images_inserted'],2)
+        self.assertTrue(result['existing_reports_and_stages_unchanged']);self.assertEqual(result['images_inserted'],3)
         self.assertEqual(result['live_request']['returned_effort'],'medium')
         self.assertIsNone(result['live_request']['requested_effort'])
         self.assertTrue(result['live_request']['sent_original_pdf']);self.assertTrue(result['live_request']['sent_verbatim_saved_prompt'])
@@ -97,15 +98,17 @@ class DiagnosticTests(unittest.TestCase):
         self.assertEqual(envelope(after['record'])['record_sha256'],evidence)
         with self.w.workflow.connect() as db:
             self.assertEqual(db.execute('SELECT state FROM ai_usage').fetchone()[0],'completed')
-        raw=(self.root/result['diagnostic_files']/'report.raw.html').read_bytes();self.assertEqual(raw,RAW.encode())
+        raw=(self.root/result['diagnostic_files']/'report.raw.html').read_bytes();self.assertEqual(raw,complete_raw.encode())
     def test_no_image_slots_is_reported_as_binding_not_exercised(self):
         self.w.save_report_settings('fixture',PROMPT)
         body={'id':'fixture-no-slots','model':'fixture-terra','status':'completed',
               'output':[{'content':[{'type':'output_text','text':'<!DOCTYPE html><html><body><input type="file"></body></html>'}]}]}
         with patch.dict(os.environ,SETTINGS,clear=True),patch('urllib.request.urlopen',return_value=Response(json.dumps(body).encode())):
             result=run(self.root,live=True)
-        self.assertTrue(result['api_call_verified']);self.assertTrue(result['html_image_only_verified'])
-        self.assertFalse(result['image_binding_exercised']);self.assertEqual(result['images_inserted'],0)
+        self.assertTrue(result['api_call_verified']);self.assertFalse(result['html_image_only_verified'])
+        self.assertIn('did not pass',result['blocked'])
+        self.assertFalse(result.get('image_binding_exercised',False))
+        self.assertEqual(result['pipeline_result'][0]['status'],'NEEDS_REVIEW')
 
     def test_incomplete_output_distinguishes_successful_http_from_unfinished_html(self):
         self.w.save_report_settings('fixture',PROMPT)

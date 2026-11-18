@@ -1,0 +1,41 @@
+{
+  "scope": "Synthetic PDF/text, mock OpenAI transport; no paid calls or operating data changes",
+  "mock_generation_requests": 1,
+  "html_check_clicked": true,
+  "original_photos_visible": 2,
+  "original_vector_diagrams_visible": 1,
+  "same_page_pixel_checks": [
+    {
+      "visible": true,
+      "rgb": [
+        255,
+        0,
+        0
+      ],
+      "dark": 0
+    },
+    {
+      "visible": true,
+      "rgb": [
+        0,
+        0,
+        255
+      ],
+      "dark": 0
+    },
+    {
+      "visible": true,
+      "rgb": [
+        21,
+        21,
+        21
+      ],
+      "dark": 652
+    }
+  ],
+  "offline_without_javascript": true,
+  "pdf_reselection_controls": 0,
+  "pdfjs_dependencies": 0,
+  "only_image_addresses_changed": true,
+  "stored_final_sha256": "ad6db7422368742bc003ff5731220e8736a29ba808f6b67d17530a4ce8723ae2"
+}

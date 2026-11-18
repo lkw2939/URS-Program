@@ -48,7 +48,7 @@ async function busy(button, fn){button.disabled=true;message('처리 중입니�
 async function waitReport(){
  const doc=activeDoc;if(!doc)return;
  while(true){const task=await api(`/api/documents/${doc.id}/report-task`);if(task.state!=='running'){if(task.state==='failed')throw new Error(task.error);if(task.state==='none')throw new Error('서버에서 작업 상태를 확인할 수 없습니다. 기존 검증 기록을 확인하세요. 자동 재시도하지 않습니다.');break;}await new Promise(resolve=>setTimeout(resolve,1500));}
- if(activeDoc?.id===doc.id)await refreshReview();
+ if(activeDoc?.id===doc.id){await refreshReview();const latest=detail.status.results.find(r=>r.stage==='report'&&r.revision===detail.status.revision);if(latest&&latest.status!=='PASS')throw new Error(JSON.parse(latest.evidence).reason||'HTML 사진 표시/배치 확인이 필요합니다.');}
 }
 async function waitReview(stage){
  const doc=activeDoc;if(!doc)return;
@@ -70,8 +70,9 @@ function renderReview(){
  const state=detail.status;const current=detail.current_report;const currentReview=detail.current_review;const base=`/api/documents/${activeDoc.id}`;
  $('review-title').textContent=`${activeDoc.name} · ${current?'현재 저장 보고서 '+current.revision:'저장 보고서 없음'}`;
  $('current-report-context').textContent=current?`화면과 독립검증의 공통 대상: URS 최종 HTML(사진 포함) · 저장 이력 ${current.revision} · 최근 생성 시도 ${state.revision}와 별도 · SHA-256 ${currentReview?.sha256||current.metadata.final_sha256||'미기록'}`:'정상 저장된 보고서가 없습니다. 최근 생성 결과를 확인하세요.';
- $('current-layout-status').textContent=detail.current_layout?.status==='PASS'?'사진 삽입 후 브라우저 A4 크기·넘침·표시 검사 통과':current?'기존 저장 보고서를 유지합니다. A4 배치/사진 표시는 확인 필요합니다. 새 보고서를 자동 생성하지 않습니다.':'';
+ $('current-layout-status').textContent=detail.current_layout?.status==='PASS'?`사진 삽입 후 브라우저 A4 크기·넘침·표시 검사 통과 · 사진/도면 ${detail.current_layout.visible_image_count??detail.current_layout.image_count}개 표시 확인`:current?'기존 저장 보고서를 유지합니다. A4 배치/사진 표시는 확인 필요합니다. 새 보고서를 자동 생성하지 않습니다.':'';
  if(detail.latest_layout&&detail.latest_layout.status!=='PASS'){const pages=[...(detail.latest_layout.pages||[]),...(detail.latest_layout.narrow_pages||[]).map(p=>({...p,page:p.page+' (좁은 화면)'}))].filter(p=>p.issues.length).map(p=>`원문 ${p.page}쪽: ${p.issues.join(', ')}`).join(' · ');$('current-layout-status').textContent+=' 최근 생성의 배치 확인 필요: '+(pages||detail.latest_layout.reason||(detail.latest_layout.issues||[]).join(', '));}
+ if(detail.current_layout?.status==='PASS'&&detail.current_layout.image_display_method!=='chromium-js-on-off-offline-v2')$('current-layout-status').textContent='기존 A4 배치 검사 기록입니다. 새 사진 표시 검사는 아직 하지 않았습니다. 저장된 파일은 그대로 유지합니다.';
  $('generation-contract').textContent=detail.generation_contract||'';
  $('record-html').href=base+'/verification.html';$('record-json').href=base+'/verification.json';
  const displayPassed=s=>s.id==='report'?!!current&&detail.current_layout?.status==='PASS':s.id==='verify'||s.id==='analyze'?currentReview?.reviews[s.id]?.status==='PASS':s.passed;
@@ -100,7 +101,7 @@ function renderReview(){
  $('reviewed-html').checked=false;$('approval-note').value='';
  $('view-html').disabled=!ready;
  $('view-html').textContent='HTML 확인';
- $('html-availability').textContent=!ready?(reports?.stored_revisions?.length?'저장된 HTML은 있으나 문서 끝·완전성 확인이 필요합니다':'아직 열 수 있는 완성 HTML이 없습니다'):`현재 열람 보고서 · 저장 이력 ${saved.revision}${reports.state==='previous'?' · 새 생성 실패/미완료로 기존 보고서 유지':''}`;
+ $('html-availability').textContent=!ready?(reports?.stored_revisions?.length?'저장된 HTML은 있으나 사진 표시·배치·문서 완전성 확인이 필요합니다':'아직 열 수 있는 완성 HTML이 없습니다'):`현재 열람 보고서 · 저장 이력 ${saved.revision}${reports.state==='previous'?' · 새 생성 실패/미완료로 기존 보고서 유지':''}`;
  const storedRevision=reports?.stored_revisions?.[0];$('stored-review').hidden=!storedRevision;
  if(storedRevision)$('stored-review').href=base+`/stored-review.zip?revision=${storedRevision}`;else $('stored-review').removeAttribute('href');
  $('html-failure').textContent=[reports?.current_failure?`현재 생성 실패: ${reports.current_failure.reason}`:'',...(reports?.invalid||[]).map(x=>`리비전 ${x.revision}: ${x.reason}`)].filter(Boolean).join(' · ');

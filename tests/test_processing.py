@@ -35,7 +35,7 @@ class ProcessingTests(unittest.TestCase):
 
     def generate(self):
         state=self.w.run('alice',self.doc,'report')
-        self.assertTrue(next(s['passed'] for s in state['stages'] if s['id']=='report'))
+        self.assertEqual(next(s['passed'] for s in state['stages'] if s['id']=='report'),self.w.processing.get(self.doc,'layout-audit')['status']=='PASS')
         return state
 
     def test_only_pdf_verbatim_saved_prompt_and_image_address_guide_sent(self):
@@ -86,9 +86,10 @@ class ProcessingTests(unittest.TestCase):
         self.generate();final=self.w.report_html('alice',self.doc).decode()
         self.assertIn('src=urs-image:9:8',final)
         self.assertEqual(final.count('data:image/png;base64,'),2)
-        self.w.run('alice',self.doc,'verify')
+        with self.assertRaises(Blocked):self.w.run('alice',self.doc,'verify')
         status=self.w.status('alice',self.doc)
-        self.assertEqual(next(r['status'] for r in status['results'] if r['stage']=='verify'),'NEEDS_REVIEW')
+        self.assertEqual(next(r['status'] for r in status['results'] if r['stage']=='report'),'NEEDS_REVIEW')
+        self.assertEqual(len(self.provider.calls),1)
 
     def test_settings_are_owner_scoped_and_append_only_no_regeneration(self):
         self.generate();before=self.w.report_html('alice',self.doc)

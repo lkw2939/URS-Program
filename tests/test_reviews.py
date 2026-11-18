@@ -58,11 +58,12 @@ class ReviewTests(unittest.TestCase):
   self.assertNotIn('<script>',result_html(self.w,'alice',self.doc,'verify').decode())
   with self.assertRaises(AccessDenied):result_html(self.w,'bob',self.doc,'verify')
   with self.assertRaises(AccessDenied):run(self.w,'bob',self.doc,'analyze')
- def test_fenced_stored_html_is_valid_review_input_without_a4_replacement(self):
+ def test_new_fenced_output_is_not_completed_or_reviewable(self):
   self.provider.raw='```html\n'+self.provider.raw+'\n```';self.generate()
   self.assertEqual(self.w.report_availability('alice',self.doc)['state'],'none')
-  self.assertTrue(overview(self.w,'alice',self.doc)['verify']['can_run'])
-  run(self.w,'alice',self.doc,'verify');self.assertEqual(self.provider.calls[-1][3],self.provider.raw)
+  self.assertFalse(overview(self.w,'alice',self.doc)['verify']['can_run'])
+  with self.assertRaises(Blocked):run(self.w,'alice',self.doc,'verify')
+  self.assertEqual(len(self.provider.calls),1)
 
  def test_previous_server_pending_attempt_does_not_leave_button_permanently_disabled(self):
   self.generate()

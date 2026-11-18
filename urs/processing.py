@@ -81,10 +81,14 @@ class Processing:
                 exc.diagnostics=info
             raise exc from None
         from urs.layout_audit import inspect
-        from urs.report_contract import VERSION
+        from urs.report_contract import VERSION,check
         from pypdf import PdfReader
         import io
         layout=inspect(final,len(PdfReader(io.BytesIO(pdf)).pages))
+        contract_issues=check(raw)
+        if contract_issues:
+            layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).extend(contract_issues)
+        layout['contract_issues']=contract_issues
         layout['source_image_candidates']=len(assets);layout['bound_image_slots']=len(comparison['replacements'])
         if assets and not comparison['replacements']:
             layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).append('원본 그림 후보가 있으나 최종 HTML에 연결된 그림이 없습니다.')
@@ -99,10 +103,11 @@ class Processing:
             for kind,value in data.items():
                 payload=value if isinstance(value,bytes) else json.dumps(value,ensure_ascii=False).encode()
                 db.execute('INSERT INTO artifacts VALUES(?,?,?,?)',(document,revision,kind,payload))
-        return Status.PASS, {'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256'],
+        complete=layout['status']=='PASS'
+        return (Status.PASS if complete else Status.UNVERIFIED if layout['status']=='UNVERIFIED' else Status.NEEDS_REVIEW), {'layout_status':layout['status'],'layout_issues':layout.get('issues',[]),'visible_image_count':layout.get('visible_image_count'),'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256'],
             'only_image_addresses_changed':True,'unresolved':comparison['unresolved'],
             'outputs':{k:hashlib.sha256(v if isinstance(v,bytes) else json.dumps(v,ensure_ascii=False).encode()).hexdigest() for k,v in data.items()},
-            'reason':f"HTML 저장 완료 · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"}
+            'reason':('최종 HTML 저장·사진 표시 확인 완료' if complete else 'HTML은 보존했으나 사진 표시/배치 확인이 필요합니다.')+f" · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"+((' · '+' · '.join(layout.get('issues',[]))) if not complete else '')}
 
     def checked_html(self, document, revision=None):
         raw=self.get(document,'report.raw.html',revision)

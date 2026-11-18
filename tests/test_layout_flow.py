@@ -43,6 +43,32 @@ class LayoutFlowTests(unittest.TestCase):
    row=db.execute("SELECT payload FROM artifacts WHERE document=? AND kind='report-metadata'",(self.doc,)).fetchone();meta=json.loads(row[0]);meta.pop('layout_contract',None);meta.pop('layout_status',None);db.execute("UPDATE artifacts SET payload=? WHERE document=? AND kind='report-metadata'",(json.dumps(meta).encode(),self.doc))
   self.assertEqual(self.w.report_availability('alice',self.doc)['selected']['revision'],1)
   self.assertTrue(self.w.report_html('alice',self.doc,True).endswith(b'</html>\n```'))
+  targets.run(self.w,'alice',self.doc,f'displayed:{self.doc}:1','verify')
+  self.assertEqual(self.provider.calls[-1][3],self.w.report_html('alice',self.doc).decode())
  def test_forced_scale_and_model_unfit_pages_are_flagged(self):
   raw=self.raw.replace('data-urs-page="1"','data-urs-page="1" data-urs-unfit="도면 글자 확인 필요"').replace('</style>','section{transform:scale(.8)}</style>')
   audit=inspect(self.final(raw),1);self.assertIn('강제 축소 배치',audit['pages'][0]['issues']);self.assertTrue(any('도면 글자' in x for x in audit['pages'][0]['issues']))
+
+ def test_file_picker_pdfjs_and_non_img_slots_are_rejected(self):
+  from urs.report_contract import check
+  for addition in ['<input type="file" accept="application/pdf">','<script src="https://example.com/pdf.min.js"></script>','<script>pdfjsLib.getDocument(bytes)</script>','<image href="urs-image:1:1">','<canvas></canvas>','<picture><img src="urs-image:1:1"></picture>']:
+   with self.subTest(addition=addition):self.assertTrue(check(self.raw.replace('</body>',addition+'</body>')))
+  self.assertFalse(check(self.raw.replace('</section>','<p>사용 설명에 PDF.js라는 단어가 있어도 로딩 코드는 아닙니다.</p></section>')))
+ def test_image_opacity_on_parent_and_outside_page_are_rejected(self):
+  for raw in [self.raw.replace('</style>','figure{opacity:0}</style>'),self.raw.replace('</body>',"<img style='display:none' src='urs-image:1:1'></body>")]:
+   audit=inspect(self.final(raw),1);self.assertEqual(audit['status'],'NEEDS_REVIEW');self.assertTrue(any(i['issues'] for i in audit['images']))
+ def test_javascript_cannot_hide_and_then_reveal_images_to_pass_audit(self):
+  raw=self.raw.replace('</style>','img{display:none}</style>').replace('</body>',"<script>document.querySelectorAll('img').forEach(i=>i.style.display='block')</script></body>")
+  audit=inspect(self.final(raw),1);self.assertEqual(audit['visible_image_count'],0);self.assertEqual(audit['status'],'NEEDS_REVIEW')
+  raw=self.raw.replace('</body>',"<script>document.querySelectorAll('img').forEach(i=>i.style.display='none')</script></body>")
+  audit=inspect(self.final(raw),1);self.assertEqual(audit['status'],'NEEDS_REVIEW');self.assertTrue(any(i['issues'] for i in audit['script_enabled_images']))
+  raw=self.raw.replace('</body>',"<script>document.querySelectorAll('img').forEach(i=>i.remove())</script></body>")
+  audit=inspect(self.final(raw),1);self.assertEqual(audit['status'],'NEEDS_REVIEW');self.assertEqual(audit['script_enabled_images'],[])
+ def test_non_compliant_generated_html_preserved_but_not_completed(self):
+  self.generate();old=self.w.report_html('alice',self.doc,revision=1)
+  self.provider.raw=self.raw.replace('</body>','<input type="file"><script src="pdf.js"></script></body>');self.generate()
+  self.assertEqual(self.w.processing.get(self.doc,'report.raw.html',2),self.provider.raw.encode());self.assertEqual(self.w.report_availability('alice',self.doc)['selected']['revision'],1);self.assertEqual(self.w.report_html('alice',self.doc,revision=1),old)
+  status=self.w.status('alice',self.doc);self.assertFalse(next(s['passed'] for s in status['stages'] if s['id']=='report'));self.assertEqual(next(r['status'] for r in status['results'] if r['stage']=='report'),'NEEDS_REVIEW')
+ def test_contract_requires_plain_img_and_overrides_legacy_pdf_selection_prompt(self):
+  from urs.report_contract import TEXT
+  self.assertIn('<img src="urs-image:1:2"',TEXT);self.assertIn('PDF.js 방식이 있어도 아래 방식이 우선',TEXT);self.assertIn('JavaScript와 인터넷 연결 없이',TEXT)

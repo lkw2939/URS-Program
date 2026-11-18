@@ -18,8 +18,8 @@ def main():
         workspace=Workspace(Path(directory)/'synthetic.sqlite')
         password='synthetic-browser-password-123'
         workspace.add_user('browser-fixture',password)
-        client_controls='<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><section><label>원본 PDF 선택<input id="local-pdf" type="file" accept="application/pdf"></label><p id="file-proof"></p><canvas id="local-render"></canvas></section><script>\ntry { void parent.document.body; document.body.dataset.parentAccess=\'allowed\'; } catch(e) { document.body.dataset.parentAccess=\'blocked\'; }\ndocument.getElementById(\'local-pdf\').addEventListener(\'change\',async function(){\nconst bytes=new Uint8Array(await this.files[0].arrayBuffer()); const proof=document.getElementById(\'file-proof\');\nproof.textContent=new TextDecoder().decode(bytes.slice(0,5)); proof.dataset.bytes=String(bytes.length);\npdfjsLib.GlobalWorkerOptions.workerSrc=\'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js\';\ntry { const task=pdfjsLib.getDocument({data:bytes}); const pdf=await task.promise; const first=await pdf.getPage(1); const viewport=first.getViewport({scale:1});\nconst canvas=document.getElementById(\'local-render\'); canvas.width=viewport.width; canvas.height=viewport.height;\nawait first.render({canvasContext:canvas.getContext(\'2d\'),viewport}).promise; proof.dataset.pages=String(pdf.numPages); } catch(e) { proof.dataset.error=String(e); throw e; }\n});\n</script>'
-        provider=ReportAI(RAW.replace('src=urs-image:9:8','src=urs-image:1:1').replace('</body>',client_controls+'</body>'))
+        probe="<script>try { void parent.document.body; document.body.dataset.parentAccess='allowed'; } catch(e) { document.body.dataset.parentAccess='blocked'; }</script>"
+        provider=ReportAI(RAW.replace('src=urs-image:9:8','src=urs-image:1:1').replace('</body>',probe+'</body>'))
         workspace.processing.provider=provider
         server=make_app(workspace,0)
         thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
@@ -27,10 +27,6 @@ def main():
             with sync_playwright() as p:
                 browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
                 page=browser.new_page(viewport={'width':1440,'height':1080},reduced_motion='reduce');errors=[]
-                def pdfjs_asset(route):
-                    name=route.request.url.rsplit('/',1)[-1]
-                    route.fulfill(status=200,content_type='text/javascript',headers={'Access-Control-Allow-Origin':'*'},body=(ROOT/'tests/vendor/pdfjs'/name).read_bytes())
-                page.context.route('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/*',pdfjs_asset)
                 page.on('pageerror',lambda e:errors.append(str(e)))
                 page.goto(f'http://127.0.0.1:{server.server_port}')
                 assert '추출' not in page.locator('body').inner_text()
@@ -55,6 +51,7 @@ def main():
                 page.get_by_role('button',name='원본 등록',exact=True).click()
                 page.get_by_role('button',name='보고서 검토',exact=True).click()
                 page.get_by_role('button',name='HTML 보고서 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='보고서 생성').disabled");page.get_by_role('button',name='보고서 생성',exact=True).click()
+                page.get_by_role('button',name='HTML 확인',exact=True).click()
                 page.locator('#html-result').wait_for(state='visible')
                 frame=page.frame_locator('#report-preview')
                 frame.locator('h1').wait_for()
@@ -64,20 +61,11 @@ def main():
                 assert frame.locator('img').evaluate_all('(xs)=>xs.every(x=>x.complete && x.naturalWidth>0)')
                 assert frame.locator('body').evaluate('(e)=>getComputedStyle(e).marginTop')=='23px'
                 assert frame.locator('body').get_attribute('data-parent-access')=='blocked'
-                requests=[]
-                page.on('request',lambda request:requests.append(request.method))
-                fixture_pdf=visual_pdf()
-                page.locator('#report-preview').scroll_into_view_if_needed()
-                frame.locator('#local-pdf').scroll_into_view_if_needed()
-                frame.locator('#local-pdf').set_input_files({'name':'local-only.pdf','mimeType':'application/pdf','buffer':fixture_pdf})
-                frame.locator('#file-proof').filter(has_text='%PDF-').wait_for()
-                frame.locator('#file-proof[data-error], #file-proof[data-pages]').wait_for(state='visible',timeout=15000)
-                assert frame.locator('#file-proof').get_attribute('data-error') is None, (frame.locator('#file-proof').get_attribute('data-error'),errors)
-                assert frame.locator('#file-proof').get_attribute('data-pages')=='1'
-                assert frame.locator('#file-proof').get_attribute('data-bytes')==str(len(fixture_pdf))
-                assert frame.locator('#local-render').evaluate('(c)=>Array.from(c.getContext("2d").getImageData(70,150,1,1).data).slice(0,3)')==[255,0,0]
-                assert frame.locator('#local-render').evaluate('(c)=>Array.from(c.getContext("2d").getImageData(270,150,1,1).data).slice(0,3)')==[0,0,255]
-                assert 'POST' not in requests,'Report file selection must stay in the browser'
+                assert frame.locator('input[type=file]').count()==0
+                assert frame.locator('script[src]').count()==0
+                assert frame.locator('img').evaluate_all("(xs)=>xs.every(i=>{const r=i.getBoundingClientRect(),s=getComputedStyle(i);return r.width>0&&r.height>0&&s.display!=='none'&&s.visibility==='visible'&&Number(s.opacity)>0})")
+                colors=frame.locator('img').evaluate_all("xs=>xs.map(i=>{const c=document.createElement('canvas');c.width=c.height=1;const x=c.getContext('2d');x.drawImage(i,0,0,1,1);return [...x.getImageData(0,0,1,1).data].slice(0,3)})")
+                assert colors==[[0,0,255],[255,0,0],[255,0,0]],colors
                 assert '추출' not in page.locator('#workspace').inner_text()+page.locator('#review').inner_text()
                 assert page.locator('#checklist-steps li').count()==5
                 assert page.get_by_role('button',name='현재 리비전 최종 승인').is_disabled()
@@ -123,7 +111,7 @@ def main():
                 assert workspace.report_html('browser-fixture',doc)==before
                 assert not errors,errors
                 browser.close()
-                print('PASS: login, employee model/effort/output settings UI and presets, persistence across reload and no call on save, verbatim prompt saving, original PDF upload, report generation, sandboxed final HTML with 3 original crops, model CSS/caption retained, 5 stages with no text extraction, separate verification/analysis, blocked unqualified approval, responsive desktop/mobile, reload preserves output, sandboxed inline scripts and local PDF File API and real PDF.js page rendering work without upload and parent access remains blocked; no paid API calls.')
+                print('PASS: login, employee model/effort/output settings UI and presets, persistence across reload and no call on save, verbatim prompt saving, original PDF upload, report generation, sandboxed final HTML with 3 original crops, model CSS/caption retained, 5 stages with no text extraction, separate verification/analysis, blocked unqualified approval, responsive desktop/mobile, reload preserves output, HTML 확인 opens visible original photos without PDF reselection/PDF.js; rendered image pixels and parent sandbox isolation checked; no paid API calls.')
         finally:
             server.shutdown();server.server_close();thread.join()
 if __name__=='__main__':main()

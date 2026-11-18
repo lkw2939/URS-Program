@@ -20,7 +20,7 @@ ENV={'URS_OPENAI_API_KEY':'fixture-private-key-never-return','URS_OPENAI_MODEL':
  'URS_AI_BUDGET_USD':'50','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'2'}
 CONFIG={'model':'web-model','effort':'xhigh','max_output_tokens':64000}
 
-def response(raw=RAW,status='completed',reason=None):
+def response(raw=RAW.replace('src=urs-image:9:8','src=urs-image:1:1'),status='completed',reason=None):
     value={'status':status,'usage':{'output_tokens':12},'output':[{'content':[{'type':'output_text','text':raw}]}]}
     if reason:value['incomplete_details']={'reason':reason}
     return io.BytesIO(json.dumps(value).encode())

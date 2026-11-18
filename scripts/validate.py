@@ -20,6 +20,7 @@ def main():
               ('a4-target-browser',[sys.executable,'tests/browser_targets.py'],'final-a4-target-browser.txt'),
               ('review-browser',[sys.executable,'tests/browser_reviews.py'],'final-review-browser.txt'),
               ('cost-browser',[sys.executable,'tests/browser_costs.py'],'final-cost-browser.txt'),
+              ('immediate-image-browser',[sys.executable,'tests/browser_immediate_images.py'],'final-immediate-image-browser.txt'),
               ('report-timeout-browser',[sys.executable,'tests/browser_report_timeout.py'],'final-report-timeout-browser.txt'),
               ('saved-html-browser',[sys.executable,'tests/browser_saved_reports.py'],'final-saved-html-browser.txt'),
               ('html-artifacts',[sys.executable,'tests/html_smoke.py'],'final-html.txt')]
@@ -38,7 +39,7 @@ def main():
         if entry['exit_code']!=0:break
     paths=[*ROOT.glob('urs/*.py'),*ROOT.glob('tests/*.py'),*ROOT.glob('scripts/*.py'),*ROOT.glob('static/*.*'),*ROOT.glob('tests/vendor/pdfjs/*'),*ROOT.glob('prompts/*.txt'),ROOT/'requirements.lock',ROOT/'service.py',ROOT/'start.py',ROOT/'.devcontainer/devcontainer.json']
     manifest={str(p.relative_to(ROOT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(paths)}
-    evidence={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.rglob('*') if p.is_file() and p.parent==OUT and (p.name.startswith(('final-','html-report-','ai-settings-','synthetic-model-','saved-html-','report-timeout-','review-','a4-target-','cost-')) or p.name in ('html-comparison.json','html-request-contract.json'))}
+    evidence={str(p.relative_to(OUT)):hashlib.sha256(p.read_bytes()).hexdigest() for p in OUT.rglob('*') if p.is_file() and p.parent==OUT and (p.name.startswith(('final-','html-report-','ai-settings-','synthetic-model-','saved-html-','report-timeout-','review-','a4-target-','cost-','immediate-')) or p.name in ('html-comparison.json','html-request-contract.json'))}
     stage_file=OUT/'stages/stage-results.json'
     unit_stages=json.loads(stage_file.read_text()) if stage_file.exists() else []
     summary={'unit_stages':unit_stages,'scope':'synthetic fixtures and mocked AI transport only','runs':runs,'source_sha256':manifest,'evidence_sha256':evidence,

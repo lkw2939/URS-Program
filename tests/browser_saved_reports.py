@@ -59,12 +59,13 @@ def main():
                 page.locator('#html-access').scroll_into_view_if_needed();page.screenshot(path=str(out/'saved-html-previous.png'),full_page=True)
                 assert w.report_html('fixture',doc,revision=1)==current
                 assert len(provider.calls)==1,'Read/reload/download must never generate a report'
-                # Saved PASS with closing tag followed by a code fence must not say complete.
+                # A response with a code fence is retained for inspection, never marked completed.
                 fenced=ReportAI('```html\n'+RAW+'\n```');w.processing.provider=fenced;w.run('fixture',doc,'report')
                 revision=w.status('fixture',doc)['revision'];before=w.processing.get(doc,'report.html',revision)
                 page.reload();page.locator('#workspace').wait_for(state='visible');open_review()
                 assert 'HTML 보고서 · 저장·A4 확인 완료' in page.locator('#checklist-steps').inner_text()
-                assert '저장 성공 · A4 배치/문서 끝 확인 필요' in page.locator('#check-results').inner_text()
+                assert 'NEEDS_REVIEW' in page.locator('#check-results').inner_text()
+                assert '사진 표시/배치 확인이 필요합니다' in page.locator('#check-results').inner_text()
                 assert '기존 보고서 유지' in page.locator('#html-availability').inner_text()
                 with page.expect_download() as download:page.locator('#stored-review').click()
                 import zipfile,io,json

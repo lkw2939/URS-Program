@@ -59,8 +59,8 @@ class BackupTests(unittest.TestCase):
         self.assertFalse(output.exists())
 
     def _processed_document(self):
-        from html_fixtures import ReportAI,visual_pdf,PROMPT
-        self.w.processing.provider=ReportAI()
+        from html_fixtures import ReportAI,visual_pdf,PROMPT,RAW
+        self.w.processing.provider=ReportAI(RAW.replace('src=urs-image:9:8','src=urs-image:1:1'))
         self.w.save_report_settings('operator',PROMPT)
         document=self.w.upload('operator',self.project,'processed.pdf',visual_pdf())
         state=self.w.run('operator',document,'report')
