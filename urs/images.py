@@ -64,9 +64,9 @@ def crop_images(payload):
 
 
 class ImageSlots(HTMLParser):
-    def __init__(self, html):
+    def __init__(self, html, prefix="urs-image:"):
         super().__init__(convert_charrefs=False)
-        self.html=html;self.slots=[]
+        self.html=html;self.slots=[];self.prefix=prefix
         self.lines=[0]
         self.lines.extend(m.end() for m in re.finditer('\n',html))
         self.feed(html);self.close()
@@ -82,7 +82,7 @@ class ImageSlots(HTMLParser):
             group=next((g for g in (2,3,4) if match.group(g) is not None),None)
             if group is None:continue
             uri=match.group(group)
-            if uri.startswith('urs-image:'):
+            if uri.startswith(self.prefix):
                 self.slots.append((offset+match.start(group),offset+match.end(group),uri))
 
     handle_startendtag=handle_starttag

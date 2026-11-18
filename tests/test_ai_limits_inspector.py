@@ -17,10 +17,10 @@ class LimitInspectorTests(unittest.TestCase):
   self.assertNotIn('PRIVATE',json.dumps(result));return result
  def test_budget_only_and_failed_calls_count(self):
   with sqlite3.connect(self.db) as db:db.executemany('INSERT INTO ai_usage VALUES("doc",?,?)',[('failed',3),('completed',3),('reserved',3)])
-  r=self.run_audit();self.assertEqual(r['current_revision'],2);self.assertEqual(r['target_revision'],1);self.assertEqual(r['request_count'],3);self.assertFalse(r['request_count_limit_reached']);self.assertTrue(r['budget_limit_for_target']);self.assertEqual(r['max_output_tokens'],64000)
+  r=self.run_audit();self.assertEqual(r['current_revision'],2);self.assertEqual(r['target_revision'],1);self.assertEqual(r['request_count'],3);self.assertFalse(r['request_count_limit_reached']);self.assertIsNone(r['budget_limit_for_target']);self.assertEqual(r['budget_scope'],'per_execution');self.assertEqual(r['max_output_tokens'],64000)
  def test_count_only(self):
   with sqlite3.connect(self.db) as db:db.executemany('INSERT INTO ai_usage VALUES("doc","failed",0.001)',[()]*120)
-  r=self.run_audit();self.assertTrue(r['request_count_limit_reached']);self.assertFalse(r['budget_limit_for_target'])
+  r=self.run_audit();self.assertTrue(r['request_count_limit_reached']);self.assertIsNone(r['budget_limit_for_target'])
  def test_current_revision_without_html_is_not_switched_automatically(self):
   with patch.dict(os.environ,{},clear=True):r=module.audit(self.root,self.db,'doc')
   self.assertFalse(r['target_raw_html_exists']);self.assertIsNone(r['budget_limit_for_target']);self.assertEqual(r['target_revision'],2)

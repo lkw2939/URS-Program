@@ -19,6 +19,7 @@ class Response(io.BytesIO):
 
 class DiagnosticTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch('urs.costing.count_input_tokens',return_value=12000))
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.root=Path(self.tmp.name);self.w=Workspace(self.root/'.runtime/workspace.sqlite')
         self.w.add_user('fixture','fixture-password-123')
@@ -74,6 +75,7 @@ class DiagnosticTests(unittest.TestCase):
     def test_completed_response_yields_independent_image_only_comparison_and_preserves_reports(self):
         self.w.save_report_settings('fixture',PROMPT)
         self.w.processing.put(self.doc,1,'translation.pdf',b'old report must stay')
+        previous_costs=self.w.verification_record('fixture',self.doc)['record']['ai_cost_history']
         evidence=self.w.verification_record('fixture',self.doc)['record_sha256']
         body={'id':'fixture-response','model':'fixture-model-resolved','status':'completed',
               'reasoning':{'effort':'medium'},'usage':{'input_tokens':10,'output_tokens':20},
@@ -88,6 +90,9 @@ class DiagnosticTests(unittest.TestCase):
         after=self.w.verification_record('fixture',self.doc)
         self.assertEqual(len(after['record']['api_diagnostics']),1)
         after['record']['api_diagnostics']=[]
+        self.assertEqual(len(after['record']['ai_cost_history']['calls']),1)
+        self.assertEqual(after['record']['ai_cost_history']['calls'][0]['settlement_state'],'settled')
+        after['record']['ai_cost_history']=previous_costs
         from urs.audit import envelope
         self.assertEqual(envelope(after['record'])['record_sha256'],evidence)
         with self.w.workflow.connect() as db:

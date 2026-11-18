@@ -1,0 +1,1 @@
+PASS: actual login/buttons -> free exact-input count(mock) without inference/ledger reservation -> $0.092000 per-call estimate under $10 despite $9.00778 history -> same multimodal request -> mock usage settlement $0.014000, four unknown legacy calls retained, no report/old-ledger overwrite, paid calls=0.

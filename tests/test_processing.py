@@ -24,6 +24,7 @@ SETTINGS={'URS_OPENAI_API_KEY':'synthetic-only','URS_OPENAI_MODEL':'fixture-terr
 
 class ProcessingTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch('urs.costing.count_input_tokens',return_value=12000))
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.path=Path(self.tmp.name)/'test.sqlite';self.w=Workspace(self.path)
         self.w.add_user('alice','fixture-password-123');self.w.add_user('bob','fixture-password-456')

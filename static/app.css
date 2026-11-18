@@ -13,3 +13,5 @@
 #generation-contract{white-space:pre-wrap}
 
 #current-report-context,#a4-target-info{white-space:normal;overflow-wrap:anywhere;word-break:break-word;min-width:0}#current-layout-status{overflow-wrap:anywhere}
+
+#process-buttons{display:block}.execution-cost{border:1px solid #d8e4eb;border-radius:10px;padding:16px;margin:12px 0;min-width:0}.execution-cost h4{margin:0 0 12px}.execution-cost p{overflow-wrap:anywhere}#usage-preview{overflow-x:auto}

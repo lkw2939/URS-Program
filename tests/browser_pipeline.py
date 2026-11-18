@@ -14,7 +14,7 @@ from urs.web import make_app
 ROOT=Path(__file__).resolve().parents[1]
 def main():
     evidence=ROOT/'docs/evidence';evidence.mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory() as directory,patch('urllib.request.urlopen',side_effect=AssertionError('Paid/network API disabled in browser test')):
+    with patch('urs.costing.count_input_tokens',return_value=12000),patch.dict('os.environ',{'URS_AI_BUDGET_USD':'100','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'},clear=False),tempfile.TemporaryDirectory() as directory,patch('urllib.request.urlopen',side_effect=AssertionError('Paid/network API disabled in browser test')):
         workspace=Workspace(Path(directory)/'synthetic.sqlite')
         password='synthetic-browser-password-123'
         workspace.add_user('browser-fixture',password)
@@ -54,7 +54,7 @@ def main():
                 page.get_by_label('고객 원본 PDF',exact=True).set_input_files({'name':'synthetic.pdf','mimeType':'application/pdf','buffer':visual_pdf()})
                 page.get_by_role('button',name='원본 등록',exact=True).click()
                 page.get_by_role('button',name='보고서 검토',exact=True).click()
-                page.get_by_role('button',name='보고서 생성',exact=True).click()
+                page.get_by_role('button',name='HTML 보고서 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='보고서 생성').disabled");page.get_by_role('button',name='보고서 생성',exact=True).click()
                 page.locator('#html-result').wait_for(state='visible')
                 frame=page.frame_locator('#report-preview')
                 frame.locator('h1').wait_for()
@@ -82,13 +82,20 @@ def main():
                 assert page.locator('#checklist-steps li').count()==5
                 assert page.get_by_role('button',name='현재 리비전 최종 승인').is_disabled()
                 for label,stage in [('독립 검증 실행','verify'),('기술 분석 실행','analyze')]:
+                    with page.expect_response(lambda r:r.url.endswith('/cost-preview')) as response:
+                        page.get_by_role('button',name=label.replace(' 실행',' 비용 확인 (무료)'),exact=True).focus();page.get_by_role('button',name=label.replace(' 실행',' 비용 확인 (무료)'),exact=True).press('Enter')
+                    assert response.value.status==200 and response.value.json()['status']=='READY'
+                    try:page.wait_for_function("([label])=>![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent===label).disabled",arg=[label],timeout=5000)
+                    except Exception:
+                        print('COST UI:',page.locator('#message').inner_text(),page.locator('#process-buttons').inner_text(),flush=True)
+                        raise
                     control=page.get_by_role('button',name=label,exact=True)
                     control.focus()
                     control.press('Enter')
                     try:
                         page.wait_for_function("([stage])=>[...document.querySelectorAll('#check-results .result')].some(x=>x.textContent.includes(stage+' · PASS'))",arg=[{'verify':'독립 검증','analyze':'기술 분석'}[stage]],timeout=5000)
                     except Exception:
-                        print('UI ERROR:',page.locator('#message').inner_text(),page.locator('#check-results').inner_text(),flush=True)
+                        print('UI ERROR:',page.locator('#message').inner_text(),page.locator('#process-buttons').inner_text(),page.locator('#check-results').inner_text(),flush=True)
                         raise
                 assert workspace.report_settings('browser-fixture')['prompt']==PROMPT
                 assert [c[0] for c in provider.calls]==['report','independent_verify','technical_analysis']

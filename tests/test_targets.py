@@ -68,7 +68,9 @@ class TargetTests(unittest.TestCase):
  def test_budget_block_does_not_prevent_registration_or_send_a_request(self):
   import os
   ident=self.register();calls=len(self.w.processing.provider.calls)
-  with patch.dict(os.environ,{'URS_AI_BUDGET_USD':'0.01','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'},clear=True):
+  with patch.dict(os.environ,{'URS_OPENAI_MODEL':'fixture','URS_AI_BUDGET_USD':'0.01','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'},clear=True):
+   from urs.costing import review_quote
+   with patch('urs.costing.count_input_tokens',return_value=20000):review_quote(self.w,'alice',self.doc,ident,'verify',True)
    info=targets.overview(self.w,'alice',self.doc,ident)['reviews']['verify']
    self.assertFalse(info['can_run']);self.assertTrue(info['budget_preview']['blocked'])
    with self.assertRaises(Blocked):targets.run(self.w,'alice',self.doc,ident,'verify')

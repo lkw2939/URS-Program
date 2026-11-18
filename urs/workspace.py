@@ -351,6 +351,7 @@ class Workspace:
     def verification_record(self, owner, document):
         from datetime import datetime,timezone,timedelta
         from urs.audit import envelope
+        from urs.usage_audit import ledger
         with self.workflow.connect() as db:
             row=db.execute('SELECT d.* FROM documents d JOIN projects p ON p.id=d.project WHERE d.id=? AND p.owner=?',(document,owner)).fetchone()
             if row is None:raise AccessDenied('문서에 접근할 수 없습니다.')
@@ -359,9 +360,9 @@ class Workspace:
             results=[dict(r) for r in db.execute('SELECT * FROM results WHERE job=? ORDER BY revision,stage,check_id',(document,))]
             verification_history=[{'revision':r['revision'],'verification':json.loads(r['payload'])} for r in db.execute("SELECT revision,payload FROM artifacts WHERE document=? AND kind='verification' ORDER BY revision",(document,))]
             artifacts=[{'revision':r['revision'],'kind':r['kind'],'sha256':hashlib.sha256(r['payload']).hexdigest()} for r in db.execute('SELECT revision,kind,payload FROM artifacts WHERE document=? ORDER BY revision,kind',(document,))]
-            bundle=envelope({'schema_version':1,'document_id':document,
+            bundle=envelope({'schema_version':1,'document_id':document,'ai_cost_history':ledger(db,document),
                 'original':{'name':row['name'],'sha256':row['sha256'],'pages':row['pages']},
                 'review_attempts':[dict(r) for r in db.execute('SELECT id,revision,stage,state,status,evidence,created,digest FROM review_attempts WHERE document=? ORDER BY id',(document,))],'api_diagnostics':[json.loads(r[0]) for r in db.execute('SELECT payload FROM report_diagnostics WHERE document=? ORDER BY call_id',(document,))],'snapshot':snapshot,'all_results':results,'verification_history':verification_history,'artifact_hashes':artifacts,
-                'scope':'Document evidence only. No process environment, application authentication credential tables, raw original binary or app payment configuration is included. No inferred accuracy score.'})
+                'scope':'Document evidence only. No process environment, application authentication credential tables, raw original binary or API keys are included. Non-secret per-call cost snapshots are included. No inferred accuracy score.'})
             bundle['exported_at_kst']=datetime.now(timezone(timedelta(hours=9))).isoformat()
             return bundle

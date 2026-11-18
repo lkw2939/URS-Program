@@ -12,6 +12,7 @@ class Reply(io.BytesIO):
 def good(html=RAW):return Reply({'status':'completed','usage':{'input_tokens':12,'output_tokens':9},'output':[{'content':[{'type':'output_text','text':html}]}]})
 class ReportTransportTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch('urs.costing.count_input_tokens',return_value=12000))
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.w=Workspace(Path(self.tmp.name)/'mock.sqlite');self.w.add_user('alice','fixture-password-123')
         p=self.w.create_project('alice','timeout fixture');self.doc=self.w.upload('alice',p,'fixture.pdf',visual_pdf());self.w.save_report_settings('alice',PROMPT)
@@ -91,6 +92,7 @@ class ReportTransportTests(unittest.TestCase):
             self.assertEqual(http('/api/settings/report-timeout',{'timeout_seconds':900})[0],200)
             with patch.dict(os.environ,ENV,clear=True),patch('urllib.request.urlopen',side_effect=pending):
                 path=f'/api/documents/{self.doc}'
+                self.assertEqual(http(path+'/cost-preview',{'stage':'report'})[0],200)
                 start=__import__('time').monotonic();status,_,_=http(path+'/run',{'stage':'report','background':True})
                 self.assertEqual(status,202);self.assertLess(time.monotonic()-start,2);self.assertTrue(entered.wait(2))
                 self.assertEqual(http(path+'/report-task')[1]['state'],'running')

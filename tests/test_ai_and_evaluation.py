@@ -24,6 +24,7 @@ def corpus(fail=0,critical=0):
 
 class AIAndEvaluationTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch('urs.costing.count_input_tokens',return_value=12000))
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.w=Workspace(Path(self.tmp.name)/'state.sqlite')
         self.ai=OpenAI(self.w.workflow,'synthetic-document')

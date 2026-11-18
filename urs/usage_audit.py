@@ -23,13 +23,22 @@ def preview(db,document,input_rate,output_rate):
             'rate_caveat':'현재 설정 단가로만 계산한 미리보기입니다. 과거 적용 단가·캐시·서비스 계층·일괄 처리·실제 청구액을 입증하지 않습니다. 장부나 예산은 바꾸지 않았습니다.'}
 
 
+def ledger(db,document):
+    exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='ai_call_costs'").fetchone()
+    snapshots={r['call_id']:json.loads(r['payload']) for r in db.execute('SELECT * FROM ai_call_costs')} if exists else {}
+    calls=[]
+    for row in db.execute('SELECT id,task,model,state,reserved,usage FROM ai_usage WHERE document=? ORDER BY id',(document,)):
+        r=dict(row);snapshot=snapshots.get(r['id'],{});usage=snapshot.get('usage')
+        if usage is None:
+            try:usage=json.loads(r['usage'] or '{}')
+            except (TypeError,ValueError):usage={}
+        if not isinstance(usage,dict):usage={}
+        reason=snapshot.get('settlement_state','legacy_rates_unknown' if 'input_tokens' in usage and 'output_tokens' in usage else 'usage_unknown')
+        calls.append({'call_id':r['id'],'task':r['task'],'model':r['model'],'state':r['state'],'original_estimate_usd':r['reserved'],'settlement_state':reason,'actual_cost_usd':snapshot.get('actual_cost_usd'),'usage':usage,'price_snapshot':snapshot.get('quote',{}).get('pricing'),'note':'사용량과 요청 당시 단가로 정산' if reason=='settled' else '미확인 금액: 0원 처리하지 않으며 실제 지출에도 합산하지 않습니다.'})
+    return {'calls':calls,'settled_usage_cost_usd':sum(c['actual_cost_usd'] for c in calls if c['actual_cost_usd'] is not None),'unresolved_count':sum(c['actual_cost_usd'] is None for c in calls),'unresolved_original_estimates_usd':sum(c['original_estimate_usd'] for c in calls if c['actual_cost_usd'] is None),'request_count':len(calls),'request_count_limit':120,'note':'문서 누적 사용 이력입니다. 합계는 1회 실행 한도에서 빼지 않습니다. 미확인 예약액은 실지출이 아닙니다. 실제 청구서/잔액은 OpenAI에서 별도 확인하세요.'}
+
 def server_preview(workspace,owner,document):
-    import os,math
+    from urs.costing import rates
     workspace.original(owner,document)
-    budget=float(os.environ.get('URS_AI_BUDGET_USD','0'));ir=float(os.environ.get('URS_AI_INPUT_USD_PER_MILLION','0'));out=float(os.environ.get('URS_AI_OUTPUT_USD_PER_MILLION','0'))
-    if not all(math.isfinite(v) and v>0 for v in (budget,ir,out)):raise ValueError('예산·단가 설정을 확인하세요.')
-    with workspace.workflow.connect() as db:
-        result=preview(db,document,ir,out)
-        count,total=db.execute('SELECT COUNT(*),COALESCE(SUM(reserved),0) FROM ai_usage WHERE document=?',(document,)).fetchone()
-    result.update(document_budget_usd=budget,request_count=count,request_count_limit=120,reserved_total_usd=total,input_rate_per_million=ir,output_rate_per_million=out,rate_source='실행 중인 서버의 현재 설정',read_only=True)
-    return result
+    with workspace.workflow.connect() as db:result=ledger(db,document)
+    return {**result,'per_execution_cap_usd':rates()['cap_usd'],'budget_scope':'per_execution','provider_balance_usd':None,'read_only':True}

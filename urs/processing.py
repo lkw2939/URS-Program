@@ -13,6 +13,7 @@ from urs.evaluation import fingerprint
 class Processing:
     def __init__(self, workspace, provider=None):
         self.workspace,self.workflow,self.provider=workspace,workspace.workflow,provider
+        self.authorized_quotes={}
         with self.workflow.connect() as db:
             db.executescript('''
             CREATE TABLE IF NOT EXISTS report_timeouts(owner TEXT,version INTEGER,seconds INTEGER,PRIMARY KEY(owner,version));
@@ -26,6 +27,8 @@ class Processing:
             CREATE TABLE IF NOT EXISTS page_assets(document TEXT,page INTEGER,payload BLOB,PRIMARY KEY(document,page));
             CREATE TABLE IF NOT EXISTS ai_usage(id INTEGER PRIMARY KEY,document TEXT,task TEXT,model TEXT,reserved REAL,state TEXT,usage TEXT);
             ''')
+            from urs.costing import schema
+            schema(db)
 
     def _revision(self, document):
         with self.workflow.connect() as db:return self.workflow._job(db,document)['revision']
@@ -51,7 +54,7 @@ class Processing:
         return document,revision,bytes(row['original']),row['name']
 
     def provider_for(self, document, config=None):
-        return self.provider or OpenAI(self.workflow,document,settings=config)
+        return self.provider or OpenAI(self.workflow,document,settings=config,authorized_quotes=self.authorized_quotes)
 
     def report(self, content):
         document,revision,pdf,name=self._input(content)
@@ -63,8 +66,8 @@ class Processing:
         prompt=settings['prompt']
         if not prompt.strip():raise Blocked('웹 설정에서 보고서 프롬프트를 먼저 저장해 주세요.')
         assets=crop_images(pdf)
-        inventory=[{k:a[k] for k in ('uri','page','index','bbox')} for a in assets]
-        guide='Image address mapping only: use <img src="urs-image:PAGE:INDEX"> for a source picture/diagram at the corresponding original PDF page and region. Available image addresses and bounding boxes (PDF points from top-left):\n'+json.dumps(inventory,ensure_ascii=False)
+        from urs.costing import image_guide
+        guide=image_guide(assets)
         raw=self.provider_for(document,config).report_html(pdf,name,prompt,guide)
         if not isinstance(raw,str) or not raw:raise ValueError('HTML 응답이 없습니다.')
         try:final,comparison=bind_images(raw,assets)

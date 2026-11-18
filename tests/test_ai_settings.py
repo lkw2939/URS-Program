@@ -27,6 +27,7 @@ def response(raw=RAW,status='completed',reason=None):
 
 class AISettingsTests(unittest.TestCase):
     def setUp(self):
+        self.enterContext(patch('urs.costing.count_input_tokens',return_value=12000))
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup)
         self.path=Path(self.tmp.name)/'data.sqlite';self.w=Workspace(self.path)
         self.w.add_user('alice','fixture-password-alice');self.w.add_user('bob','fixture-password-bob')

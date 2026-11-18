@@ -12,7 +12,7 @@ test_stop_does_not_claim_it_stopped_a_nonexistent_server (test_service.ServiceTe
 test_unresponsive_server_is_recovered_without_losing_original_or_session (test_service.ServiceTests.test_unresponsive_server_is_recovered_without_losing_original_or_session) ... ok
 
 ----------------------------------------------------------------------
-Ran 12 tests in 29.444s
+Ran 12 tests in 28.747s
 
 OK
 기존 URS 서버 종료를 확인했습니다. 자동 시작은 비활성화했습니다.
@@ -21,13 +21,13 @@ OK
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.
 첫 실행: python start.py 로 직원 계정을 먼저 만들어 주세요.
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.
-42191 포트를 다른 프로그램 또는 확인할 수 없는 프로세스가 사용 중입니다. 자동 종료하지 않았습니다.
+58967 포트를 다른 프로그램 또는 확인할 수 없는 프로세스가 사용 중입니다. 자동 종료하지 않았습니다.
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.
 기존 URS 서버 종료를 확인했습니다. 자동 시작은 비활성화했습니다.
 기존 URS 서버 종료를 확인했습니다. 자동 시작은 비활성화했습니다.
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.
-51797 포트를 다른 프로그램 또는 확인할 수 없는 프로세스가 사용 중입니다. 자동 종료하지 않았습니다.
+40895 포트를 다른 프로그램 또는 확인할 수 없는 프로세스가 사용 중입니다. 자동 종료하지 않았습니다.
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.
 기존 URS 서버 종료를 확인했습니다. 자동 시작은 비활성화했습니다.
 종료할 URS 서버가 없습니다. 자동 시작은 비활성화했습니다.

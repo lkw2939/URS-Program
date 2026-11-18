@@ -114,6 +114,7 @@ def run(root=ROOT,document=None,live=False):
     result['scope']='single provider call; existing report artifacts and stages preserved'
     proof={'requests':0};real_open=urllib.request.urlopen
     def observed(request,*args,**kwargs):
+        if request.full_url=='https://api.openai.com/v1/responses/input_tokens':return real_open(request,*args,**kwargs) # Free count is not a paid report response.
         if request.full_url!='https://api.openai.com/v1/responses':raise ValueError('Unexpected diagnostic destination')
         proof['requests']+=1
         if proof['requests']>1:raise ValueError('Diagnostic is limited to one live call')

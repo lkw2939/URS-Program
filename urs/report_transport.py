@@ -62,10 +62,8 @@ def request(client,req,call_id,limit,timeout):
         elif phase in ('reading_response','parsing_response'):d['outcome']='response_parse_error';error='OpenAI 응답 데이터 해석 실패.'
         else:d['outcome']='connection_error';error='OpenAI 연결 실패 (HTTP 응답 미확인).'
     d['elapsed_seconds']=round(time.monotonic()-start,3);save()
-    usage=(result.get('usage') or {}) if isinstance(result,dict) else {}
-    if not isinstance(usage,dict):usage={}
-    safe_usage={k:v for k,v in usage.items() if k in ('input_tokens','output_tokens','total_tokens') and type(v) is int}
-    with client.workflow.connect() as db:db.execute('UPDATE ai_usage SET state=?,usage=? WHERE id=?',('failed' if error else 'completed',json.dumps(safe_usage),call_id))
+    from urs.costing import finish
+    finish(client.workflow,call_id,'failed' if error else 'completed',result)
     if error:
         exc=AIError(error);exc.diagnostics=dict(d);raise exc
     return raw

@@ -15,7 +15,7 @@ from urs.workspace import Workspace
 
 def main():
     root=Path(__file__).resolve().parents[1]/'docs/evidence'
-    with tempfile.TemporaryDirectory() as folder:
+    with patch('urs.costing.count_input_tokens',return_value=12000),patch.dict('os.environ',{'URS_AI_BUDGET_USD':'100','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'},clear=False),tempfile.TemporaryDirectory() as folder:
         w=Workspace(Path(folder)/'synthetic.sqlite')
         w.add_user('fixture','synthetic-password-123')
         project=w.create_project('fixture','Synthetic request evidence')

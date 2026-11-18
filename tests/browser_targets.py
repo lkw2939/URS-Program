@@ -9,7 +9,7 @@ from urs.web import make_app
 from html_fixtures import ReportAI,RAW,PROMPT,visual_pdf
 ROOT=Path(__file__).resolve().parents[1]
 def main(a4_payload=None,pdf_payload=None,raw_payload=None):
- with tempfile.TemporaryDirectory() as tmp,patch.dict('os.environ',{'URS_AI_BUDGET_USD':'100','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'}),patch('urllib.request.urlopen',side_effect=AssertionError('Paid API forbidden')):
+ with patch('urs.costing.count_input_tokens',return_value=12000),patch.dict('os.environ',{'URS_OPENAI_MODEL':'fixture-model','URS_AI_BUDGET_USD':'100','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'},clear=False),tempfile.TemporaryDirectory() as tmp,patch.dict('os.environ',{'URS_OPENAI_MODEL':'fixture-model','URS_AI_BUDGET_USD':'100','URS_AI_INPUT_USD_PER_MILLION':'1','URS_AI_OUTPUT_USD_PER_MILLION':'5'}),patch('urllib.request.urlopen',side_effect=AssertionError('Paid API forbidden')):
   w=Workspace(Path(tmp)/'fixture.sqlite');w.add_user('fixture','fixture-password-123');p=w.create_project('fixture','A4 registration fixture');doc=w.upload('fixture',p,'source.pdf',pdf_payload if pdf_payload is not None else visual_pdf());w.save_report_settings('fixture',PROMPT)
   provider=ReportAI((raw_payload if raw_payload is not None else RAW).replace('src=urs-image:9:8','src=urs-image:1:1'));w.processing.provider=provider;w.run('fixture',doc,'report')
   with w.workflow.connect() as db:
@@ -26,17 +26,19 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
     page.locator('#a4-parent').select_option('1');page.locator('#a4-file').set_input_files({'name':'report-a4.html','mimeType':'text/html','buffer':a4});page.get_by_role('button',name='A4 검증 대상 등록',exact=True).click()
     page.wait_for_function("() => document.querySelector('#a4-target-info').textContent.includes('부모 리비전 1')")
     assert '현재 작업 리비전 2와 별도' in page.locator('#a4-target-info').inner_text()
-    page.get_by_role('button',name='예약액·실사용량 확인 (조회만)',exact=True).click();page.locator('#usage-preview').wait_for(state='visible')
-    assert '정산을 적용하지 않았습니다' in page.locator('#usage-preview').inner_text()
+    page.get_by_role('button',name='누적 사용량·정산 이력 (조회만)',exact=True).click();page.locator('#usage-preview').wait_for(state='visible')
+    assert '누적 사용량 정산액' in page.locator('#usage-preview').inner_text()
     assert len(provider.calls)==1,'Registration must not call report/review AI'
     with page.expect_download() as download:page.get_by_role('link',name='선택 보고서 HTML 내려받기',exact=True).click()
     assert Path(download.value.path()).read_bytes()==a4
     with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
-    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_enabled()
-    assert page.get_by_role('button',name='A4 독립검증 실행',exact=True).is_enabled()
+    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_disabled()
+    assert page.get_by_role('button',name='A4 독립검증 실행',exact=True).is_disabled()
+    page.get_by_role('button',name='A4 독립검증 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
     assert page.get_by_role('button',name='A4 기술분석 실행',exact=True).is_disabled()
     page.locator('#a4-target-panel').screenshot(path=str(ROOT/'docs/evidence/a4-target-registration.png'))
     page.get_by_role('button',name='A4 독립검증 실행',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][0].disabled")
+    page.get_by_role('button',name='A4 기술분석 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
     page.get_by_role('button',name='A4 기술분석 실행',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][1].disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='A4 기술분석 결과 보기',exact=True).click()
     result=opened.value;result.wait_for_load_state();assert '등록 A4 HTML' in result.locator('body').inner_text();assert '부모 리비전 1' in result.locator('body').inner_text()

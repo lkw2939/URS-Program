@@ -20,7 +20,7 @@
           "exit_code": 0,
           "tests": 7,
           "log": "foundation-1.txt",
-          "duration_seconds": 0.062
+          "duration_seconds": 0.061
         },
         {
           "command": [
@@ -37,7 +37,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "foundation-2.txt",
-          "duration_seconds": 0.85
+          "duration_seconds": 0.365
         },
         {
           "command": [
@@ -54,7 +54,7 @@
           "exit_code": 0,
           "tests": 1,
           "log": "foundation-3.txt",
-          "duration_seconds": 0.096
+          "duration_seconds": 0.056
         },
         {
           "command": [
@@ -71,7 +71,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "foundation-4.txt",
-          "duration_seconds": 0.142
+          "duration_seconds": 0.143
         }
       ]
     },
@@ -95,7 +95,7 @@
           "exit_code": 0,
           "tests": 16,
           "log": "employee-original-1.txt",
-          "duration_seconds": 3.96
+          "duration_seconds": 3.705
         },
         {
           "command": [
@@ -112,7 +112,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-2.txt",
-          "duration_seconds": 9.101
+          "duration_seconds": 8.441
         },
         {
           "command": [
@@ -129,7 +129,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-3.txt",
-          "duration_seconds": 29.636
+          "duration_seconds": 28.961
         }
       ]
     },
@@ -153,7 +153,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-1.txt",
-          "duration_seconds": 0.227
+          "duration_seconds": 0.289
         },
         {
           "command": [
@@ -170,14 +170,14 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-2.txt",
-          "duration_seconds": 0.249
+          "duration_seconds": 0.245
         }
       ]
     },
     {
       "id": "technical-meaning-guards",
       "status": "PASS",
-      "tests": 47,
+      "tests": 67,
       "commands": [
         {
           "command": [
@@ -194,7 +194,7 @@
           "exit_code": 0,
           "tests": 11,
           "log": "technical-meaning-guards-1.txt",
-          "duration_seconds": 0.069
+          "duration_seconds": 0.058
         },
         {
           "command": [
@@ -211,7 +211,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "technical-meaning-guards-2.txt",
-          "duration_seconds": 0.27
+          "duration_seconds": 0.2
         },
         {
           "command": [
@@ -228,7 +228,7 @@
           "exit_code": 0,
           "tests": 8,
           "log": "technical-meaning-guards-3.txt",
-          "duration_seconds": 0.624
+          "duration_seconds": 0.683
         },
         {
           "command": [
@@ -245,7 +245,7 @@
           "exit_code": 0,
           "tests": 10,
           "log": "technical-meaning-guards-4.txt",
-          "duration_seconds": 4.065
+          "duration_seconds": 4.028
         },
         {
           "command": [
@@ -262,7 +262,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "technical-meaning-guards-5.txt",
-          "duration_seconds": 6.751
+          "duration_seconds": 6.55
         },
         {
           "command": [
@@ -279,7 +279,24 @@
           "exit_code": 0,
           "tests": 4,
           "log": "technical-meaning-guards-6.txt",
-          "duration_seconds": 0.183
+          "duration_seconds": 0.185
+        },
+        {
+          "command": [
+            "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-p",
+            "test_costing.py",
+            "-v"
+          ],
+          "exit_code": 0,
+          "tests": 20,
+          "log": "technical-meaning-guards-7.txt",
+          "duration_seconds": 2.142
         }
       ]
     },
@@ -303,7 +320,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "document-pipeline-1.txt",
-          "duration_seconds": 15.336
+          "duration_seconds": 14.662
         },
         {
           "command": [
@@ -320,7 +337,7 @@
           "exit_code": 0,
           "tests": 14,
           "log": "document-pipeline-2.txt",
-          "duration_seconds": 14.702
+          "duration_seconds": 14.153
         },
         {
           "command": [
@@ -337,7 +354,7 @@
           "exit_code": 0,
           "tests": 13,
           "log": "document-pipeline-3.txt",
-          "duration_seconds": 8.079
+          "duration_seconds": 7.633
         },
         {
           "command": [
@@ -354,7 +371,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "document-pipeline-4.txt",
-          "duration_seconds": 12.175
+          "duration_seconds": 11.397
         },
         {
           "command": [
@@ -371,7 +388,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "document-pipeline-5.txt",
-          "duration_seconds": 11.215
+          "duration_seconds": 10.994
         },
         {
           "command": [
@@ -388,7 +405,7 @@
           "exit_code": 0,
           "tests": 8,
           "log": "document-pipeline-6.txt",
-          "duration_seconds": 11.54
+          "duration_seconds": 10.763
         }
       ]
     }
@@ -402,9 +419,9 @@
         "scripts/validate_unit_stages.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 129.362,
+      "duration_seconds": 125.756,
       "log": "final-tests.txt",
-      "tests": 178
+      "tests": 198
     },
     {
       "name": "chromium",
@@ -413,7 +430,7 @@
         "tests/browser_pipeline.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 10.176,
+      "duration_seconds": 9.05,
       "log": "final-browser.txt"
     },
     {
@@ -423,7 +440,7 @@
         "tests/browser_targets.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 4.597,
+      "duration_seconds": 5.433,
       "log": "final-a4-target-browser.txt"
     },
     {
@@ -433,8 +450,18 @@
         "tests/browser_reviews.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 25.075,
+      "duration_seconds": 28.06,
       "log": "final-review-browser.txt"
+    },
+    {
+      "name": "cost-browser",
+      "command": [
+        "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+        "tests/browser_costs.py"
+      ],
+      "exit_code": 0,
+      "duration_seconds": 4.801,
+      "log": "final-cost-browser.txt"
     },
     {
       "name": "report-timeout-browser",
@@ -443,7 +470,7 @@
         "tests/browser_report_timeout.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 5.137,
+      "duration_seconds": 4.14,
       "log": "final-report-timeout-browser.txt"
     },
     {
@@ -453,7 +480,7 @@
         "tests/browser_saved_reports.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 9.265,
+      "duration_seconds": 8.945,
       "log": "final-saved-html-browser.txt"
     },
     {
@@ -463,7 +490,7 @@
         "tests/html_smoke.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 1.698,
+      "duration_seconds": 1.63,
       "log": "final-html.txt"
     }
   ],
@@ -471,41 +498,43 @@
     ".devcontainer/devcontainer.json": "9483b5bfef537adcb3eccb15bf74afa40b0b4353f267566f6b7ad1f60ca89abd",
     "prompts/user-report-ko-html.txt": "0dc8ca08ab3d927be4729e1fdf0a91a61ae69d2bd9c273ad4d71bc93bcc7f60a",
     "requirements.lock": "904673c14c6fe1ea7a5989ba43c7518bd8e246b5e82a3cc8600271a9bb5a7b52",
-    "scripts/check_api_report.py": "cc9b3dac46de3dd065a5465cd814d0f92372b5238c4b1452dcc06f177845cd18",
-    "scripts/inspect_ai_limits.py": "518dc4900f6a1ab95f670039ad00f78ec8b3bf0b8962ddf06e73a412739ae700",
+    "scripts/check_api_report.py": "ec535272818773f731cdd0e6f3504a936b14a06477492d09cb04326d84418dae",
+    "scripts/inspect_ai_limits.py": "ab9fd730dc6e743706fc0a8414c7c8d7a8edb0e066e45cbb6d14ace942645e2a",
     "scripts/inspect_saved_html.py": "4c1f506969398b07592d9114cb70ac411afcc9e2ee836038bd09321fbb7898f0",
-    "scripts/validate.py": "258cb6a515fdf27e5d9eee79dee1d51d1a3bc0e8aaf95a2cd0a28d519ec49a19",
-    "scripts/validate_unit_stages.py": "dcb28649e05f3e233c175825c69ee5caf73ae58a45843f645e2e8c1d52ae7b62",
+    "scripts/validate.py": "9c1c19b1579715660a3b91e5fcc820ed5d346afb84b5baa85db2005141e614ff",
+    "scripts/validate_unit_stages.py": "b310e781d5c1380274c239f5d80ec31d7c2ce24b0c82a55088dff87be6960597",
     "service.py": "999c7281c9a355bad753fd8017ce6fe435e496e24cfa358fa439b1ba32c23dd6",
     "start.py": "a32d7c4a5d9b252ea34f7e0b9293fe9022e60d39652426de33b28ee9de2473d4",
-    "static/app.css": "e79c6bd8a9c7373d30969cf50f6fd963724bd1e98ec8324c8339fb290a15c898",
-    "static/app.js": "9e8ee2ac0817c0bc710116092f7d6061fff7b82930e4a97d857cb7458dcff7d0",
-    "static/index.html": "aecea76760a7c6522d40b91931f15ad7f303f3bea6816a95a87d27d26290e16e",
-    "tests/browser_pipeline.py": "e22898c6a6a46cecdb84abd473aaa85dfebc9fc78bb4c25c918248bb194feb44",
-    "tests/browser_report_timeout.py": "683e8132255d8fa29df3dd768f759aa95fa69ac3c561c6ba8efc8e84d0622409",
-    "tests/browser_reviews.py": "26fe159216908213de31815cc2ee9abdaca12185544cd99c4faf4b4aa57d140a",
+    "static/app.css": "d797d6fb69e80715cbfe318190a10f39eff1b1e7de1452823a9c5495f41d3acc",
+    "static/app.js": "2011c8afb12faa4acdaae79cc23a26de8fff5fc9dbd4c0c2be1bdf2d6d1c89ec",
+    "static/index.html": "f7e4630c52f48c6585e5baafa4c95efaec40db11b3b9bde73d2b4599c9420b80",
+    "tests/browser_costs.py": "6f09a3f86fb7f679d11607e457a00f7d51d5b7224bb87c64c6e69ccaadc73a98",
+    "tests/browser_pipeline.py": "8233d14a8e3d9c9b964b107dff5ddd06ccdca36401c8557aceca15631556d72d",
+    "tests/browser_report_timeout.py": "805c31f89c1a8038a3f8afe380919ea39b55f1e190485543b4b4bb24a4323bb3",
+    "tests/browser_reviews.py": "75dbb90b4090287e248b7d7be206ea8b51ccfdb6cb0e5bcede11686cbbc3d9f8",
     "tests/browser_saved_reports.py": "96deab8625c4c358baf4a6e150534ad7bf4b2891dac5f0e138f87d4a1253a9c8",
-    "tests/browser_targets.py": "064be00d4aaac7311797716f5f6526d95b6609781fc2ca97013ee3ed9aa08507",
+    "tests/browser_targets.py": "f01f7388772cbee4ef37bc59d4e62eabe270b1984c483fa830651469c8845f9f",
     "tests/fixtures.py": "821bc8a1d2b3c98ab1b7baf69d10691ce815dfce0d302699a7e4749240f2425f",
     "tests/html_fixtures.py": "0d645c4d100fb40362c094dd99bfde0cbb12b31bc671235eb8e8ef9c76d4e940",
-    "tests/html_smoke.py": "c9268c4ed7228c765a9c9224c45b31222d2a3d8d47385cb65af1b3300496497c",
-    "tests/test_ai_and_evaluation.py": "5cc095593444c78cbd9391f30eef5a493c809134923c53321c17d1293efcfba8",
-    "tests/test_ai_limits_inspector.py": "9108928adc982f7f3d6827a45a232e1d3141a1009a90c75984780999edffb633",
-    "tests/test_ai_settings.py": "4b85fa46a57ab223d6cdbf6034f23d71edf991fb310e5c9977ac9346aa5787f0",
-    "tests/test_api_diagnostic.py": "1b0dbbb98fc9ccaf2b390d08c222297f036bc38fb435056446004346fa0b60d4",
+    "tests/html_smoke.py": "dd76217d208fdfa7464c17a7b7b0574a84c6a9a9b53171d2ff4aa8009ac99072",
+    "tests/test_ai_and_evaluation.py": "84ee991106cfe67ba13af66e3b428ea86fac1881cd837043460bd049fc091d46",
+    "tests/test_ai_limits_inspector.py": "6b2c67755955c88cb85d71538335b9c507f9d06f6d613b522c4b42c5030dc367",
+    "tests/test_ai_settings.py": "fb2b7b5ee5c900a3e6b7c97de119392263073a2f8936664af0b8f61acf5e0bf9",
+    "tests/test_api_diagnostic.py": "13f5edbf04dfeb31b193c347ded091768bf508debff2a899892bd0f8e9a002f7",
     "tests/test_backup.py": "c2aba89cc0f45c5497bdbe9df8dac27a8b2e904a0319478a2fa3e2270afdae82",
     "tests/test_blank_pages.py": "dc0f4a1dc0a23a50acacf225cfde055372e854dc0debcb50a0b16f5fcfb887b7",
+    "tests/test_costing.py": "5325ebf435fb911fd4b8fb87ae64a2925c440026def920422f05735a7246d4d2",
     "tests/test_gates.py": "ff9f57587d5d66f37f673488227baf04057c7b1624a75c5728f9a622f7e16d91",
     "tests/test_layout_flow.py": "3da22118ad22c19e4152afa210da969e140e3397f74235497fa2d9d41fd5d394",
     "tests/test_pdf_variants.py": "431159cf447e0828820da883d812e4dddb58ba5772f5e9c609948331a1235742",
-    "tests/test_processing.py": "868c865ee57e225cf319a5397b6dab0563918c3c348b1b030900ed3de52d7559",
+    "tests/test_processing.py": "92452e65b3f411d955feadafd0db508cb56d8df5a7173e729cdafa5514eb59e9",
     "tests/test_quantity_units.py": "df076edbf15b7980b7bb465baf44db9f2800634afb38c25340d5cad575e2e085",
-    "tests/test_report_transport.py": "d9bc06d7c7ed64bed8b18d357a0b40ab086585f66001070ac795ae376c54dd57",
+    "tests/test_report_transport.py": "b616a21f429f5253a211d837f91636c3cdb6927286f91062e7da82461d615e0b",
     "tests/test_requirements.py": "8e4a59d6109cad406c8280adccfb7a709ea1d3a6fc06e754d1f068ccc9880219",
     "tests/test_reviews.py": "e57ad40864cb36fe02574a1b772393f3a1db3e4caa6abf14134fa501be4895fa",
     "tests/test_saved_reports.py": "9876e8f5a26c71e95e8628cb769ffa079460498901d64014d0ff2ee4cbec6f69",
     "tests/test_service.py": "23c260d387119f1aa5931daae390706b8aa9012a2f8e642a049ae1ca8aa83e39",
-    "tests/test_targets.py": "0068a943d0387bd2f0e15af8f01c70a8735585aca38a874b5ed03916660eafd0",
+    "tests/test_targets.py": "a0c301ddaf9e8c30f1eb858628d6aeed6c040932310626328ecabeb675a93de6",
     "tests/test_terminology.py": "21ae719e1e6e3653e069c89258813e9bcea8dc535c822d6bc76d0c9b2a37a241",
     "tests/test_verification.py": "54ca21aa792f6e80954492d41c5d9437345868a4633944ed6ead4a766ad587f1",
     "tests/test_workflow.py": "fa3955f6fece06c20a0deec03e75408f33e5aacf760e4eae784b0758ff95407c",
@@ -515,57 +544,61 @@
     "tests/vendor/pdfjs/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
     "urs/__init__.py": "7bb470b921aaedbe3f3a0532b94a66b6977ad147af205097b58f796dfe3c5224",
     "urs/__main__.py": "944c7b6e1a1db3ac08edd7ef98af52aae7c3e47c15114637f299820943073067",
-    "urs/ai.py": "160ca3de9696daa06ae64f4e002655fba9da43cff7386e743434dffd3875c7bf",
+    "urs/ai.py": "7694456d1c734353d0edaf0a3c4ae2ccdf30e536bceba9c82f88514d2e7e92e3",
     "urs/ai_settings.py": "1362cf47586309973ba9d1a31dff037edf38e654605fc03bba000ee60a6be80c",
     "urs/audit.py": "0312bfe9e814de47bfabafa8361df600686f571abfb060708ebb84ba222a005e",
     "urs/backup.py": "d19ca817eea6969c23330900184c9d80124caa42ef89c571a7457d22ed8d382e",
+    "urs/costing.py": "80198476a3f6db11115b44276612f6925a29ecba8870788eba04585020ba759f",
     "urs/evaluation.py": "7a9cf03427c62afc9ce9d796fa61ff5f42e816f198261a174f8669b45bd7d118",
     "urs/gates.py": "fc505e2d65122067b516af04a971307bbc2e8f6bbdf900886a0140863029f04a",
-    "urs/images.py": "726338b4a3ae505662cec66e611f9c36b657b830fcb199e99ad97867cbe0827b",
+    "urs/images.py": "965d371ce8d536fdaff24a00d6e938dde2b72c979c63862418504b7fa2f532ef",
     "urs/launcher.py": "923f92717cbfb44f2281b547f69c26353614d318f8141fa26a66fc9b05a019e3",
     "urs/layout_audit.py": "3b88bb6de05d0d29bade9f07d5550fc8be90778408a1fc1a78b7838eb2937295",
-    "urs/processing.py": "e0a9d0c52db95b1048411ff5a50486f90d0c3bfb0d32ac2d2f703ec2fae6fc3e",
+    "urs/processing.py": "0f7db108db09f1a7ba2e6b72db386cff14aac9b99cd106870f2daa5b8f95cd6b",
     "urs/quality.py": "14b108d963179efc85cb06903213e39d4d734955c106eb2fe756e975aa9140a5",
     "urs/report_contract.py": "10c066b0f6c44939b88028c9ac08c28994adcbe81e77be39e2fc90592c202f1a",
     "urs/report_tasks.py": "1cd1a79006ebddb8aa8627c5907c40cddbc84bf917f319ed3433b905455dfe4d",
-    "urs/report_transport.py": "23b1afe5b2c91e030c7c3a1c1cfc6bffc1016510d4a9936bb43352263a6aba42",
+    "urs/report_transport.py": "3d174d8fb7e2b6320f951665d0538cd99a17ccfae04cf09764413329b81ba242",
     "urs/reviews.py": "6c9a6e434b91878fafdd301e6ea0f3a85e1d3d75ce61b88b478eeb636ae58fef",
     "urs/saved_reports.py": "eca8118a3a8a9fa348027d866beec7ccfab5fb4ce1636deff504966906945c91",
     "urs/server.py": "bf3c4b21705bfcd876b48631add6cabcaf51cd130b341d7268c668ef951e7e42",
-    "urs/targets.py": "0ab184da70d4320009d1fdf71b11d18541755a84b257562b085ff3068b335a96",
+    "urs/targets.py": "3af7fc840b39b7d54db2a0ef51f8d69d3bec8d623fe9955ef17e9c73b0d651a7",
     "urs/terminology.py": "8f7385954224b6ca004621d1b32ce5deec26653c282b963fc554fad910f011f7",
-    "urs/usage_audit.py": "e52e0efd695cce576dfa254ff7e40001c85f251af9ee9b331ee4316501d34462",
+    "urs/usage_audit.py": "97900b3cf86640b6ede5318cf30b54bffb06ca7e132f120c7ef7ec253dd457d9",
     "urs/verification.py": "efa63924d6e96b44655017ac104d4827c9b4a0b9d204b13a9169e62f60d78f2c",
-    "urs/web.py": "69289e0ed3be4c7d81c98952c54335223bf89e13de0bb90bed0a2fd303bd8e77",
+    "urs/web.py": "4b92673916d6cb59b2a9e7ca188f52aa6614feaeef39f9f2ccedf75df5fd0c52",
     "urs/workflow.py": "15ef7c9c446800fc7e223efe556b122316f645a1f5c2bc97c968fbce9fa68c44",
-    "urs/workspace.py": "7121c060d7e171a6cc4857ab0196488f531e30292e665f8e0839487a5b12db0a"
+    "urs/workspace.py": "0b9c058f7cec1514de1e8f10840a4678724a8b19424174e199faa3570a6a6cc4"
   },
   "evidence_sha256": {
-    "html-request-contract.json": "bb5ba8b5fbe2258d149d40ab8762abad95f369bfb7c1a20e5db320d3fa4a665f",
+    "html-request-contract.json": "e2034d56050c9573ad7ac7e449bf7b9b504dc5de2c74cea52fcc3b84afc12a70",
     "report-timeout-settings.png": "02cc3171b35d5d76bb9fb6a709476ad0b684c8f020f887ea94c8244ae010fcb5",
     "final-review-browser.txt": "0113ee04c144091ddb978e5e4f07b6ef60984037975cf17ebd6e6525bce01f17",
     "ai-settings-desktop.png": "e7c66c86e12d28f481059b57fab2ce655edcb6c09dbe866dbed05327fecd4055",
     "ai-settings-mobile.png": "3d148539176ba13a6a9f31cc31595676c9abc9edafeb4d6d5c5337b6aba7d7f2",
     "final-report-timeout-browser.txt": "6b186198962234ea6b020fa5e5ff996a79c490f298f04379a417659abfd8d6ad",
     "final-a4-target-browser.txt": "57552efa06e16ee53c5fce6e180988d34b603e3d96d1cb94f77e1cdd5c8d1fea",
-    "saved-html-previous.png": "271dccba678219e3077eaea82f2d08071da000bf4d68ba2a477e63d440ef4fb4",
+    "saved-html-previous.png": "16b32bed66578052aeeafa16a00b76c986ee492884262f34127090a5d3cb558c",
     "synthetic-model-final.html": "5d41af839510b99202a599b52dae608cc2cab6ef7dec12a67e5bcbf6632f6f2c",
-    "saved-html-none.png": "ac2ea5bf1293606b215040080fc05979d1dd9c8b15506d771e6f9543188853c7",
-    "saved-html-end-check.png": "03f222de4585b5bde4390a54459b66fca4ba79082099709ef0f5ac26d340c839",
+    "cost-preview.png": "e1d8fd94093ffd5f6005302b9c4d649c83b90c05f924815056c9688691939aa8",
+    "saved-html-none.png": "f9ce6434f9c261dc2c12cca88889c6c8f61b377439d29fee42e1ff554b36a246",
+    "saved-html-end-check.png": "d8117c59ce30b5584cb8f2dacda2955067b4604a0278d58a69621c26ab5aa7fd",
+    "final-cost-browser.txt": "e1b71f2a6c3417d86381cf8e27cc17dd305846d7f48d931847a5017ad7b80fb9",
     "final-office.txt": "c0972375ff23124232bb122e0743bdd7ee309b516ef164e00bbab805a423ffcb",
-    "review-result-buttons.png": "6b1ffb1e1f33b25dd8d19fd1341a212daf5772fce5390ffc75f0273402900bd8",
+    "review-result-buttons.png": "2f320112021c718fd85347e5437f38f31ac639c9b60f9435ed6da522df310395",
     "html-comparison.json": "5ab9891cbe2035011be53e25fde4984526f65ecd415c8fcf3ddcfa0696f58f35",
     "review-verification.png": "dc21d8a21cd6c4a262164077a113b9cb09bac00c4b761bbee8b19091da4acff9",
     "final-html.txt": "1c86b501cc057163a3f0fc1b63e90eb1d236b52029b273d6a8a6e8f30740aab9",
-    "html-report-mobile.png": "5f53f99399b075e9315ca854a7c8e36b30bc54f8cc32f7c4dc33ccb7251cb94e",
-    "a4-target-registration.png": "3bef7742ca163f5e4f79be7ff94c222eeb5293b021c60ca3a4aeaaaa9addf430",
+    "html-report-mobile.png": "ec8ea88f180741f5970d0327b6f9df2c5655d1e82d59fdd9c4921cf8738279fe",
+    "a4-target-registration.png": "7d8d80ec5b8ea70185829824d40c9290f213699a8c2e1ea0df12429a7abf510e",
     "synthetic-model-original.html": "cf27f4f6173aa8aa5408022a03567e481be0e920a25d2ee5fd234b426d6908a7",
-    "final-tests.txt": "485141940615f9d719065e146ffd513a5081a690ad04be96e5d11c850da8b11f",
-    "html-report-desktop.png": "b977c0d716e758258e54be99a99f311f1e4d2558d96d69c0b83cd6e69cb4ffbd",
+    "final-tests.txt": "30e1a2a1d380456e01fd79563c96016435be366d0355eb400131583e0ccaec50",
+    "html-report-desktop.png": "20f9e68a242e10bca36b74c65e451de2cf4fdc504d110e99c14f978a040d7622",
     "final-saved-html-browser.txt": "7025b41ed981bbc1b74ace2ffa0bb633e1b5a47df68df1570162ca93be2648b9",
     "review-analysis.png": "27a50905128abdaced700e6c9d8ccab4cc8ca0d628095549065a7cba2f85c5b6",
+    "cost-ledger.png": "9c7a0a273ae927377d076ad8368c595670504f0c2976d46ffe82129483c958bd",
     "final-browser.txt": "f3ae5c6b463bfa2940028d4621ae8057da5645316d96ed65efa26eeb89cc93ee",
-    "saved-html-current.png": "3a8add017227bcab270a319eef819d66b9f45fcc55beb218886f7a0c6f6faef1"
+    "saved-html-current.png": "43e048ec5e122e1b0ecdcfdf735c589d927378f23fb28395897b07d9181d427b"
   },
   "real_openai_verified": false,
   "real_customer_urs_verified": false,

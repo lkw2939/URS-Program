@@ -27,14 +27,14 @@ def audit(root,data,document,revision=None,stage='verify'):
         if not all(math.isfinite(n) and n>0 for n in (budget,ir,out)) or type(tokens) is not int or tokens<1:raise ValueError('현재 숫자 설정이 올바르지 않습니다.')
         counts=[dict(r) for r in db.execute('SELECT state,COUNT(*) AS calls,COALESCE(SUM(reserved),0) AS reserved_usd FROM ai_usage WHERE document=? GROUP BY state',(document,))]
         calls=sum(x['calls'] for x in counts);reserved=sum(x['reserved_usd'] for x in counts)
-        reserve=((len(doc['original'])+len(bytes(raw[0]))+len(instruction(stage).encode()))*ir+tokens*out)/1_000_000 if raw else None
+        reserve=None # A byte count is not a token count. Use the web free counter on the actual request.
         if db.execute("SELECT 1 FROM pragma_table_info('ai_usage') WHERE name='usage'").fetchone():result['settlement_preview']=preview(db,document,ir,out)
         else:result['settlement_preview']={'applied':False,'reason':'usage 필드가 없어 정산 자료를 확인할 수 없습니다.'}
         result.update(current_revision=current,target_revision=target,target_is_previous=target!=current,target_raw_html_exists=bool(raw),stage=stage,max_output_tokens=tokens,output_setting_source='web' if web else 'environment/default',
             budget_usd=budget,input_usd_per_million=ir,output_usd_per_million=out,request_count=calls,request_count_limit=120,reserved_usd=reserved,ledger_by_state=counts,
-            next_reservation_usd=reserve,request_count_limit_reached=calls>=120,budget_limit_for_target=(reserved+reserve>budget) if reserve is not None else None,
+            next_reservation_usd=reserve,request_count_limit_reached=calls>=120,budget_limit_for_target=None,budget_scope='per_execution',estimate_status='UNVERIFIED: use free token-count preview on the actual web request',
             historical_limit_cause='Unverified: the old generic failure does not snapshot request count, reserved total and budget.',
-            reservation_note='Application reservation estimate, not OpenAI billing. PDF byte length is used as a token proxy; failed/reserved calls also count. No reservation is reset or released.')
+            reservation_note='Application reservation estimate, not OpenAI billing. No byte/token proxy is used. Historical reservations are preserved as evidence, not treated as actual spending or subtracted from the per-execution cap.')
     return result
 
 def main():

@@ -50,16 +50,12 @@ def overview(workspace,owner,document,target):
         attempts=[dict(r) for r in db.execute('SELECT * FROM target_reviews WHERE target=? ORDER BY id DESC',(target,))]
     budget={}
     try:
-        from urs.ai_settings import effective
-        from urs.ai import review_text
-        config=effective(workspace.workflow,document=document)
-        limit=float(os.environ.get('URS_AI_BUDGET_USD','0'));ir=float(os.environ.get('URS_AI_INPUT_USD_PER_MILLION','0'));outr=float(os.environ.get('URS_AI_OUTPUT_USD_PER_MILLION','0'))
-        if all(math.isfinite(v) and v>0 for v in (limit,ir,outr)):
-            with workspace.workflow.connect() as db:total,calls=db.execute('SELECT COALESCE(SUM(reserved),0),COUNT(*) FROM ai_usage WHERE document=?',(document,)).fetchone()
-            for stage in ('verify','analyze'):
-                estimate=((len(original['original'])+len(row['payload'])+len(review_text('independent_verify' if stage=='verify' else 'technical_analysis').encode()))*ir+config['max_output_tokens']*outr)/1000000
-                budget[stage]={'request_count':calls,'request_limit':120,'reserved_usd':total,'next_reservation_usd':estimate,'budget_usd':limit,'blocked':calls>=120 or total+estimate>limit,'additional_budget_needed_usd':max(0,total+estimate-limit),'minimum_budget_for_this_call_usd':total+estimate}
-    except (ValueError,TypeError,KeyError):pass
+        from urs.costing import review_quote
+        for stage in ('verify','analyze'):
+            budget[stage]=review_quote(workspace,owner,document,target,stage)
+    except (ValueError,TypeError,KeyError) as exc:
+        budget={stage:{'status':'UNVERIFIED','reason':str(exc),'budget_scope':'per_execution'} for stage in ('verify','analyze')}
+    with workspace.workflow.connect() as db:request_count=db.execute('SELECT COUNT(*) FROM ai_usage WHERE document=?',(document,)).fetchone()[0]
     info={k:row[k] for k in ('id','parent_revision','name','sha256','source_sha256','created','kind')};info['bytes']=len(row['payload']);info['reviews']={}
     import re
     text=row['payload'].decode('utf-8',errors='replace');ends=list(re.finditer(r'</html\s*>',text,re.I))
@@ -72,10 +68,11 @@ def overview(workspace,owner,document,target):
         verification=next((r for r in attempts if r['stage']=='verify'),None)
         blocked='실행 중입니다. 자동 재실행하지 않습니다.' if running else ''
         if stage=='analyze' and (not verification or verification['state']!='finished' or verification['status']!='PASS'):blocked='이 선택 대상의 독립검증이 PASS여야 합니다. 다른 보고서·다른 리비전 결과는 재사용하지 않습니다.'
+        if request_count>=120:blocked=(blocked+' · ' if blocked else '')+'문서 요청 횟수 안전 상한(120회)입니다. 비용과 별개입니다.'
         failure=json.loads(current['evidence']).get('reason') if current and current['state']=='failed' else None
         if current and current['state']=='running' and not running:failure='이전 서버 작업의 완료 여부가 미확인입니다. API 사용 내역 확인 후 필요할 때만 수동 실행하세요.'
         if not running and budget.get(stage,{}).get('blocked'):
-            blocked=(blocked+' · ' if blocked else '')+'문서의 요청/예약 예산 상한입니다. 등록은 완료됐으며 실제 검토는 사용량·단가 정산 확인 후 실행하세요. 자동으로 예산을 올리거나 초기화하지 않습니다.'
+            blocked=(blocked+' · ' if blocked else '')+'이번 1회 예상 비용이 실행 한도를 넘습니다. 누적 사용액 때문이 아닙니다.'
         info['reviews'][stage]={'budget_preview':budget.get(stage),'status':current['status'] if current else 'UNVERIFIED','can_run':not blocked,'blocked_reason':blocked,'running':running,'failure':failure,'available':stored is not None,'attempt':stored['id'] if stored else None,'older_attempt':bool(current and stored and current['id']!=stored['id'])}
     return info
 

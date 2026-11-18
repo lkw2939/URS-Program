@@ -1,0 +1,25 @@
+test_cached_count_invalidated_by_model_effort_or_output_limit (test_costing.CostTests.test_cached_count_invalidated_by_model_effort_or_output_limit) ... ok
+test_cached_usage_with_price_is_settled (test_costing.CostTests.test_cached_usage_with_price_is_settled) ... ok
+test_cached_usage_without_historical_cache_price_is_unsettled (test_costing.CostTests.test_cached_usage_without_historical_cache_price_is_unsettled) ... ok
+test_changed_preview_fingerprint_blocks_before_count_or_inference (test_costing.CostTests.test_changed_preview_fingerprint_blocks_before_count_or_inference) ... ok
+test_count_endpoint_uses_exact_model_input_and_format_without_inference (test_costing.CostTests.test_count_endpoint_uses_exact_model_input_and_format_without_inference) ... ok
+test_counter_and_inference_use_same_inputs_and_only_inference_is_reserved (test_costing.CostTests.test_counter_and_inference_use_same_inputs_and_only_inference_is_reserved) ... ok
+test_expired_quote_does_not_authorize_inference (test_costing.CostTests.test_expired_quote_does_not_authorize_inference) ... ok
+test_failed_call_with_usage_is_settled_at_snapshot_rates (test_costing.CostTests.test_failed_call_with_usage_is_settled_at_snapshot_rates) ... ok
+test_free_counter_failure_never_sends_paid_request (test_costing.CostTests.test_free_counter_failure_never_sends_paid_request) ... ok
+test_html_processing_failure_keeps_actual_usage (test_costing.CostTests.test_html_processing_failure_keeps_actual_usage) ... ok
+test_images_are_image_inputs_exact_bytes_and_stored_html_unchanged (test_costing.CostTests.test_images_are_image_inputs_exact_bytes_and_stored_html_unchanged) ... ok
+test_legacy_usage_has_no_fabricated_historical_rate (test_costing.CostTests.test_legacy_usage_has_no_fabricated_historical_rate) ... ok
+test_partial_usage_is_not_settled (test_costing.CostTests.test_partial_usage_is_not_settled) ... ok
+test_prior_failed_estimates_do_not_reduce_per_execution_cap (test_costing.CostTests.test_prior_failed_estimates_do_not_reduce_per_execution_cap) ... ok
+test_single_execution_over_cap_is_blocked_before_reservation (test_costing.CostTests.test_single_execution_over_cap_is_blocked_before_reservation) ... ok
+test_status_query_does_not_contact_network (test_costing.CostTests.test_status_query_does_not_contact_network) ... ok
+test_success_with_usage_settles_and_reasoning_not_double_counted (test_costing.CostTests.test_success_with_usage_settles_and_reasoning_not_double_counted) ... ok
+test_unknown_failure_retains_evidence_but_never_becomes_zero_spend (test_costing.CostTests.test_unknown_failure_retains_evidence_but_never_becomes_zero_spend) ... ok
+test_unknown_image_format_not_silently_counted_as_text (test_costing.CostTests.test_unknown_image_format_not_silently_counted_as_text) ... ok
+test_verification_export_includes_settlement_without_keys_or_body (test_costing.CostTests.test_verification_export_includes_settlement_without_keys_or_body) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 1.904s
+
+OK

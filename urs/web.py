@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 from urs.workflow import Blocked
 from urs.ai import AIBlocked, AIError
 from urs.ai_settings import SettingsError
+from urs.costing import CostError
 from urs.workspace import AccessDenied, Unauthorized, MAX_PDF
 
 STATIC = Path(__file__).resolve().parents[1] / 'static'
@@ -151,6 +152,16 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             for stage in ('verify','analyze'):
                                 if tasks.status(document,stage)['state']=='running':data['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다. 결과가 저장될 때까지 기다려 주세요.')
                             self.reply(200, data)
+                        elif post and action=='cost-preview':
+                            from urs.costing import review_quote,report_quote
+                            stage=body['stage']
+                            if stage=='report':result=report_quote(workspace,owner,document,True)
+                            elif stage in ('verify','analyze'):
+                                selected=workspace.report_availability(owner,document)['selected']
+                                if not selected:raise Blocked('열람할 저장 보고서가 없습니다.')
+                                result=review_quote(workspace,owner,document,f"displayed:{document}:{selected['revision']}",stage,True)
+                            else:raise ValueError('실행 단계를 확인하세요.')
+                            self.reply(200,result)
                         elif post and action=='current-review-run':
                             selected=workspace.report_availability(owner,document)['selected']
                             if not selected:raise Blocked('정상 저장된 보고서가 없습니다. 생성 실패 또는 배치 확인 이력을 확인하세요.')
@@ -158,8 +169,16 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             ident=f"displayed:{document}:{selected['revision']}"
                             visible,_=targets.get(workspace,owner,document,ident)
                             if body.get('expected_revision')!=selected['revision'] or body.get('expected_sha256')!=visible['sha256']:raise Blocked('보고서가 갱신됐거나 화면과 다릅니다. 새로고침해 현재 보고서를 확인한 뒤 실행하세요. API를 호출하지 않았습니다.')
+                            from urs.costing import review_quote
+                            q=review_quote(workspace,owner,document,ident,body['stage'])
+                            if q['status']!='READY':raise Blocked('먼저 무료 비용 계산으로 이번 1회 예상액을 확인하세요.')
+                            workspace.processing.authorized_quotes[(document,'independent_verify' if body['stage']=='verify' else 'technical_analysis')]=q['fingerprint']
                             result=target_tasks.start(owner,document,ident,body['stage'])
                             self.reply(202,{**result,'target':ident})
+                        elif post and action=='target-cost-preview':
+                            from urs.costing import review_quote
+                            if body['stage'] not in ('verify','analyze'):raise ValueError('실행 단계를 확인하세요.')
+                            self.reply(200,review_quote(workspace,owner,document,body['target'],body['stage'],True))
                         elif not post and action=='usage-preview':
                             from urs.usage_audit import server_preview
                             self.reply(200,server_preview(workspace,owner,document))
@@ -174,6 +193,10 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             target=parse_qs(urlparse(self.path).query)['target'][0]
                             self.reply(200,target_tasks.status(owner,document,target))
                         elif post and action=='target-run':
+                            from urs.costing import review_quote
+                            q=review_quote(workspace,owner,document,body['target'],body['stage'])
+                            if q['status']!='READY':raise Blocked('먼저 선택 대상의 무료 비용 계산을 확인하세요.')
+                            workspace.processing.authorized_quotes[(document,'independent_verify' if body['stage']=='verify' else 'technical_analysis')]=q['fingerprint']
                             if body['stage'] not in ('verify','analyze'):raise ValueError('검토 단계를 확인하세요.')
                             self.reply(202,target_tasks.start(owner,document,body['target'],body['stage']))
                         elif not post and action in ('target.html','target-result.html'):
@@ -222,6 +245,11 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             if set(body)=={'stage','background'} and body['background'] is True and body['stage'] in ('verify','analyze'):
                                 self.reply(202,tasks.start(owner,document,body['stage']));return
                             if body=={'stage':'report','background':True}:
+                                from urs.costing import report_quote
+                                q=report_quote(workspace,owner,document)
+                                if q['status']!='READY':raise Blocked('먼저 보고서 무료 비용 계산으로 이번 실행 예상액을 확인하세요.')
+                                if q['blocked']:raise Blocked('이번 보고서 1회 예상 비용이 실행 한도를 넘습니다.')
+                                workspace.processing.authorized_quotes[(document,'report_html')]=q['fingerprint']
                                 self.reply(202,tasks.start(owner,document));return
                             if set(body) != {'stage'}:
                                 raise ValueError('검증 상태는 서버만 기록할 수 있습니다.')
@@ -246,7 +274,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
                 self.reply(409, {'error': str(exc)})
             except AIError as exc:
                 self.reply(502, {'error': str(exc)})
-            except SettingsError as exc:
+            except (SettingsError,CostError) as exc:
                 self.reply(400,{'error':str(exc)})
             except (ValueError, KeyError, TypeError, binascii.Error):
                 self.reply(400, {'error': '요청을 확인해 주세요. PDF 형식·크기 또는 입력이 올바르지 않습니다.'})

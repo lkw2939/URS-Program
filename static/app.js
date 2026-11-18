@@ -1,3 +1,6 @@
+let reportCost=null;
+function costText(q){if(!q||q.status!=='READY')return '예상 비용 미확인 · '+(q?.reason||'먼저 무료 비용 계산을 누르세요.')+' 입력 토큰 계산만 하며 보고서를 생성하지 않습니다.';
+return `이번 1회 (설정 단가 기준): 입력 ${q.input_tokens.toLocaleString()} 토큰 $${q.input_cost_usd.toFixed(6)} + 최대 출력 ${q.max_output_tokens.toLocaleString()} 토큰 $${q.max_output_cost_usd.toFixed(6)} = 예상 상한 $${q.estimated_max_usd.toFixed(6)} / 1회 실행 한도 $${q.cap_usd.toFixed(2)}${q.blocked?' · 한도 초과':''}. 문서 누적액과 OpenAI 잔액은 별개이며 계정 잔액은 자동 조회하지 않습니다. 캐시 할인 전 예상 상한이며 실제 사용액은 응답 사용량으로 정산합니다.`;}
 'use strict';
 let csrf = '', selected = null;
 const a4Selections=new Map();
@@ -60,7 +63,7 @@ async function waitCurrentReview(stage,target){
  while(true){await new Promise(resolve=>setTimeout(resolve,1000));const state=await api(`/api/documents/${doc.id}/target-status?target=${target}`);if(!state.reviews[stage].running)break;}
  if(activeDoc?.id===doc.id)await refreshReview();
 }
-async function openReview(doc){activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.current_review?.reviews[stage]?.running)await waitCurrentReview(stage,detail.current_review.id);}
+async function openReview(doc){reportCost=null;activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.current_review?.reviews[stage]?.running)await waitCurrentReview(stage,detail.current_review.id);}
 async function refreshReview(){if(!activeDoc)return;detail=await api(`/api/documents/${activeDoc.id}/detail`);renderReview();await documents();}
 function renderReview(){
  renderTargets();
@@ -77,10 +80,17 @@ function renderReview(){
  for(const [index,stage] of state.stages.entries()){
   $('checklist-steps').append(element('li',`${stageNames[stage.id]} · ${stage.id==='report'?(current?(detail.current_layout?.status==='PASS'?'저장·A4 확인 완료':'저장됨 · A4 확인 필요'):'정상 저장 보고서 없음'):displayPassed(stage)?'완료':'확인 전'}`));
   if(stage.id==='source'||stage.id==='approval')continue;
+  const group=element('section',null,'execution-cost');group.append(element('h4',stageNames[stage.id]));const controls=element('div',null,'actions');group.append(controls);$('process-buttons').append(group);
   const button=element('button',stage.id==='report'?(current?'새 보고서 생성':'보고서 생성'):stageNames[stage.id]+' 실행');
   const reviewInfo=stage.id==='report'?null:currentReview?.reviews[stage.id]||{can_run:false,blocked_reason:'검증할 정상 저장 보고서가 없습니다. 생성 실패/배치 확인 이력을 확인하세요.'};
-  button.disabled=reviewInfo?!reviewInfo.can_run:state.stages.slice(0,index).some(s=>!s.passed)||stage.id==='report'&&detail.report_task?.state==='running';
-  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{const accepted=await api(base+'/current-review-run',{stage:stage.id,expected_revision:current.revision,expected_sha256:currentReview.sha256});await waitCurrentReview(stage.id,accepted.target);}});$('process-buttons').append(button);if(reviewInfo){const note=element('p',(reviewInfo.running?'실행 중 · ':reviewInfo.blocked_reason?'실행 불가 · ':'실행 가능 · ')+(reviewInfo.blocked_reason||'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.'),'muted small');$('process-buttons').append(note);if(reviewInfo.budget_preview){const q=reviewInfo.budget_preview;$('process-buttons').append(element('p',`문서 예산: 남은 예약 여유 $${Math.max(0,q.budget_usd-q.reserved_usd).toFixed(6)} / 다음 ${stageNames[stage.id]} 예상 예약 $${q.next_reservation_usd.toFixed(6)} / 부족 $${q.additional_budget_needed_usd.toFixed(6)} (실제 청구액 아님, 예산 변경 없음)`,'muted small'));}if(reviewInfo.failure)$('process-buttons').append(element('p','최근 실패: '+reviewInfo.failure,'result'));}
+  const q=stage.id==='report'?reportCost:reviewInfo?.budget_preview;
+  button.disabled=(reviewInfo?!reviewInfo.can_run:state.stages.slice(0,index).some(s=>!s.passed)||detail.report_task?.state==='running')||!q||q.status!=='READY'||q.blocked;
+  const estimate=element('button',`${stageNames[stage.id]} 비용 확인 (무료)`);estimate.type='button';estimate.disabled=stage.id!=='report'&&!current;
+  estimate.onclick=()=>busy(estimate,async()=>{const result=await api(base+'/cost-preview',{stage:stage.id});if(stage.id==='report')reportCost=result;await refreshReview();});controls.append(estimate);
+  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{const accepted=await api(base+'/current-review-run',{stage:stage.id,expected_revision:current.revision,expected_sha256:currentReview.sha256});await waitCurrentReview(stage.id,accepted.target);}});controls.append(button);
+  group.append(element('p',costText(q),'muted small'));
+  if(reviewInfo){group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason?'실행 불가 · '+reviewInfo.blocked_reason:q?.status==='READY'?'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.':'비용 확인 후 실행할 수 있습니다.','muted small'));if(reviewInfo.failure)group.append(element('p','최근 실패: '+reviewInfo.failure,'result'));}
+
  }
  for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${result.stage==='report'&&current&&state.revision!==current.revision?'최근 생성 시도 (현재 보고서 유지)':stageNames[result.stage]} · ${result.stage==='report'&&result.status==='PASS'&&detail.reports?.state!=='current'?'저장 성공 · A4 배치/문서 끝 확인 필요':result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
  for(const stage of ['verify','analyze']){const info=currentReview?.reviews[stage];if(info&&info.status!=='UNVERIFIED')$('check-results').append(element('div',`${stageNames[stage]} · ${info.status} · 화면의 현재 보고서 ${current.revision} 검토 결과${info.failure?' · '+info.failure:''}`,'result'));}
@@ -159,9 +169,10 @@ async function loadTarget(){
  $('a4-target-download').href=base+'/target.html?target='+target;
  $('a4-target-actions').replaceChildren();$('a4-target-results').replaceChildren();const notes=[];
  for(const [stage,label] of [['verify','독립검증'],['analyze','기술분석']]){
-  const state=info.reviews[stage];const button=element('button',`${targetLabel} ${label} 실행`);button.type='button';button.disabled=!state.can_run;
+  const state=info.reviews[stage];const button=element('button',`${targetLabel} ${label} 실행`);button.type='button';button.disabled=!state.can_run||state.budget_preview?.status!=='READY'||state.budget_preview?.blocked;
+  const estimate=element('button',`${targetLabel} ${label} 비용 확인 (무료)`);estimate.type='button';estimate.onclick=()=>busy(estimate,async()=>{await api(base+'/target-cost-preview',{target,stage});await loadTarget();});$('a4-target-actions').append(estimate);
   button.onclick=()=>busy(button,async()=>{await api(base+'/target-run',{target,stage});$('a4-target-state').textContent=`${targetLabel} ${label} 실행 중입니다.`;await loadTarget();});$('a4-target-actions').append(button);
-  if(state.budget_preview){const q=state.budget_preview;notes.push(`${label} 예약 점검: 요청 ${q.request_count}/${q.request_limit}, 기존 $${q.reserved_usd.toFixed(6)} + 다음 추정 $${q.next_reservation_usd.toFixed(6)} / 예산 $${q.budget_usd} · 이 1회 예약 기준 부족액 $${q.additional_budget_needed_usd.toFixed(6)} · 필요한 총 한도 $${q.minimum_budget_for_this_call_usd.toFixed(6)} (실제 청구액 아님, 예산 변경 없음)`);}
+  if(state.budget_preview)notes.push(costText(state.budget_preview));
   if(state.blocked_reason)notes.push(label+': '+state.blocked_reason);if(state.failure)notes.push(label+' 실패/미확인: '+state.failure);
   const view=element('button',`${targetLabel} ${label} 결과 보기`);view.type='button';view.disabled=!state.available;
   if(state.available)view.onclick=()=>window.open(base+`/target-result.html?target=${target}&stage=${stage}&attempt=${state.attempt}`,'_blank','noopener');$('a4-target-results').append(view);
@@ -184,9 +195,10 @@ $('register-a4-target').onsubmit=e=>{e.preventDefault();submit(e.target,async()=
 
 $('show-usage-preview').onclick=()=>busy($('show-usage-preview'),async()=>{
  if(!activeDoc)return;const doc=activeDoc.id;const info=await api(`/api/documents/${doc}/usage-preview`);if(activeDoc?.id!==doc)return;
- const box=$('usage-preview');box.hidden=false;box.replaceChildren(element('p',`현재 서버 설정 · 요청 ${info.request_count}/${info.request_count_limit} · 예약 합계 $${info.reserved_total_usd.toFixed(6)} / 문서 예산 $${info.document_budget_usd}`));
- const table=element('table','','data');const head=element('tr');for(const label of ['요청','상태','예약액','기록된 입력/출력 토큰','현재 단가 계산(확정 청구 아님)','정산 판단'])head.append(element('th',label));table.append(head);
- const states={failed:'실패',completed:'완료',reserved:'예약/응답 미확인'};
- for(const call of info.calls){const row=element('tr');for(const value of [call.call_id,states[call.state]||call.state,'$'+call.reserved_usd.toFixed(6),call.usage_available?`${call.input_tokens} / ${call.output_tokens}`:'미확인',call.usage_available?'$'+call.cost_at_current_configured_rates_usd.toFixed(6):'산정 불가',call.settlement_action])row.append(element('td',String(value)));table.append(row);}
- box.append(table,element('p',`사용량 확인분 계산 $${info.known_usage_estimate_usd.toFixed(6)} + 사용량 미확인 예약 유지 $${info.unknown_usage_reservations_kept_usd.toFixed(6)}. 아직 정산을 적용하지 않았습니다.`),element('p',info.rate_caveat,'muted small'));
+ const box=$('usage-preview');box.hidden=false;box.replaceChildren(element('p',`1회 실행 한도 $${info.per_execution_cap_usd.toFixed(2)} · 문서 요청 ${info.request_count}/${info.request_count_limit} · 누적 사용량 정산액 $${info.settled_usage_cost_usd.toFixed(6)} · 미정산 ${info.unresolved_count}건 (실지출 아님)`));
+ const table=element('table');const head=element('tr');for(const label of ['호출','상태','기존 예상액','입력/출력 토큰','사용량 정산액','정산 상태'])head.append(element('th',label));table.append(head);
+ const labels={settled:'정산 완료',pending:'진행 중',usage_unknown:'사용량 미확인',legacy_rates_unknown:'과거 단가 미확인',cached_rate_unknown:'캐시 단가 미확인',service_tier_rate_unknown:'서비스 계층 단가 미확인',usage_invalid:'사용량 확인 필요'};
+ for(const c of info.calls){const row=element('tr');for(const v of [c.call_id,c.state,'$'+c.original_estimate_usd.toFixed(6),`${c.usage.input_tokens??'미확인'} / ${c.usage.output_tokens??'미확인'}`,c.actual_cost_usd===null?'미확인':'$'+c.actual_cost_usd.toFixed(6),labels[c.settlement_state]||c.settlement_state])row.append(element('td',String(v)));table.append(row);}
+ box.append(table,element('p',info.note,'muted small'));
+
 });
