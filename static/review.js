@@ -22,6 +22,7 @@
  const message=text=>{$('correction-status').textContent=text;};
  function update(){
   const current=data.execution_report;const verify=current?.reviews.verify,analyze=current?.reviews.analyze;
+  $('preview-corrections').disabled=!data.can_edit||!data.current_matches||!data.error_count;
   $('reverify').disabled=!verify?.can_run;$('analyze-current').disabled=!analyze?.can_run;
   $('analysis-wait').textContent=analyze?.can_run?'현재 보고서의 독립검증이 통과했습니다. 기술분석을 실행할 수 있습니다.':analyze?.blocked_reason||'현재 보고서의 독립검증 PASS 후 기술분석을 실행할 수 있습니다.';
   if(current){$('corrected-report').href=base+'/report.html?revision='+current.revision;$('corrected-report').textContent=current.revision!==data.revision?'수정된 보고서 보기':'현재 보고서 보기';}
@@ -29,10 +30,14 @@
  }
  async function refresh(){data=await api(base+'/review-result-data?target='+encodeURIComponent(data.target)+'&attempt='+data.attempt);update();}
  if(location.protocol==='file:'){for(const b of document.querySelectorAll('button'))b.disabled=true;message('내려받은 HTML은 읽기 전용입니다. 수정·재검증은 로그인한 URS 웹 화면에서 진행하세요.');return;}
- $('findings').addEventListener('input',()=>{plan=null;$('apply-corrections').hidden=true;$('correction-preview').hidden=true;});
+ function fitFields(){for(const field of document.querySelectorAll('textarea')){field.style.height='auto';field.style.height=Math.max(58,field.scrollHeight+2)+'px';const copy=field.parentElement.querySelector('.print-value');if(copy)copy.textContent=field.value;}for(const d of document.querySelectorAll('.proposal'))d.dataset.printValues=[...d.querySelectorAll('textarea')].some(f=>f.value.trim())?'yes':'no';}
+ $('findings').addEventListener('input',()=>{plan=null;$('apply-corrections').hidden=true;$('correction-preview').hidden=true;fitFields();});
+ for(const details of document.querySelectorAll('.proposal'))details.addEventListener('toggle',fitFields);fitFields();
+ window.addEventListener('beforeprint',()=>{for(const d of document.querySelectorAll('.source,.proposal'))if(!d.open&&(!d.classList.contains('proposal')||d.dataset.printValues==='yes')){d.dataset.printOpen='yes';d.open=true;}});
+ window.addEventListener('afterprint',()=>{for(const d of document.querySelectorAll('[data-print-open]')){d.open=false;delete d.dataset.printOpen;}});
  $('preview-corrections').onclick=async()=>{
   try{const changes=[...document.querySelectorAll('.finding')].filter(n=>n.querySelector('[data-select]')?.checked).map(n=>({issue_id:n.dataset.issue,before:n.querySelector('[data-before]').value,after:n.querySelector('[data-after]').value,delete:n.querySelector('[data-delete]').checked}));
-   plan=await api(base+'/correction-preview',{target:data.target,attempt:data.attempt,changes});const area=$('correction-preview');area.replaceChildren();for(const p of plan.changes){const box=el('section');box.append(el('h3','원문 '+p.page+'쪽 수정안'),el('p','현재: '+p.before),el('p','적용 후: '+(p.after||'(선택 문구 삭제)')));area.append(box);}area.hidden=false;$('apply-corrections').hidden=false;message(plan.note);
+   plan=await api(base+'/correction-preview',{target:data.target,attempt:data.attempt,changes});const area=$('correction-preview');area.replaceChildren();for(const p of plan.changes){const box=el('section');box.append(el('h3','원문 '+p.page+'쪽 수정안'),el('p','현재 보고서에서 바꿀 문구: '+p.before),el('p','바꿀 문구: '+(p.after||'(이 문구만 삭제)')));area.append(box);}area.hidden=false;$('apply-corrections').hidden=false;message(plan.note);
   }catch(e){message(e.message);}
  };
  $('apply-corrections').onclick=async()=>{

@@ -8,25 +8,66 @@ from urs.workflow import Blocked
 def ko(value,fallback):
     return value.strip() if isinstance(value,str) and re.search('[가-힣]',value) else fallback
 
-def issues(body):
+def clean(value,placeholders=True):
+    if not isinstance(value,str):return ''
+    text=value.strip()
+    if placeholders and text.lower() in ('미기록','없음','-','[]','{}','""'):return ''
+    return text
+
+def page_number(value):
+    if type(value) is int and value>0:return value
+    if isinstance(value,str) and value.strip().isdigit() and int(value)>0:return int(value)
+    return None
+
+def issues(body,page_count=None):
     result=[]
     for index,item in enumerate(body.get('issues',[])):
         item=item if isinstance(item,dict) else {'reason':str(item)}
         severity=str(item.get('severity','')).lower().replace(' ','_')
         kind='error' if severity in ('오류','오역','error','critical','major') else 'review'
         if item.get('needs_confirmation') is True:kind='review'
-        category=str(item.get('category','')).lower()
+        category=str(item.get('category',item.get('issue_type',''))).lower().replace('-','_')
+        declared=str(item.get('issue_type','')).lower()
+        if declared=='customer':kind='review'
+        problem=ko(clean(item.get('problem_ko')) or clean(item.get('reason')),'')
+        title=ko(clean(item.get('title_ko')),'')
+        combined=' '.join(str(item.get(k,'')) for k in ('title_ko','problem_ko','reason','category'))
+        if category in ('source_ambiguity','source_conflict','customer_confirmation','customer','ambiguous_source','원문 모호성','고객 확인') or (declared!='translation' and re.search(r'원문(?:\s*자체)?(?:의|에서|에|은|이|가)?[^.]{0,24}(?:모호|불명확|상충)',combined)):kind='review'
         if category in ('layout','pagination','line_break','page_number','서식','쪽수','줄바꿈') or item.get('layout_only') is True:kind='layout'
-        page=item.get('page');page=page if type(page) is int and page>0 else int(page) if isinstance(page,str) and page.isdigit() and int(page)>0 else None
-        before=item.get('before',item.get('current_ko',''));after=item.get('after',item.get('suggested_ko',''))
-        before=before if isinstance(before,str) else '';after=after if isinstance(after,str) else ''
-        reason=item.get('problem_ko',item.get('reason',''))
-        title=ko(item.get('title_ko'),ko(reason,('원문 '+str(page)+'쪽의 요구사항을 확인해 주세요.' if page else '원문 위치와 요구사항을 확인해 주세요.')))
-        if len(title)>110:title=title[:110]+'…'
-        english=item.get('source_en','')
-        if not english and isinstance(reason,str) and reason and not re.search('[가-힣]',reason):english=reason
-        result.append({'id':str(index),'page':page,'kind':kind,'category':category,'title':title,'problem':ko(reason,'한국어 문제 설명이 저장되지 않았습니다. 원문 근거를 확인해 주세요.'),'why':ko(item.get('why_ko',item.get('why',item.get('impact_ko'))),'중요성에 대한 구체적인 판단 근거가 기록에 없습니다.'),'how':ko(item.get('fix_ko',item.get('how_to_fix_ko')),'아래 수정안을 원문과 대조한 뒤 필요한 항목만 선택하세요.' if kind=='error' else '고객 또는 직원에게 확인한 뒤 판단해야 합니다. 자동 수정하지 않습니다.'),'before':before,'after':after,'source_en':english if isinstance(english,str) else '', 'can_propose':kind=='error' and page is not None})
-    return sorted(result,key=lambda x:({'error':0,'review':1,'layout':2}[x['kind']],x['page'] or 999999,int(x['id'])))
+        if declared=='program' or category in ('image','image_reference','image_mapping','image_visibility','css','program','pipeline','rendering','html','placeholder','program_issue','프로그램 문제') or re.search(r'urs-(?:review-)?image:|display\s*:\s*none|숨김\s*CSS|(?:그림|이미지)\s*주소|PDF\.js',combined,re.I):kind='program'
+        page=page_number(item.get('page'))
+        if page_count and page and page>page_count:page=None
+        references=[]
+        raw_refs=item.get('evidence',item.get('references',[]))
+        if isinstance(raw_refs,list):
+            for ref in raw_refs:
+                if not isinstance(ref,dict):continue
+                n=page_number(ref.get('page'));quote=clean(ref.get('source_en')) or clean(ref.get('quote'))
+                if n and quote and (not page_count or n<=page_count):references.append({'page':n,'quote':quote})
+        pages=sorted(set(([page] if page else [])+[r['page'] for r in references]))
+        # Unquoted related page numbers are not promoted to confirmed source evidence.
+        claimed=item.get('pages',item.get('related_pages',[]));claimed=claimed if isinstance(claimed,list) else []
+        pending_pages=sorted({n for value in claimed if (n:=page_number(value)) and n not in pages and (not page_count or n<=page_count)})
+        before=clean(item.get('before',item.get('current_ko','')),False);after=clean(item.get('after',item.get('suggested_ko','')),False)
+        why=ko(clean(item.get('why_ko')) or clean(item.get('why')) or clean(item.get('impact_ko')),'')
+        how=ko(clean(item.get('fix_ko')) or clean(item.get('how_to_fix_ko')),'')
+        question=ko(clean(item.get('question_ko')) or clean(item.get('customer_question_ko')),'')
+        if kind=='review' and not question:
+            times=list(dict.fromkeys(re.findall(r'\d+(?:\.\d+)?\s*(?:시간|hours?)(?![A-Za-z])',problem,re.I)))
+            if len(times)>=2:question='원문에 나온 '+', '.join(times)+'은 각각 어떤 조건에 적용되며, 견적과 검수에는 어느 기준을 사용해야 하나요?'
+            elif before:question='원문 '+str(page or '해당')+'쪽의 “'+before+'”는 어떤 기준으로 적용해야 하나요?'
+            elif problem:question='원문 '+str(page or '해당')+'쪽에서 지적한 조건의 적용 기준을 확인해 주세요.'
+        if not title:title={'error':'번역 문구 수정','review':'고객에게 조건 확인','program':'프로그램 표시·전송 점검','layout':'쪽수·줄바꿈 등 표시 차이'}[kind]
+        # Keep a supplied title once; do not repeat it as the problem paragraph.
+        if re.sub(r'[\s.。]+','',title)==re.sub(r'[\s.。]+','',problem):problem=''
+        if why in (title,problem):why=''
+        if how in (title,problem,why,question):how=''
+        english=clean(item.get('source_en'))
+        if not english and not references:
+            reason=clean(item.get('reason'))
+            if reason and not re.search('[가-힣]',reason):english=reason
+        result.append({'id':str(index),'page':page,'pages':pages,'pending_pages':pending_pages,'references':references,'kind':kind,'category':category,'title':title,'problem':problem,'why':why,'how':how,'question':question,'before':before,'after':after,'source_en':english,'can_propose':kind=='error' and page is not None})
+    return sorted(result,key=lambda x:({'error':0,'review':1,'program':2,'layout':3}[x['kind']],x['page'] or 999999,int(x['id'])))
 
 
 def load(workspace,owner,document,target,attempt):
@@ -36,7 +77,7 @@ def load(workspace,owner,document,target,attempt):
         row=db.execute("SELECT * FROM target_reviews WHERE id=? AND target=? AND stage='verify'",(attempt,target)).fetchone()
         latest=db.execute("SELECT id FROM target_reviews WHERE target=? AND stage='verify' AND payload IS NOT NULL ORDER BY id DESC LIMIT 1",(target,)).fetchone()
     if row is None or not row['payload']:raise Blocked('저장된 독립검증 결과가 없습니다.')
-    body=json.loads(row['payload']);evidence=json.loads(row['evidence']);entries=issues(body)
+    body=json.loads(row['payload']);evidence=json.loads(row['evidence']);entries=issues(body,original['pages'])
     current=workspace.report_availability(owner,document)['selected']
     current_target=f"displayed:{document}:{current['revision']}" if current else None
     state=overview(workspace,owner,document,current_target) if current else None
@@ -44,7 +85,9 @@ def load(workspace,owner,document,target,attempt):
     try:when=datetime.fromisoformat(evidence.get('finished_at',row['created'])).astimezone(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S (한국시간)')
     except (TypeError,ValueError):when='기록 일시 미확인'
     transport=evidence.get('transport_manifest')
-    return {'document':document,'target':target,'attempt':attempt,'report_name':original['name'],'revision':selected['parent_revision'],'verified_at':when,'status':row['status'],'issues':entries,'error_count':sum(x['kind']=='error' for x in entries),'review_count':sum(x['kind']=='review' for x in entries),'layout_count':sum(x['kind']=='layout' for x in entries),'current_matches':same,'older_attempt':bool(latest and latest['id']!=attempt),'can_edit':same and bool(latest and latest['id']==attempt),'stored_html_sha256':selected['sha256'],'transport':transport,'source_pdf_sha256':original['sha256'],'output_format':'브라우저에서 읽는 HTML 결과 화면 · 내려받기도 HTML','execution_report':{'revision':current['revision'],'sha256':state['sha256'],'target':current_target,'reviews':state['reviews']} if state else None}
+    from urs.review_evidence import compare
+    presentation=compare(selected['payload'].decode(),transport)
+    return {'document':document,'target':target,'attempt':attempt,'report_name':original['name'],'revision':selected['parent_revision'],'verified_at':when,'status':row['status'],'issues':entries,'error_count':sum(x['kind']=='error' for x in entries),'review_count':sum(x['kind']=='review' for x in entries),'program_count':sum(x['kind']=='program' for x in entries),'layout_count':sum(x['kind']=='layout' for x in entries),'current_matches':same,'older_attempt':bool(latest and latest['id']!=attempt),'can_edit':same and bool(latest and latest['id']==attempt),'stored_html_sha256':selected['sha256'],'transport':transport,'presentation_comparison':presentation,'source_pdf_sha256':original['sha256'],'output_format':'브라우저에서 읽는 HTML 결과 화면 · 내려받기도 HTML','execution_report':{'revision':current['revision'],'sha256':state['sha256'],'target':current_target,'reviews':state['reviews']} if state else None}
 
 
 class TextRanges(HTMLParser):
@@ -88,17 +131,21 @@ def decoded_map(text):
     return ''.join(chars),spans
 
 
+class CorrectionInputError(ValueError):
+    pass
+
 def plan_changes(text,entries,changes,single_page=False):
-    if not isinstance(changes,list) or not 1<=len(changes)<=100:raise ValueError('수정할 오류 항목을 선택하세요.')
+    if not isinstance(changes,list) or not 1<=len(changes)<=100:raise CorrectionInputError('수정할 오류 항목을 선택하세요.')
     by_id={x['id']:x for x in entries};ranges=TextRanges(text).ranges;patches=[];seen=set()
     mapped=any(p is not None for _,_,p in ranges)
     for change in changes:
-        if not isinstance(change,dict):raise ValueError('수정 항목 형식을 확인하세요.')
+        if not isinstance(change,dict):raise CorrectionInputError('수정 항목 형식을 확인하세요.')
         ident=str(change.get('issue_id'));issue=by_id.get(ident)
         if not issue or not issue['can_propose'] or ident in seen:raise Blocked('확인 필요·표시 차이 항목이나 중복 항목은 자동 수정할 수 없습니다.')
         seen.add(ident);before=change.get('before');after=change.get('after')
-        if not isinstance(before,str) or not before.strip() or len(before)>50000 or not isinstance(after,str) or len(after)>50000 or (not after.strip() and change.get('delete') is not True):raise ValueError('현재 문장과 수정문을 입력하세요. 삭제는 별도로 선택해야 합니다.')
-        if before==after:raise ValueError('수정 전후가 같습니다.')
+        if not isinstance(before,str) or not before.strip() or len(before)>50000 or not isinstance(after,str) or len(after)>50000 or (not after.strip() and change.get('delete') is not True):raise CorrectionInputError('현재 문장과 수정문을 입력하세요. 삭제는 별도로 선택해야 합니다.')
+        if change.get('delete') is True and after.strip():raise CorrectionInputError('이 문구만 삭제하려면 바꿀 문구를 비워 주세요. 대체 문구와 삭제를 동시에 선택할 수 없습니다.')
+        if before==after:raise CorrectionInputError('수정 전후가 같습니다.')
         matches=[]
         for start,end,page in ranges:
             if page!=issue['page'] and not (not mapped and single_page and issue['page']==1):continue
@@ -126,30 +173,46 @@ def replay(text,patches):
 def render(workspace,owner,document,target,attempt):
     data=load(workspace,owner,document,target,attempt);esc=html.escape;base=f'/api/documents/{document}'
     ready=data['execution_report'];editable=data['can_edit']
-    next_step='오류 항목의 수정안을 확인하고 필요한 항목만 선택해 적용하세요.' if data['error_count'] else '확인 필요 항목을 고객·직원에게 확인하세요.' if data['review_count'] else '이 보고서의 독립검증이 통과했다면 기술분석으로 이어갈 수 있습니다.'
+    next_step='오류 항목의 수정안을 확인하고 필요한 항목만 선택해 적용하세요.' if data['error_count'] else '확인 필요 항목을 고객·직원에게 확인하세요.' if data['review_count'] else '프로그램 점검 항목의 발생 위치를 확인하세요. 번역문은 바꾸지 않습니다.' if data['program_count'] else '이 보고서의 독립검증이 통과했다면 기술분석으로 이어갈 수 있습니다.'
     s=f'<header><p class="eyebrow">독립검증 결과</p><h1>{esc(data["report_name"])}</h1><p>보고서 버전 {data["revision"]} · 검증 일시 {esc(data["verified_at"])}</p></header>'
     if not data['current_matches']:s+='<p class="notice" id="historical-note">수정 전 또는 이전 보고서의 검증 결과입니다. 현재 보고서의 검증 결과로 사용하지 않습니다.</p>'
     elif data['older_attempt']:s+='<p class="notice">같은 보고서의 이전 실행 결과입니다. 최신 검증 결과를 확인하세요.</p>'
-    s+=f'<section class="summary"><strong>오류 {data["error_count"]}건</strong><strong>확인 필요 {data["review_count"]}건</strong><p>다음에 할 일 · {esc(next_step)}</p></section>'
-    s+=f'<nav><a href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증한 보고서 보기</a><a href="/">URS 보고서 검토로 돌아가기</a></nav>'
-    s+='<section id="findings"><h2>오류와 확인할 항목</h2>'
+    s+=f'<section class="summary"><strong>번역 오류 {data["error_count"]}건</strong><strong>고객 확인 필요 {data["review_count"]}건</strong><strong>프로그램 점검 {data["program_count"]}건</strong><p>다음에 할 일 · {esc(next_step)}</p></section>'
+    s+=f'<nav class="screen-only"><a href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증한 보고서 HTML 보기</a><a href="/">URS 보고서 검토로 돌아가기</a></nav>'
+    s+='<section id="findings"><h2>확인할 내용</h2>'
     if not data['issues']:s+='<p>저장된 발견 항목이 없습니다. 본문 전체의 정확성을 자동 보증한다는 뜻은 아닙니다.</p>'
     for item in data['issues']:
         if item['kind']=='layout':continue
-        n=item['id'];kind='오류' if item['kind']=='error' else '확인 필요';can=editable and item['can_propose']
-        page_label=str(item['page'])+'쪽' if item['page'] else '쪽 미확인'
-        s+=f'<article class="finding {item["kind"]}" data-issue="{n}"><div class="finding-top"><span>{kind} · 원문 {page_label}</span></div><h3>{esc(item["title"])}</h3><h4>무엇이 문제인가요?</h4><p>{esc(item["problem"])}</p><h4>왜 중요한가요?</h4><p>{esc(item["why"])}</p><h4>어떻게 고치나요?</h4><p>{esc(item["how"])}</p>'
-        s+=f'<details class="proposal" {"open" if item["kind"]=="error" else ""}><summary>수정안 보기</summary><div class="compare"><label>현재 문장<textarea data-before placeholder="현재 문장 기록이 없으면 보고서의 정확한 표현을 입력하세요." {"" if can else "readonly"}>{esc(item["before"])}</textarea></label><label>권장 수정문<textarea data-after placeholder="권장 수정문 기록이 없으면 확인한 수정문을 입력하세요." {"" if can else "readonly"}>{esc(item["after"])}</textarea></label></div>'
-        if can:s+='<p class="muted">문장이 여러 태그로 나뉘거나 반복되면 문제가 있는 표현 단위로 입력하세요. 수정은 본문 텍스트에만 적용됩니다.</p><label class="check"><input type="checkbox" data-delete>선택한 문구를 삭제하는 수정입니다</label><label class="check"><input type="checkbox" data-select>이 오류의 수정안 선택</label>'
-        else:s+='<p class="muted">확인 필요 항목은 자동 수정하지 않습니다.</p>' if item['kind']=='review' else '<p class="muted">현재 보고서와 연결된 최신 결과에서만 수정할 수 있습니다. 원문 쪽 또는 수정 위치가 없으면 직접 확인이 필요합니다.</p>'
-        s+='</details>'
-        if item['source_en']:s+='<details class="source"><summary>영어 원문 근거</summary><blockquote>'+esc(item['source_en'])+'</blockquote></details>'
+        n=item['id'];kind={'error':'번역 오류','review':'고객 확인','program':'프로그램 문제'}[item['kind']];can=editable and item['can_propose']
+        page_label=' · '.join(str(p)+'쪽' for p in item['pages']) or '쪽 미확인'
+        s+=f'<article class="finding {item["kind"]}" data-issue="{n}"><div class="finding-top"><span>{kind} · 원문 {page_label}</span></div><h3>{esc(item["title"])}</h3>'
+        if item['problem'] and not (item['kind']=='review' and item['question'].endswith(item['problem'].rstrip('. '))):s+='<p>'+esc(item['problem'])+'</p>'
+        if item['why']:s+='<p class="impact"><strong>실무 영향</strong> · '+esc(item['why'])+'</p>'
+        if item['kind']=='review' and item['question']:s+='<aside class="customer-question"><strong>고객에게 물어볼 질문</strong><p>'+esc(item['question'])+'</p></aside>'
+        if item['kind']=='program':
+            from urs.review_evidence import explanation
+            s+='<section class="program-diagnosis"><strong>직원용 HTML · 실제 검증 사본 비교</strong>'+''.join('<p>'+esc(line)+'</p>' for line in explanation(item,data['presentation_comparison']))+'</section>'
+        elif item['how'] and item['how'] not in (item['problem'],item['question']):s+='<p><strong>다음 조치</strong> · '+esc(item['how'])+'</p>'
+        if item['kind']=='error' and can:
+            summary='수정안 보기' if item['before'] or item['after'] else '수정 문구 직접 입력'
+            opened='open' if item['before'] or item['after'] else ''
+            s+=f'<details class="proposal" {opened}><summary>{summary}</summary><div class="compare"><label>현재 보고서에서 바꿀 문구<textarea data-before placeholder="보고서에서 바꿀 문구를 정확히 입력하세요.">{esc(item["before"])}</textarea><p class="print-value" data-print-before>{esc(item["before"])}</p></label><label>바꿀 문구<textarea data-after placeholder="원하는 수정문을 입력하세요. 빈칸은 삭제가 아닙니다.">{esc(item["after"])}</textarea><p class="print-value" data-print-after>{esc(item["after"])}</p></label></div><label class="check"><input type="checkbox" data-delete>이 문구만 삭제 — 대체 문구 없이 지웁니다</label><label class="check"><input type="checkbox" data-select>이 수정 선택</label><p class="muted">입력한 문구가 해당 쪽에서 한 곳으로 확인될 때만 적용합니다. 여러 태그로 나뉘거나 반복된 문장은 바꿀 표현만 좁혀 입력하세요.</p></details>'
+        elif item['kind']=='error' and (item['before'] or item['after']):
+            s+='<div class="compare read-only">'
+            if item['before']:s+='<div><strong>현재 보고서에서 바꿀 문구</strong><p>'+esc(item['before'])+'</p></div>'
+            if item['after']:s+='<div><strong>바꿀 문구</strong><p>'+esc(item['after'])+'</p></div>'
+            s+='</div><p class="muted">현재 보고서와 연결된 최신 결과에서 수정할 수 있습니다.</p>'
+        quotes=[]
+        for ref in item['references']:quotes.append('<p class="source-page-label">원문 '+str(ref['page'])+'쪽</p><blockquote>'+esc(ref['quote'])+'</blockquote>')
+        if item['source_en'] and item['source_en'] not in [r['quote'] for r in item['references']]:quotes.append('<blockquote>'+esc(item['source_en'])+'</blockquote>')
+        if quotes:s+='<details class="source"><summary>영어 원문 근거</summary>'+''.join(quotes)+'</details>'
+        if item['pending_pages']:s+='<p class="muted">추가 대조 필요: '+', '.join(str(p)+'쪽' for p in item['pending_pages'])+' (원문 인용 미기록)</p>'
         s+='</article>'
     s+='</section>'
-    if data['layout_count']:s+='<details><summary>쪽수·줄바꿈 등 표시 차이 '+str(data['layout_count'])+'건 (번역 오류 수에 포함하지 않음)</summary>'+''.join('<p>'+esc(i['problem'])+'</p>' for i in data['issues'] if i['kind']=='layout')+'</details>'
-    s+='<section class="actions-panel"><h2>선택한 오류 수정</h2><p>수정안을 비교한 뒤 적용해야 새 보고서로 저장됩니다. 원본 보고서와 검증 기록은 이력으로 남습니다.</p><button id="preview-corrections" '+('' if editable and data['error_count'] else 'disabled')+'>선택 항목 수정 전후 확인</button><div id="correction-preview" hidden></div><button id="apply-corrections" hidden>선택한 수정 적용</button><p id="correction-status" role="status"></p></section>'
+    if data['layout_count']:s+='<details class="layout-notes"><summary>쪽수·줄바꿈 등 표시 차이 '+str(data['layout_count'])+'건 (번역 오류 수에 포함하지 않음)</summary>'+''.join('<p>'+esc(i['problem'] or i['title'])+'</p>' for i in data['issues'] if i['kind']=='layout')+'</details>'
+    s+='<section class="actions-panel screen-only"><h2>선택한 오류 수정</h2><p>수정안을 비교한 뒤 적용해야 새 보고서로 저장됩니다. 원본 보고서와 검증 기록은 이력으로 남습니다.</p><button id="preview-corrections" '+'disabled'+'>선택 항목 수정 전후 확인</button><div id="correction-preview" hidden></div><button id="apply-corrections" hidden>선택한 수정 적용</button><p id="correction-status" role="status"></p></section>'
     current_link=base+'/report.html?revision='+str(ready['revision']) if ready else '#'
-    s+='<section class="actions-panel" id="next-actions"><h2>수정 후 확인·재검증</h2><a id="corrected-report" href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><p id="verification-state">'+('수정된 보고서는 독립 재검증 전입니다. 아래 실행은 현재 보고서에 연결됩니다.' if ready and ready['revision']!=data['revision'] else '현재 보고서에 대해 다시 검증할 수 있습니다.')+'</p><button id="reverify">독립 재검증 실행</button><button id="analyze-current">기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></section>'
+    s+='<section class="actions-panel screen-only" id="next-actions"><h2>수정 후 확인·재검증</h2><a id="corrected-report" href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><p id="verification-state">'+('수정된 보고서는 독립 재검증 전입니다. 아래 실행은 현재 보고서에 연결됩니다.' if ready and ready['revision']!=data['revision'] else '현재 보고서에 대해 다시 검증할 수 있습니다.')+'</p><button id="reverify" disabled>독립 재검증 실행</button><button id="analyze-current" disabled>기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></section>'
     s+='<details class="technical"><summary>검증 요청 자료·실제 전송·결과 형식 상세</summary><h3>1. 검증을 요청한 보고서</h3><p>'+esc(data['report_name'])+' · 저장 버전 '+str(data['revision'])+'</p><p>저장 최종 HTML SHA-256: <code>'+esc(data['stored_html_sha256'])+'</code></p><h3>2. AI에 실제 보낸 자료</h3>'
     m=data['transport']
     if m and m.get('recording')=='inference_request_boundary':
@@ -161,5 +224,7 @@ def render(workspace,owner,document,target,attempt):
         s+='<p>실제 요청 본문 SHA-256: <code>'+esc(m['body_sha256'])+'</code></p>'
     else:s+='<p>이 저장 결과에는 실제 요청 경계의 전송 상세 기록이 없습니다. 결과 화면이 HTML이라는 이유로 입력 형식을 추정하지 않습니다. 현재 코드의 전송 방식과 과거 요청을 구분해야 합니다.</p>'
     s+='<h3>3. 지금 보는 결과</h3><p>'+esc(data['output_format'])+'</p><a download="verification-result.html" href="'+base+'/target-result.html?target='+esc(target)+'&amp;stage=verify&amp;attempt='+str(attempt)+'">검증 결과 HTML 내려받기 (선택)</a></details>'
+    from pathlib import Path
+    css=(Path(__file__).resolve().parents[1]/'static/review.css').read_text()
     encoded=json.dumps(data,ensure_ascii=False).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
-    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><link rel="stylesheet" href="/review.css"><script defer src="/review.js"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()
+    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()

@@ -1,0 +1,13 @@
+test_actual_copy_hash_distinguishes_transport_labels (test_review_presentation.ReviewPresentationTests.test_actual_copy_hash_distinguishes_transport_labels) ... ok
+test_both_pages_need_quotes (test_review_presentation.ReviewPresentationTests.test_both_pages_need_quotes) ... ok
+test_delete_with_replacement_is_rejected (test_review_presentation.ReviewPresentationTests.test_delete_with_replacement_is_rejected) ... ok
+test_hidden_css_located_in_staff_and_transport_copy (test_review_presentation.ReviewPresentationTests.test_hidden_css_located_in_staff_and_transport_copy) ... ok
+test_missing_fields_are_empty_not_invented (test_review_presentation.ReviewPresentationTests.test_missing_fields_are_empty_not_invented) ... ok
+test_old_or_different_request_not_falsely_verified (test_review_presentation.ReviewPresentationTests.test_old_or_different_request_not_falsely_verified) ... ok
+test_out_of_range_pages_not_promoted (test_review_presentation.ReviewPresentationTests.test_out_of_range_pages_not_promoted) ... ok
+test_translation_ambiguity_and_program_are_distinct (test_review_presentation.ReviewPresentationTests.test_translation_ambiguity_and_program_are_distinct) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.030s
+
+OK

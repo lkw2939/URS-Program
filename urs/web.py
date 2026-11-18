@@ -160,7 +160,11 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             self.reply(200,load(workspace,owner,document,q['target'][0],int(q['attempt'][0])))
                         elif post and action=='correction-preview':
                             from urs.corrections import preview
-                            self.reply(200,preview(workspace,owner,document,body['target'],int(body['attempt']),body['changes']))
+                            from urs.review_results import CorrectionInputError
+                            try:result=preview(workspace,owner,document,body['target'],int(body['attempt']),body['changes'])
+                            except CorrectionInputError as exc:
+                                self.reply(400,{'error':str(exc)});return
+                            self.reply(200,result)
                         elif post and action=='correction-apply':
                             from urs.corrections import apply
                             self.reply(200,apply(workspace,owner,document,body['plan_id']))
