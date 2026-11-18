@@ -72,7 +72,9 @@ class Processing:
         guide=image_guide(assets)
         raw=self.provider_for(document,config).report_html(pdf,name,prompt,guide)
         if not isinstance(raw,str) or not raw:raise ValueError('HTML 응답이 없습니다.')
-        try:final,comparison=bind_images(raw,assets)
+        from urs.image_presentation import prepare
+        prepared,presentation=prepare(raw)
+        try:final,comparison=bind_images(prepared,assets)
         except Exception as error:
             from urs.report_transport import diagnostics
             records=diagnostics(self.workflow,document)
@@ -87,18 +89,23 @@ class Processing:
         from pypdf import PdfReader
         import io
         layout=inspect(final,len(PdfReader(io.BytesIO(pdf)).pages))
-        contract_issues=check(raw)
+        contract_issues=check(prepared)
         if contract_issues:
             layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).extend(contract_issues)
         layout['contract_issues']=contract_issues
         layout['source_image_candidates']=len(assets);layout['bound_image_slots']=len(comparison['replacements'])
         if assets and not comparison['replacements']:
             layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).append('원본 그림 후보가 있으나 최종 HTML에 연결된 그림이 없습니다.')
+        comparison.update(raw_sha256=hashlib.sha256(raw.encode()).hexdigest(),prepared_sha256=presentation['prepared_sha256'],only_image_addresses_changed=not presentation['changed'])
         data={'layout-audit':layout,'report.raw.html':raw.encode(),'report.html':final.encode(),
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
                   'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
                   'api_timeout_seconds':None,'api_wait_policy':'unlimited','layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
+        if presentation['changed']:
+            comparison['binding_source']='report.prepared.html'
+            data['report.prepared.html']=prepared.encode();data['image-presentation']=presentation
+            data['report-metadata'].update(image_presentation_version=presentation['version'],image_presentation_sha256=hashlib.sha256(json.dumps(presentation,ensure_ascii=False).encode()).hexdigest(),prepared_sha256=presentation['prepared_sha256'])
         # Append-only report artifacts. Retries/regeneration must use a new revision.
         with self.workflow.connect() as db:
             if self.workflow._job(db,document)['revision']!=revision:raise Blocked('보고서 생성 중 문서가 변경되었습니다.')
@@ -107,14 +114,14 @@ class Processing:
                 db.execute('INSERT INTO artifacts VALUES(?,?,?,?)',(document,revision,kind,payload))
         complete=layout['status']=='PASS'
         return (Status.PASS if complete else Status.UNVERIFIED if layout['status']=='UNVERIFIED' else Status.NEEDS_REVIEW), {'layout_status':layout['status'],'layout_issues':layout.get('issues',[]),'visible_image_count':layout.get('visible_image_count'),'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256'],
-            'only_image_addresses_changed':True,'unresolved':comparison['unresolved'],
+            'only_image_addresses_changed':comparison['only_image_addresses_changed'],'image_presentation':presentation,'unresolved':comparison['unresolved'],
             'outputs':{k:hashlib.sha256(v if isinstance(v,bytes) else json.dumps(v,ensure_ascii=False).encode()).hexdigest() for k,v in data.items()},
-            'reason':('최종 HTML 저장·사진 표시 확인 완료' if complete else 'HTML은 보존했으나 사진 표시/배치 확인이 필요합니다.')+f" · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"+((' · '+' · '.join(layout.get('issues',[]))) if not complete else '')}
+            'reason':('최종 HTML 저장·사진 표시 확인 완료' if complete else 'HTML은 보존했으나 사진 표시/배치 확인이 필요합니다.')+(' · PDF 재선택 코드·이미지 숨김 선언 정리 적용' if presentation['changed'] else '')+f" · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"+((' · '+' · '.join(layout.get('issues',[]))) if not complete else '')}
 
     def checked_html(self, document, revision=None):
         revision=revision or self._revision(document)
         with self.workflow.connect() as db:
-            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind='correction-patch'",(document,revision)).fetchone()
+            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind IN ('correction-patch','image-presentation')",(document,revision)).fetchone()
             if corrected:
                 from urs.saved_reports import read_final
                 return read_final(db,document,revision)[0]
@@ -131,7 +138,7 @@ class Processing:
         document,revision,pdf,name=self._input(content)
         config=effective(self.workflow,document=document)
         self.checked_html(document,revision)
-        input_kind='report.html' if self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' else 'report.raw.html'
+        input_kind='report.html' if (self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' or self.get(document,'report-metadata',revision).get('image_presentation_version')) else 'report.raw.html'
         raw=self.get(document,input_kind,revision).decode()
         result=self.provider_for(document,config).review_pdf(task,pdf,name,raw)
         if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):

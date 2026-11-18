@@ -1,0 +1,12 @@
+test_captions_and_normal_scripts_are_preserved (test_image_presentation.PresentationTests.test_captions_and_normal_scripts_are_preserved) ... ok
+test_generation_storage_integrity_and_tamper_detection (test_image_presentation.PresentationTests.test_generation_storage_integrity_and_tamper_detection) ... ok
+test_healthy_response_is_byte_exact (test_image_presentation.PresentationTests.test_healthy_response_is_byte_exact) ... ok
+test_legacy_cleanup_preserves_report_content_and_slots (test_image_presentation.PresentationTests.test_legacy_cleanup_preserves_report_content_and_slots) ... ok
+test_missing_end_is_not_manufactured (test_image_presentation.PresentationTests.test_missing_end_is_not_manufactured) ... ok
+test_picker_container_with_report_table_is_not_deleted (test_image_presentation.PresentationTests.test_picker_container_with_report_table_is_not_deleted) ... ok
+test_unknown_file_ui_or_prose_not_silently_removed (test_image_presentation.PresentationTests.test_unknown_file_ui_or_prose_not_silently_removed) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 3.087s
+
+OK

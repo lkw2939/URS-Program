@@ -27,3 +27,13 @@ class ReportAI:
     def review_pdf(self,task,pdf,filename,html):
         self.calls.append((task,pdf,filename,html))
         return {'status':'PASS','issues':[],'sections':[{'page':1,'text':'fixture analysis'}],'conflicts':[],'questions':[]}
+
+
+def legacy_image_loader(raw):
+    """Same PDF-picker/ready-class defect as the reported file, without customer content."""
+    raw=raw.replace('<figure>', '<figure class="figure">')
+    raw=raw.replace('</style>', '.figure img { display:none; } .figure img.ready {display:block} .figure-status{display:block}</style>')
+    raw=raw.replace('<body>', '<body><aside class="toolbar"><h1>원본 PDF 그림 불러오기</h1><input id="pdf-file" type="file" accept="application/pdf"><div id="pdf-status">원본 PDF 선택 필요</div></aside>')
+    raw=raw.replace('<figcaption>', '<span class="figure-status">원본 PDF를 선택하면 표시됩니다.</span><figcaption>')
+    raw=raw.replace('</body>', '<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script>const images=[...document.querySelectorAll(\'img[src^="urs-image:"]\')];document.getElementById("pdf-file").onchange=()=>{pdfjsLib.getDocument({});images.forEach(i=>i.classList.add("ready"));};</script></body>')
+    return '```html\n'+raw+'\n```'

@@ -74,7 +74,7 @@ function renderReview(){
  $('current-layout-status').textContent=detail.current_layout?.status==='PASS'?`사진 삽입 후 브라우저 A4 크기·넘침·표시 검사 통과 · 사진/도면 ${detail.current_layout.visible_image_count??detail.current_layout.image_count}개 표시 확인`:current?'기존 저장 보고서를 유지합니다. A4 배치/사진 표시는 확인 필요합니다. 새 보고서를 자동 생성하지 않습니다.':'';
  if(detail.latest_layout&&detail.latest_layout.status!=='PASS'){const pages=[...(detail.latest_layout.pages||[]),...(detail.latest_layout.narrow_pages||[]).map(p=>({...p,page:p.page+' (좁은 화면)'}))].filter(p=>p.issues.length).map(p=>`원문 ${p.page}쪽: ${p.issues.join(', ')}`).join(' · ');$('current-layout-status').textContent+=' 최근 생성의 배치 확인 필요: '+(pages||detail.latest_layout.reason||(detail.latest_layout.issues||[]).join(', '));}
  if(detail.current_layout?.status==='PASS'&&detail.current_layout.image_display_method!=='chromium-js-on-off-offline-v2')$('current-layout-status').textContent='기존 A4 배치 검사 기록입니다. 새 사진 표시 검사는 아직 하지 않았습니다. 저장된 파일은 그대로 유지합니다.';
- $('generation-contract').textContent=detail.generation_contract||'';
+ $('generation-contract').textContent=(detail.image_presentation_version?'실행 중인 서버의 사진 표시 자동 정리: '+detail.image_presentation_version:'실행 중인 서버에서 사진 표시 자동 정리 버전을 확인할 수 없습니다. 서버 업데이트·재시작이 필요합니다.')+'\n'+(detail.generation_contract||'');
  $('record-html').href=base+'/verification.html';$('record-json').href=base+'/verification.json';
  const displayPassed=s=>s.id==='report'?!!current&&detail.current_layout?.status==='PASS':s.id==='verify'||s.id==='analyze'?currentReview?.reviews[s.id]?.status==='PASS':s.passed;
  $('checklist-summary').textContent=`완료 ${state.stages.filter(displayPassed).length} / ${state.stages.length} · ${state.approved?'승인 완료':'승인 전'}`;
@@ -121,7 +121,7 @@ function renderReview(){
   if(saved.raw_available)$('raw-html').href=base+`/report.raw.html?revision=${saved.revision}`;
   const meta=saved.metadata||{};
   const bindings=reports.state==='current'?detail['image-bindings']:null;
-  $('image-summary').textContent=`${reports.state==='previous'?'이전 보고서':'현재 보고서'} · 리비전 ${saved.revision} · 생성 설정: ${meta.model||'미기록'} / ${meta.reasoning_effort||'기본 또는 미기록 effort'} / ${meta.max_output_tokens?meta.max_output_tokens+' 토큰':'출력 한도 미기록'} · ${saved.integrity==='verified'?'원본/최종본 무결성 확인':'복구 파일 · 무결성 메타데이터 미기록'}`;
+  $('image-summary').textContent=`${reports.state==='previous'?'이전 보고서':'현재 보고서'} · 리비전 ${saved.revision} · 생성 설정: ${meta.model||'미기록'} / ${meta.reasoning_effort||'기본 또는 미기록 effort'} / ${meta.max_output_tokens?meta.max_output_tokens+' 토큰':'출력 한도 미기록'} · ${saved.integrity==='verified'?'원본/최종본 무결성 확인':'복구 파일 · 무결성 메타데이터 미기록'}${meta.image_presentation_version?' · PDF 재선택 코드 제거·사진 표시 정리 적용':''}`;
   $('missing-images').replaceChildren();for(const slot of bindings?.unresolved||[])$('missing-images').append(element('li',`미연결: ${slot.uri} · HTML 위치 ${slot.offset}`));
  }
  for(const [stage,buttonId,noteId,endpoint] of [['verify','view-verification','verification-result-note','review-verification.html'],['analyze','view-analysis','analysis-result-note','review-analysis.html']]){

@@ -8,7 +8,7 @@ from urs.workflow import Blocked
 
 def read_final(db, document, revision):
     rows={r['kind']:bytes(r['payload']) for r in db.execute(
-        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch')",(document,revision))}
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation')",(document,revision))}
     final=rows.get('report.html')
     if not final:raise Blocked('저장된 최종 HTML이 없습니다.')
     try:text=final.decode('utf-8')
@@ -33,6 +33,13 @@ def read_final(db, document, revision):
                 if hashlib.sha256(parent).hexdigest()!=receipt['parent_sha256']:raise ValueError()
                 from urs.review_results import replay
                 expected=replay(parent.decode(),receipt['patches'])
+            elif metadata.get('image_presentation_version'):
+                from urs.image_presentation import prepare,VERSION
+                if metadata['image_presentation_version']!=VERSION:raise ValueError()
+                prepared,receipt=prepare(raw.decode())
+                if rows['report.prepared.html']!=prepared.encode() or hashlib.sha256(prepared.encode()).hexdigest()!=metadata['prepared_sha256']:raise ValueError()
+                if json.loads(rows['image-presentation'])!=receipt or hashlib.sha256(rows['image-presentation']).hexdigest()!=metadata['image_presentation_sha256']:raise ValueError()
+                expected,_=bind_images(prepared,assets)
             else:expected,_=bind_images(raw.decode(),assets)
             if expected.encode()!=final:raise ValueError()
         except (ValueError,KeyError,TypeError,UnicodeError):
@@ -65,7 +72,7 @@ def inspect_document(db, document, current):
 def stored_review(db,document,revision):
     """Inspect exact stored bytes, including blocked files; not a quality verdict."""
     rows={r['kind']:bytes(r['payload']) for r in db.execute(
-        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch')",(document,revision))}
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation')",(document,revision))}
     if not rows:raise Blocked('저장된 HTML 결과가 없습니다.')
     files={kind:value for kind,value in rows.items() if kind in ('report.html','report.raw.html')}
     if not files:raise Blocked('저장된 HTML 결과가 없습니다.')
@@ -87,6 +94,7 @@ def stored_review(db,document,revision):
     exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='report_diagnostics'").fetchone()
     if exists:
         inspection['api_diagnostics']=[json.loads(r[0]) for r in db.execute('SELECT payload FROM report_diagnostics WHERE document=? ORDER BY call_id',(document,)) if json.loads(r[0]).get('revision')==revision]
+    if 'image-presentation' in rows:inspection['image_presentation']=json.loads(rows['image-presentation'])
     if 'correction-patch' in rows:inspection['employee_correction']=json.loads(rows['correction-patch'])
     if 'report-metadata' in rows:
         try:
