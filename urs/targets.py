@@ -90,7 +90,7 @@ def run(workspace,owner,document,target,stage):
         if not ready['can_run']:raise Blocked(ready['blocked_reason'])
         with workspace.workflow.connect() as db:
             attempt=db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(target,stage,'running','UNVERIFIED',None,json.dumps({'server_instance':INSTANCE}),datetime.now(timezone.utc).isoformat())).lastrowid
-        start=time.monotonic();result=None
+        start=time.monotonic();result=None;provider=None
         evidence={'api_timeout_seconds':None,'api_wait_policy':'unlimited','target_id':target,'input_kind':'URS final HTML with source images' if row['kind']=='stored_final' else 'stored Terra raw HTML' if row['kind']=='stored_revision' else 'A4 imported HTML','input_revision':row['parent_revision'],'input_html_sha256':row['sha256'],'input_pdf_sha256':row['source_sha256']}
         try:
             config=effective(workspace.workflow,document=document)
@@ -99,7 +99,8 @@ def run(workspace,owner,document,target,stage):
         if config:evidence.update(model=config['model'],reasoning_effort=config['effort'],max_output_tokens=config['max_output_tokens'],ai_settings_signature=signature(config),pipeline_fingerprint=fingerprint())
         try:
             if config is None:raise AIBlocked('모델·effort·출력 한도 설정을 확인하세요. 유료 호출하지 않았습니다.')
-            result=workspace.processing.provider_for(document,config).review_pdf('independent_verify' if stage=='verify' else 'technical_analysis',original['original'],original['name'],row['payload'].decode())
+            provider=workspace.processing.provider_for(document,config)
+            result=provider.review_pdf('independent_verify' if stage=='verify' else 'technical_analysis',original['original'],original['name'],row['payload'].decode())
             if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):raise ValueError('검토 JSON의 status/issues 형식이 올바르지 않습니다.')
             if result['status']=='PASS' and result['issues']:raise ValueError('PASS와 오류 목록이 모순됩니다.')
             if stage=='analyze' and any(not isinstance(result.get(k),list) for k in ('sections','conflicts','questions')):raise ValueError('분석 JSON의 sections/conflicts/questions 목록이 필요합니다.')
@@ -108,6 +109,8 @@ def run(workspace,owner,document,target,stage):
             result=None;status='FAIL';state='failed'
             evidence['reason']=str(exc) if isinstance(exc,(AIError,AIBlocked,Blocked)) else '검토 결과 처리 실패: '+type(exc).__name__
             if getattr(exc,'diagnostics',None):evidence['api_diagnostics']=exc.diagnostics
+        if getattr(provider,'request_manifest',None):evidence['transport_manifest']=provider.request_manifest
+        evidence['finished_at']=datetime.now(timezone.utc).isoformat()
         evidence['elapsed_seconds']=round(time.monotonic()-start,3)
         with workspace.workflow.connect() as db:db.execute('UPDATE target_reviews SET state=?,status=?,payload=?,evidence=? WHERE id=?',(state,status,json.dumps(result,ensure_ascii=False) if result is not None else None,json.dumps(evidence,ensure_ascii=False),attempt))
     finally:lock.release()
@@ -141,6 +144,9 @@ class Tasks:
 
 def result_html(workspace,owner,document,target,stage,attempt):
     from urs.reviews import readable,NAMES
+    if stage=='verify' and target.startswith('displayed:'):
+        from urs.review_results import render
+        return render(workspace,owner,document,target,attempt)
     target_row,_=get(workspace,owner,document,target)
     with workspace.workflow.connect() as db:
         row=db.execute('SELECT * FROM target_reviews WHERE id=? AND target=? AND stage=?',(attempt,target,stage)).fetchone()

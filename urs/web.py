@@ -36,7 +36,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
             self.send_header('X-Content-Type-Options', 'nosniff')
             self.send_header('Content-Security-Policy',
                 "sandbox allow-scripts allow-modals; default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; worker-src blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; connect-src https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com; img-src data: blob: https:; style-src 'unsafe-inline' https:; font-src data: blob: https:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'" if report else
-                "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'" if review else
+                "default-src 'none'; script-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" if review else
                 "default-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
             if cookie:
                 self.send_header('Set-Cookie', cookie)
@@ -63,9 +63,9 @@ def make_app(workspace, port=8795, secure_cookie=False):
         def dispatch(self, post):
             try:
                 path = urlparse(self.path).path
-                if not post and path in ('/', '/app.js', '/app.css'):
-                    file = {'/': 'index.html', '/app.js': 'app.js', '/app.css': 'app.css'}[path]
-                    kind = {'/': 'text/html', '/app.js': 'text/javascript', '/app.css': 'text/css'}[path]
+                if not post and path in ('/', '/app.js', '/app.css', '/review.js', '/review.css'):
+                    file = {'/': 'index.html', '/app.js': 'app.js', '/app.css': 'app.css', '/review.js':'review.js','/review.css':'review.css'}[path]
+                    kind = {'/': 'text/html', '/app.js': 'text/javascript', '/app.css': 'text/css', '/review.js':'text/javascript','/review.css':'text/css'}[path]
                     self.reply(200, (STATIC / file).read_bytes(), kind + '; charset=utf-8')
                     return
                 body = {}
@@ -152,6 +152,28 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             for stage in ('verify','analyze'):
                                 if tasks.status(document,stage)['state']=='running':data['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다. 결과가 저장될 때까지 기다려 주세요.')
                             self.reply(200, data)
+                        elif not post and action=='review-result-data':
+                            from urllib.parse import parse_qs
+                            from urs.review_results import load
+                            q=parse_qs(urlparse(self.path).query)
+                            self.reply(200,load(workspace,owner,document,q['target'][0],int(q['attempt'][0])))
+                        elif post and action=='correction-preview':
+                            from urs.corrections import preview
+                            self.reply(200,preview(workspace,owner,document,body['target'],int(body['attempt']),body['changes']))
+                        elif post and action=='correction-apply':
+                            from urs.corrections import apply
+                            self.reply(200,apply(workspace,owner,document,body['plan_id']))
+                        elif post and action=='review-prepare':
+                            from urs.costing import review_quote
+                            selected=workspace.report_availability(owner,document)['selected']
+                            if not selected or body['stage'] not in ('verify','analyze'):raise Blocked('검증할 현재 보고서가 없습니다.')
+                            target=f"displayed:{document}:{selected['revision']}"
+                            info=targets.overview(workspace,owner,document,target)
+                            if body.get('expected_revision')!=selected['revision'] or body.get('expected_sha256')!=info['sha256']:raise Blocked('현재 보고서가 바뀌었습니다. 화면을 새로고침해 주세요.')
+                            stage=body['stage']
+                            if info['reviews'][stage]['running']:raise Blocked('이미 실행 중입니다. 결과를 기다려 주세요.')
+                            if stage=='analyze' and info['reviews']['verify']['status']!='PASS':raise Blocked('현재 보고서의 독립검증 PASS 후 기술분석을 실행할 수 있습니다.')
+                            self.reply(200,review_quote(workspace,owner,document,target,stage,True))
                         elif post and action=='cost-preview':
                             from urs.costing import review_quote,report_quote
                             stage=body['stage']

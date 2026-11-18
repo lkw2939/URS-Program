@@ -28,6 +28,7 @@ def requested_effort():
 
 class OpenAI:
     def __init__(self, workflow, document, settings=None, authorized_quotes=None):
+        self.request_manifest=None
         self.workflow, self.document = workflow, document
         self.authorized_quotes=authorized_quotes if authorized_quotes is not None else {}
         self.settings=dict(settings) if settings is not None else None
@@ -64,10 +65,13 @@ class OpenAI:
         if task=='report_html':
             from urs.report_transport import request
             return request(self,req,call_id,output_limit,api_timeout)
+        from urs.request_evidence import manifest
+        self.request_manifest=manifest(task,req);self.request_manifest['request_attempted']=True
         started=time.monotonic();http_status=None;result=None
         try:
             with urllib.request.urlopen(req,timeout=api_timeout) as response:
                 value=getattr(response,'status',None);http_status=value if type(value) is int else None
+                self.request_manifest['http_status']=http_status
                 result=json.load(response)
             if result.get('status')!='completed':
                 if (result.get('incomplete_details') or {}).get('reason')=='max_output_tokens':
@@ -96,6 +100,6 @@ class OpenAI:
 
 def review_text(task):
     instructions = {
-        'independent_verify': 'Independently compare the original PDF with the supplied HTML. Check full technical meaning, omissions, additions, negation, conditions, obligations, quantities, units, codes and table associations. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,issues:[{page,reason}]}. Do not edit or rewrite the HTML.',
+        'independent_verify': 'Independently compare the original PDF with the supplied report HTML and image inputs. Check technical meaning, omissions, additions, negation, conditions, obligations, quantities, units, model codes and table associations. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,issues:[{page,severity,category,title_ko,problem_ko,why_ko,fix_ko,before,after,source_en,needs_confirmation}]}. Do not edit or rewrite the report. before must quote the exact existing text within one HTML text node, after is the proposed Korean replacement. If a unique exact location cannot be established, mark needs_confirmation true. Missing original content needs a clearly quoted existing anchor for a proposed insertion. Do not guess uncertain source characters or values. Treat pagination or line wrapping alone as layout observations, not translation errors. Distinguish proven semantic errors from matters requiring customer or employee confirmation.',
         'technical_analysis': 'Analyze equipment, processes, specification conflicts and customer questions using the original PDF and supplied report. Cite original page numbers. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,sections:[],conflicts:[],questions:[],issues:[]}. Do not edit or rewrite the HTML.'}
     return instructions[task]+' 설명과 판단 이유는 한국어로 먼저 작성하세요. 필요한 영어 원문 근거는 source_en에 분리하세요. issues 항목에는 page, severity(오류 또는 확인 필요), reason을, questions 항목에는 question_ko, reason_ko를 포함하세요. 기존 HTML은 수정하지 말고 before/after는 제안일 때만 표시하세요.'

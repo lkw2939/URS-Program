@@ -86,12 +86,13 @@ function renderReview(){
   const button=element('button',stage.id==='report'?(current?'새 보고서 생성':'보고서 생성'):stageNames[stage.id]+' 실행');
   const reviewInfo=stage.id==='report'?null:currentReview?.reviews[stage.id]||{can_run:false,blocked_reason:'검증할 정상 저장 보고서가 없습니다. 생성 실패/배치 확인 이력을 확인하세요.'};
   const q=stage.id==='report'?reportCost:reviewInfo?.budget_preview;
-  button.disabled=(reviewInfo?!reviewInfo.can_run:state.stages.slice(0,index).some(s=>!s.passed)||detail.report_task?.state==='running')||!q||q.status!=='READY'||q.blocked;
+  const runState=element('p','','muted small');group.append(runState);
+  button.disabled=(reviewInfo?!reviewInfo.can_run:state.stages.slice(0,index).some(s=>!s.passed)||detail.report_task?.state==='running')||(stage.id==='report'&&(!q||q.status!=='READY'||q.blocked));
   const estimate=element('button',`${stageNames[stage.id]} 비용 확인 (무료)`);estimate.type='button';estimate.disabled=stage.id!=='report'&&!current;
   estimate.onclick=()=>busy(estimate,async()=>{const result=await api(base+'/cost-preview',{stage:stage.id});if(stage.id==='report')reportCost=result;await refreshReview();});controls.append(estimate);
-  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{const accepted=await api(base+'/current-review-run',{stage:stage.id,expected_revision:current.revision,expected_sha256:currentReview.sha256});await waitCurrentReview(stage.id,accepted.target);}});controls.append(button);
+  button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{await window.URSReview.run({base,stage:stage.id,revision:current.revision,sha256:currentReview.sha256,knownQuote:q,onProgress:text=>{message(text);runState.textContent=text;},onComplete:()=>{}});await refreshReview();}});controls.append(button);
   group.append(element('p',costText(q),'muted small'));
-  if(reviewInfo){group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason?'실행 불가 · '+reviewInfo.blocked_reason:q?.status==='READY'?'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.':'비용 확인 후 실행할 수 있습니다.','muted small'));if(reviewInfo.failure)group.append(element('p',failureText(reviewInfo.failure),'result'));}
+  if(reviewInfo){group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason?'실행 불가 · '+reviewInfo.blocked_reason:q?.status==='READY'?'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.':'실행을 누르면 예상 비용을 확인한 뒤 시작합니다.','muted small'));if(reviewInfo.failure)group.append(element('p',failureText(reviewInfo.failure),'result'));}
 
  }
  for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${result.stage==='report'&&current&&state.revision!==current.revision?'최근 생성 시도 (현재 보고서 유지)':stageNames[result.stage]} · ${result.stage==='report'&&result.status==='PASS'&&detail.reports?.state!=='current'?'저장 성공 · A4 배치/문서 끝 확인 필요':result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
@@ -116,6 +117,7 @@ function renderReview(){
   $('view-html').onclick=show;
   show();
   $('final-html').href=view;$('raw-html').hidden=!saved.raw_available;
+  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 원본 HTML (수정 전 생성본)':'Terra 원본 HTML 다운로드';
   if(saved.raw_available)$('raw-html').href=base+`/report.raw.html?revision=${saved.revision}`;
   const meta=saved.metadata||{};
   const bindings=reports.state==='current'?detail['image-bindings']:null;
@@ -207,3 +209,5 @@ $('show-usage-preview').onclick=()=>busy($('show-usage-preview'),async()=>{
  box.append(table,element('p',info.note,'muted small'));
 
 });
+
+if('BroadcastChannel' in window){const updates=new BroadcastChannel('urs-report-updates');updates.onmessage=e=>{if(activeDoc?.id===e.data?.document)refreshReview().catch(error=>message(error.message));};}

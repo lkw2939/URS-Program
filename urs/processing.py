@@ -29,6 +29,8 @@ class Processing:
             ''')
             from urs.costing import schema
             schema(db)
+            from urs.corrections import schema as correction_schema
+            correction_schema(db)
 
     def _revision(self, document):
         with self.workflow.connect() as db:return self.workflow._job(db,document)['revision']
@@ -110,6 +112,12 @@ class Processing:
             'reason':('최종 HTML 저장·사진 표시 확인 완료' if complete else 'HTML은 보존했으나 사진 표시/배치 확인이 필요합니다.')+f" · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"+((' · '+' · '.join(layout.get('issues',[]))) if not complete else '')}
 
     def checked_html(self, document, revision=None):
+        revision=revision or self._revision(document)
+        with self.workflow.connect() as db:
+            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind='correction-patch'",(document,revision)).fetchone()
+            if corrected:
+                from urs.saved_reports import read_final
+                return read_final(db,document,revision)[0]
         raw=self.get(document,'report.raw.html',revision)
         final=self.get(document,'report.html',revision)
         assets=self.get(document,'report-images',revision)
@@ -123,7 +131,8 @@ class Processing:
         document,revision,pdf,name=self._input(content)
         config=effective(self.workflow,document=document)
         self.checked_html(document,revision)
-        raw=self.get(document,'report.raw.html',revision).decode()
+        input_kind='report.html' if self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' else 'report.raw.html'
+        raw=self.get(document,input_kind,revision).decode()
         result=self.provider_for(document,config).review_pdf(task,pdf,name,raw)
         if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):
             raise ValueError('검토 응답 형식이 올바르지 않습니다.')
@@ -133,7 +142,7 @@ class Processing:
         if persist:self.put(document,revision,kind,result)
         bindings=self.get(document,'image-bindings',revision)
         status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(result['status'])
-        return status, {**({'review_result':result} if not persist else {}),'input_html_sha256':hashlib.sha256(raw.encode()).hexdigest(),'input_pdf_sha256':hashlib.sha256(pdf).hexdigest(),'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
+        return status, {**({'review_result':result} if not persist else {}),'input_html_kind':input_kind,'input_html_sha256':hashlib.sha256(raw.encode()).hexdigest(),'input_pdf_sha256':hashlib.sha256(pdf).hexdigest(),'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
             'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),'pipeline_fingerprint':fingerprint(),
             'api_timeout_seconds':None,'api_wait_policy':'unlimited','accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
 

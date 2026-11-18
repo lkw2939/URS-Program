@@ -32,7 +32,7 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
     with page.expect_download() as download:page.get_by_role('link',name='선택 보고서 HTML 내려받기',exact=True).click()
     assert Path(download.value.path()).read_bytes()==a4
     with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
-    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_disabled()
+    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_enabled()
     assert page.get_by_role('button',name='A4 독립검증 실행',exact=True).is_disabled()
     page.get_by_role('button',name='A4 독립검증 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
     assert page.get_by_role('button',name='A4 기술분석 실행',exact=True).is_disabled()

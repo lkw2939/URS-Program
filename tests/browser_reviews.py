@@ -30,17 +30,17 @@ def main():
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible')
     page.get_by_role('button',name='Review fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
-    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_disabled();assert page.get_by_role('button',name='기술 분석 실행',exact=True).is_disabled()
+    assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_enabled();assert page.get_by_role('button',name='기술 분석 실행',exact=True).is_disabled()
     assert '독립검증' in page.locator('#process-buttons').inner_text()
     assert '이전 실행 실패 기록 (당시 90초 제한)' in page.locator('#process-buttons').inner_text()
-    page.get_by_role('button',name='독립 검증 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='독립 검증 실행').disabled")
+    page.get_by_role('button',name='독립 검증 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => document.querySelector('#process-buttons').textContent.includes('이번 1회 (설정 단가 기준)')")
     # A stale/different screen identity must be rejected before any model request.
     rejected=page.evaluate('''async (doc) => {const me=await (await fetch('/api/me')).json();const r=await fetch('/api/documents/'+doc+'/current-review-run',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':me.csrf},body:JSON.stringify({stage:'verify',expected_revision:99,expected_sha256:'wrong'})});return {status:r.status,body:await r.json()};}''',doc)
     assert rejected['status']==409 and not calls,rejected
     page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("() => document.querySelector('#process-buttons').textContent.includes('실행 중')")
     gate.set();page.get_by_role('button',name='독립검증 결과 보기',exact=True).wait_for();page.wait_for_function("() => !document.querySelector('#view-verification').disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
-    result=opened.value;result.wait_for_load_state();assert '부모 리비전 1' in result.locator('body').inner_text();assert '독립검증' in result.title();result.screenshot(path=str(ROOT/'docs/evidence/review-verification.png'),full_page=True)
+    result=opened.value;result.wait_for_load_state();assert '보고서 버전 1' in result.locator('header').inner_text();assert '독립검증' in result.title();result.screenshot(path=str(ROOT/'docs/evidence/review-verification.png'),full_page=True)
     page.get_by_role('button',name='기술 분석 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
     page.get_by_role('button',name='기술 분석 실행',exact=True).click();page.wait_for_function("() => !document.querySelector('#view-analysis').disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='기술분석 결과 보기',exact=True).click()
@@ -63,7 +63,7 @@ def main():
     assert 'revision=1' in page.locator('#report-preview').get_attribute('src')
     assert not page.locator('#advanced-targets').evaluate('(e)=>e.open')
     with w.workflow.connect() as db:before_retry={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
-    page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='독립 검증 실행').disabled")
+    page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("() => document.querySelector('#message').textContent==='처리를 완료했습니다.'")
     assert len(calls)==3 and w.status('fixture',doc)['revision']==2
     with w.workflow.connect() as db:assert before_retry=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before_retry}
     page.frame_locator('#report-preview').locator('h1').wait_for()

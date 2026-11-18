@@ -25,8 +25,8 @@ def main():
   try:
    with patch('urllib.request.urlopen',side_effect=network),sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Cost fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
-    assert not calls;assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_disabled()
-    page.get_by_role('button',name='독립 검증 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='독립 검증 실행').disabled")
+    assert not calls;assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_enabled()
+    page.get_by_role('button',name='독립 검증 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => document.querySelector('#process-buttons').textContent.includes('이번 1회 (설정 단가 기준)')")
     assert len(calls)==1 and calls[0][0].endswith('/input_tokens');assert '예상 상한 $0.092000 / 1회 실행 한도 $10.00' in page.locator('#process-buttons').inner_text()
     with w.workflow.connect() as db:assert before==[tuple(r) for r in db.execute('SELECT * FROM ai_usage')]
     parts=calls[0][1]['input'][0]['content'];assert len([x for x in parts if x['type']=='input_image'])==3;assert 'data:image/' not in parts[2]['text'];assert base64.b64decode(parts[0]['file_data'].split(',')[1])==w.original('fixture',doc)['original']

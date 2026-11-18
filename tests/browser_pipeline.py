@@ -73,7 +73,7 @@ def main():
                     with page.expect_response(lambda r:r.url.endswith('/cost-preview')) as response:
                         page.get_by_role('button',name=label.replace(' 실행',' 비용 확인 (무료)'),exact=True).focus();page.get_by_role('button',name=label.replace(' 실행',' 비용 확인 (무료)'),exact=True).press('Enter')
                     assert response.value.status==200 and response.value.json()['status']=='READY'
-                    try:page.wait_for_function("([label])=>![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent===label).disabled",arg=[label],timeout=5000)
+                    try:page.wait_for_function("([label])=>[...document.querySelectorAll('#process-buttons .execution-cost')].find(s=>s.querySelector('h4').textContent===label.replace(' 실행','')).textContent.includes('이번 1회 (설정 단가 기준)')",arg=[label],timeout=5000)
                     except Exception:
                         print('COST UI:',page.locator('#message').inner_text(),page.locator('#process-buttons').inner_text(),flush=True)
                         raise

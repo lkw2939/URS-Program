@@ -91,12 +91,13 @@ def result_html(workspace,owner,document,stage,attempt=None,revision=None):
         if row is None:raise Blocked('저장된 '+NAMES[stage]+' 결과가 없습니다. 실행 조건과 실패 이유를 확인하세요.')
         body=json.loads(row['payload']);rev=row['revision'];evidence=json.loads(row['evidence'])
         attempts=rows
+    input_label='직원 수정이 반영된 최종 HTML' if evidence.get('input_html_kind')=='report.html' else 'Terra 원본 HTML'
     parts=[f'<h1>{NAMES[stage]} 결과</h1>',f'<p><strong>보고서 리비전 {rev}</strong> · 현재 리비전 {current} · '+('이전 결과 — 최신 결과가 아닙니다' if rev!=current else '현재 리비전 결과')+'</p>',
-        '<p>입력: 해당 리비전의 원본 PDF와 Terra 원본 HTML. A4 별도 수정본·변환 PDF를 검토한 결과가 아닙니다.</p>',
+        '<p>입력: 해당 리비전의 원본 PDF와 '+input_label+'. A4 별도 수정본·변환 PDF를 검토한 결과가 아닙니다.</p>',
         '<p>보고서 본문은 수정하지 않았습니다. 수정 전후가 있으면 모델 제안이며 실제 적용된 수정이 아닙니다.</p>',
         '<p>판정: '+escape({'PASS':'통과','FAIL':'오류 발견','NEEDS_REVIEW':'확인 필요'}.get(row['status'],row['status']))+'</p>']
     if attempts and row['id']!=attempts[0]['id'] and attempts[0]['revision']==rev:parts.append('<p class="note">같은 리비전의 이전 실행 결과입니다. 최근 실행 상태: '+escape(attempts[0]['state'])+'</p>')
-    parts.append('<details><summary>검토 입력 파일 식별</summary><p>Terra 원본 HTML SHA-256: '+escape(evidence.get('input_html_sha256','미기록'))+'</p><p>원본 PDF SHA-256: '+escape(evidence.get('input_pdf_sha256','미기록'))+'</p></details>')
+    parts.append('<details><summary>검토 입력 파일 식별</summary><p>검토 HTML SHA-256: '+escape(evidence.get('input_html_sha256','미기록'))+'</p><p>원본 PDF SHA-256: '+escape(evidence.get('input_pdf_sha256','미기록'))+'</p></details>')
     for key,title in [('issues','발견 사항 · 오류 및 확인 필요'),('sections','주요 사양 · 설비와 공정'),('conflicts','충돌하는 조건'),('questions','고객에게 확인할 질문')]:
         if key not in body:continue
         parts.append('<h2>'+title+'</h2>')
