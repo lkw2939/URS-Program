@@ -72,7 +72,7 @@ def worker(html,expected):
     numbers=[str(i) for i in range(1,expected+1)]
     issues=[]
     if html.lstrip().startswith('```') or html.rstrip().endswith('```'):issues.append('마크다운 코드펜스가 HTML 바깥에 남아 있음')
-    if [x['page'] for x in out['pages']]!=numbers:issues.append('원문 페이지 구역/번호 누락 또는 순서 불일치')
+    if list(dict.fromkeys(x['page'] for x in out['pages']))!=numbers or any(int(out['pages'][i]['page'])>int(out['pages'][i+1]['page']) for i in range(len(out['pages'])-1)):issues.append('원문 페이지 구역/번호 누락 또는 순서 불일치')
     if any(x['issues'] for x in out['narrow_pages']):issues.append('좁은 화면에서도 A4 크기/내용 유지 필요')
     if any(x['issues'] for x in out['pages']):issues.append('A4 크기/넘침/읽기 크기/이미지 확인 필요')
     if any(x['issues'] for x in out['images']+out['narrow_images']+out['script_enabled_images']+out['script_enabled_narrow_images']):issues.append('최종 HTML 사진 표시 확인 필요: JavaScript·PDF 재선택 없이 보여야 합니다.')

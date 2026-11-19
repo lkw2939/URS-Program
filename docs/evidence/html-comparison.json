@@ -22,5 +22,6 @@
   "raw_sha256": "cf27f4f6173aa8aa5408022a03567e481be0e920a25d2ee5fd234b426d6908a7",
   "final_sha256": "5d41af839510b99202a599b52dae608cc2cab6ef7dec12a67e5bcbf6632f6f2c",
   "only_image_addresses_changed": true,
+  "image_bound_sha256": "5d41af839510b99202a599b52dae608cc2cab6ef7dec12a67e5bcbf6632f6f2c",
   "prepared_sha256": "cf27f4f6173aa8aa5408022a03567e481be0e920a25d2ee5fd234b426d6908a7"
 }

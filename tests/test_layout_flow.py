@@ -32,7 +32,7 @@ class LayoutFlowTests(unittest.TestCase):
   self.assertEqual(self.provider.calls[-1][3],old.decode());self.assertEqual(self.w.report_html('alice',self.doc,revision=1),old)
  def test_bad_new_layout_does_not_displace_old_report(self):
   self.generate();old=self.w.report_html('alice',self.doc,revision=1)
-  self.provider.raw=self.raw.replace('width:210mm','width:230mm');self.generate()
+  self.provider.raw=self.raw.replace('</style>','section{transform:scale(.8)}</style>');self.generate()
   self.assertEqual(self.w.report_availability('alice',self.doc)['selected']['revision'],1)
   self.assertEqual(self.w.processing.get(self.doc,'layout-audit',2)['status'],'NEEDS_REVIEW')
   self.assertEqual(self.w.report_html('alice',self.doc,revision=1),old)

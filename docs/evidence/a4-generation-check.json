@@ -1,0 +1,13 @@
+{
+  "scope": "local actual web route; mock OpenAI, no paid call; temporary DB only",
+  "source_pages": 25,
+  "final_sheets": 32,
+  "visible_images": 3,
+  "page9_and_page23_visible": true,
+  "a4_screen_both_dimensions": true,
+  "overflow": false,
+  "download_same_bytes": true,
+  "downloaded_bytes_offline_no_javascript": true,
+  "narrow_screen_same_dimensions": true,
+  "sha256": "92b9f9358d37f108136236614ea674ca8489e5a9aacec4b4b16216578f0596ca"
+}

@@ -12,6 +12,6 @@ test_sqlite_backup_includes_committed_wal_changes (test_backup.BackupTests.test_
 test_tampered_evidence_blocks_backup (test_backup.BackupTests.test_tampered_evidence_blocks_backup) ... ok
 
 ----------------------------------------------------------------------
-Ran 12 tests in 11.734s
+Ran 12 tests in 16.947s
 
 OK

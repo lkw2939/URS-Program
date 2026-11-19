@@ -8,7 +8,7 @@ from urs.workflow import Blocked
 
 def read_final(db, document, revision):
     rows={r['kind']:bytes(r['payload']) for r in db.execute(
-        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation')",(document,revision))}
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation','a4-pagination')",(document,revision))}
     final=rows.get('report.html')
     if not final:raise Blocked('저장된 최종 HTML이 없습니다.')
     try:text=final.decode('utf-8')
@@ -41,6 +41,13 @@ def read_final(db, document, revision):
                 if json.loads(rows['image-presentation'])!=receipt or hashlib.sha256(rows['image-presentation']).hexdigest()!=metadata['image_presentation_sha256']:raise ValueError()
                 expected,_=bind_images(prepared,assets)
             else:expected,_=bind_images(raw.decode(),assets)
+            if metadata.get('a4_pagination_version') and 'correction-patch' not in rows:
+                from urs.a4_pages import VERSION
+                receipt=json.loads(rows['a4-pagination'])
+                if metadata['a4_pagination_version']!=VERSION or receipt['version']!=VERSION:raise ValueError()
+                if hashlib.sha256(rows['a4-pagination']).hexdigest()!=metadata['a4_pagination_sha256']:raise ValueError()
+                if hashlib.sha256(expected.encode()).hexdigest()!=receipt['input_sha256'] or hashlib.sha256(final).hexdigest()!=receipt['final_sha256']:raise ValueError()
+                if receipt['changed']:expected=final.decode()
             if expected.encode()!=final:raise ValueError()
         except (ValueError,KeyError,TypeError,UnicodeError):
             raise Blocked('저장 HTML 원본/최종본 무결성 검사 실패') from None
@@ -72,7 +79,7 @@ def inspect_document(db, document, current):
 def stored_review(db,document,revision):
     """Inspect exact stored bytes, including blocked files; not a quality verdict."""
     rows={r['kind']:bytes(r['payload']) for r in db.execute(
-        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation')",(document,revision))}
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation','a4-pagination')",(document,revision))}
     if not rows:raise Blocked('저장된 HTML 결과가 없습니다.')
     files={kind:value for kind,value in rows.items() if kind in ('report.html','report.raw.html')}
     if not files:raise Blocked('저장된 HTML 결과가 없습니다.')

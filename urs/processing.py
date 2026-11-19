@@ -88,7 +88,13 @@ class Processing:
         from urs.report_contract import VERSION,check
         from pypdf import PdfReader
         import io
+        from urs.a4_pages import paginate
+        final,pagination=paginate(final,len(PdfReader(io.BytesIO(pdf)).pages))
+        comparison['image_bound_sha256']=comparison['final_sha256']
+        comparison['final_sha256']=hashlib.sha256(final.encode()).hexdigest()
         layout=inspect(final,len(PdfReader(io.BytesIO(pdf)).pages))
+        if pagination.get('issues'):
+            layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).extend(item['reason'] for item in pagination['issues'])
         contract_issues=check(prepared)
         if contract_issues:
             layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).extend(contract_issues)
@@ -96,12 +102,12 @@ class Processing:
         layout['source_image_candidates']=len(assets);layout['bound_image_slots']=len(comparison['replacements'])
         if assets and not comparison['replacements']:
             layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).append('원본 그림 후보가 있으나 최종 HTML에 연결된 그림이 없습니다.')
-        comparison.update(raw_sha256=hashlib.sha256(raw.encode()).hexdigest(),prepared_sha256=presentation['prepared_sha256'],only_image_addresses_changed=not presentation['changed'])
-        data={'layout-audit':layout,'report.raw.html':raw.encode(),'report.html':final.encode(),
+        comparison.update(raw_sha256=hashlib.sha256(raw.encode()).hexdigest(),prepared_sha256=presentation['prepared_sha256'],only_image_addresses_changed=not presentation['changed'] and not pagination['changed'])
+        data={'a4-pagination':pagination,'layout-audit':layout,'report.raw.html':raw.encode(),'report.html':final.encode(),
               'report-images':assets,'image-bindings':comparison,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
                   'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
-                  'api_timeout_seconds':None,'api_wait_policy':'unlimited','layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
+                  'api_timeout_seconds':None,'api_wait_policy':'unlimited','a4_pagination_sha256':hashlib.sha256(json.dumps(pagination,ensure_ascii=False).encode()).hexdigest(),'a4_pagination_changed':pagination['changed'],'a4_pagination_version':pagination['version'],'layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
         if presentation['changed']:
             comparison['binding_source']='report.prepared.html'
             data['report.prepared.html']=prepared.encode();data['image-presentation']=presentation
@@ -121,7 +127,7 @@ class Processing:
     def checked_html(self, document, revision=None):
         revision=revision or self._revision(document)
         with self.workflow.connect() as db:
-            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind IN ('correction-patch','image-presentation')",(document,revision)).fetchone()
+            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind IN ('correction-patch','image-presentation','a4-pagination')",(document,revision)).fetchone()
             if corrected:
                 from urs.saved_reports import read_final
                 return read_final(db,document,revision)[0]
@@ -138,7 +144,7 @@ class Processing:
         document,revision,pdf,name=self._input(content)
         config=effective(self.workflow,document=document)
         self.checked_html(document,revision)
-        input_kind='report.html' if (self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' or self.get(document,'report-metadata',revision).get('image_presentation_version')) else 'report.raw.html'
+        input_kind='report.html' if (self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' or self.get(document,'report-metadata',revision).get('image_presentation_version') or self.get(document,'report-metadata',revision).get('a4_pagination_changed')) else 'report.raw.html'
         raw=self.get(document,input_kind,revision).decode()
         result=self.provider_for(document,config).review_pdf(task,pdf,name,raw)
         if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):

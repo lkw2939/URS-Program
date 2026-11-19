@@ -16,6 +16,6 @@ test_verification_record_is_owner_only (test_workspace.WorkspaceTests.test_verif
 test_verification_record_preserves_old_results_after_edit (test_workspace.WorkspaceTests.test_verification_record_preserves_old_results_after_edit) ... ok
 
 ----------------------------------------------------------------------
-Ran 16 tests in 3.896s
+Ran 16 tests in 4.737s
 
 OK

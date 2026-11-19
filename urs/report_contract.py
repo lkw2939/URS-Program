@@ -1,12 +1,12 @@
 """User-authorized output mechanics; Terra owns translation and page design."""
 import re
 from html.parser import HTMLParser
-VERSION='a4-inline-images-v2'
+VERSION='a4-inline-images-v3'
 TEXT='''현재 URS 보고서의 출력 요구사항(저장 프롬프트에 원본 PDF 재선택·PDF.js 방식이 있어도 아래 방식이 우선):
 번역·문서 구성·HTML/CSS 디자인과 각 쪽 내부 재배치는 모델이 직접 작성한다. 원문 내용을 삭제·요약·잘라내지 않는다.
-브라우저에서도 원본 1쪽당 section[data-urs-page="원문쪽번호"] 한 장을 만들고 각 장의 border-box를 210mm × 297mm A4 세로로 지정한다. @page 인쇄 설정만으로 대신하지 않는다. 좁은 화면에서도 A4 CSS 크기를 유지하고 수평 스크롤을 허용하며 미디어쿼리로 페이지를 축소하지 않는다.
-문단·표·사진·도면·여백을 해당 장 안에서 재배치한다. 글자가 많다는 이유로 자동 다음 장으로 넘기거나 overflow:hidden, 잘라내기, transform/zoom 축소로 숨기지 않는다. 본문은 읽기 가능한 크기(최소13 CSS px), 표·캡션은 최소12px로 쓴다.
-한 장에 읽기 좋게 담기 어려우면 data-urs-unfit="구체적인 이유"를 그 장에 표시하고, 내용을 숨기지 말고 보존한다. 어려운 쪽은 사용자에게 명시한다.
+브라우저에서도 원본 1쪽당 section[data-urs-page="원문쪽번호"] 구역을 만들고 각 장의 border-box를 210mm × 297mm A4 세로로 지정한다. @page 인쇄 설정만으로 대신하지 않는다. 좁은 화면에서도 A4 CSS 크기를 유지하고 수평 스크롤을 허용하며 미디어쿼리로 페이지를 축소하지 않는다.
+문단·표·사진·도면·여백을 읽기 좋게 배치한다. 긴 내용은 다음 A4 장으로 이어도 되며 원문 쪽 소속을 표시한다. overflow:hidden, 잘라내기, transform/zoom 축소로 숨기지 않는다. 본문은 읽기 가능한 크기(최소13 CSS px), 표·캡션은 최소12px로 쓴다.
+한 장에 읽기 좋게 담기 어려우면 다음 A4 장으로 이어지도록 구성한다. 프로그램은 이미지 삽입 후 브라우저 실측으로 A4 장을 나누며 본문을 삭제하지 않는다. 표 한 행이나 도면을 읽기 좋게 담을 수 없으면 data-urs-unfit="구체적인 이유"로 표시한다.
 사진·도면 자리는 일반 <img> 태그로만 만든다. 예: <img src="urs-image:1:2" alt="원본 1쪽 두 번째 도면">. 제공한 목록의 urs-image:쪽:번호를 img의 src에 직접 넣는다. canvas, picture/source, data-src, CSS 배경 그림, JavaScript 그림 삽입으로 대신하지 않는다.
 프로그램이 처음 업로드된 PDF에서 원본 사진·도면을 잘라 지정 img src만 원본 PNG data URL로 치환해 최종 HTML로 저장한다. 사용자가 PDF를 다시 고르거나 첨부할 필요가 없다.
 사진을 숨기는 CSS(display:none, visibility:hidden, opacity:0, content-visibility:hidden 등)를 만들지 않는다. ready 클래스, 파일 선택, PDF.js, onload/onerror, src 접두어를 찾는 스크립트, 클릭·스크롤 이벤트에 사진 표시를 의존하지 않는다. 치환된 img는 JavaScript와 인터넷 연결 없이도 즉시 보여야 한다.
