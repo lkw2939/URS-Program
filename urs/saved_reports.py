@@ -8,7 +8,7 @@ from urs.workflow import Blocked
 
 def read_final(db, document, revision):
     rows={r['kind']:bytes(r['payload']) for r in db.execute(
-        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation','a4-pagination')",(document,revision))}
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation','a4-pagination','layout-refinement','report.refinement-response.html')",(document,revision))}
     final=rows.get('report.html')
     if not final:raise Blocked('저장된 최종 HTML이 없습니다.')
     try:text=final.decode('utf-8')
@@ -33,6 +33,16 @@ def read_final(db, document, revision):
                 if hashlib.sha256(parent).hexdigest()!=receipt['parent_sha256']:raise ValueError()
                 from urs.review_results import replay
                 expected=replay(parent.decode(),receipt['patches'])
+            elif metadata.get('layout_refinement_version'):
+                from urs.layout_refinement import VERSION,preserved,sha
+                receipt_bytes=rows['layout-refinement'];receipt=json.loads(receipt_bytes)
+                if metadata['layout_refinement_version']!=VERSION or receipt['version']!=VERSION:raise ValueError()
+                if sha(receipt_bytes)!=metadata['layout_refinement_sha256'] or receipt['initial_raw_sha256']!=sha(raw):raise ValueError()
+                if receipt['accepted']!=metadata['layout_refinement_accepted']:raise ValueError()
+                chosen=rows['report.refinement-response.html'] if receipt['accepted'] else raw
+                if sha(chosen)!=receipt['chosen_raw_sha256'] or sha(chosen)!=metadata['binding_raw_sha256'] or sha(final)!=receipt['final_sha256']:raise ValueError()
+                if receipt['accepted'] and not preserved(raw.decode(),chosen.decode()):raise ValueError()
+                expected,_=bind_images(chosen.decode(),assets)
             elif metadata.get('image_presentation_version'):
                 from urs.image_presentation import prepare,VERSION
                 if metadata['image_presentation_version']!=VERSION:raise ValueError()
@@ -79,9 +89,9 @@ def inspect_document(db, document, current):
 def stored_review(db,document,revision):
     """Inspect exact stored bytes, including blocked files; not a quality verdict."""
     rows={r['kind']:bytes(r['payload']) for r in db.execute(
-        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation','a4-pagination')",(document,revision))}
+        "SELECT kind,payload FROM artifacts WHERE document=? AND revision=? AND kind IN ('report.html','report.raw.html','report-metadata','report-images','correction-patch','report.prepared.html','image-presentation','a4-pagination','layout-refinement','report.refinement-response.html')",(document,revision))}
     if not rows:raise Blocked('저장된 HTML 결과가 없습니다.')
-    files={kind:value for kind,value in rows.items() if kind in ('report.html','report.raw.html')}
+    files={kind:value for kind,value in rows.items() if kind in ('report.html','report.raw.html','report.refinement-response.html')}
     if not files:raise Blocked('저장된 HTML 결과가 없습니다.')
     inspection={'revision':revision,'files':{},'only_image_addresses_changed':None,'api_diagnostics':[],
                 'content_completeness':'미확인: 원본 PDF의 마지막 내용과 대조해야 합니다. 끝 태그나 API completed만으로 판단하지 않습니다.'}
@@ -101,6 +111,7 @@ def stored_review(db,document,revision):
     exists=db.execute("SELECT 1 FROM sqlite_master WHERE name='report_diagnostics'").fetchone()
     if exists:
         inspection['api_diagnostics']=[json.loads(r[0]) for r in db.execute('SELECT payload FROM report_diagnostics WHERE document=? ORDER BY call_id',(document,)) if json.loads(r[0]).get('revision')==revision]
+    if 'layout-refinement' in rows:inspection['layout_refinement']=json.loads(rows['layout-refinement'])
     if 'image-presentation' in rows:inspection['image_presentation']=json.loads(rows['image-presentation'])
     if 'correction-patch' in rows:inspection['employee_correction']=json.loads(rows['correction-patch'])
     if 'report-metadata' in rows:

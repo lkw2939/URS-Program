@@ -127,8 +127,16 @@ def review_quote(workspace,owner,document,target,stage,count=False):
     return {**result,'target':target,'revision':row['parent_revision'],'stored_html_sha256':row['sha256']}
 
 def image_guide(assets):
-    inventory=[{k:a[k] for k in ('uri','page','index','bbox')} for a in assets]
-    return 'Image address mapping only: use <img src="urs-image:PAGE:INDEX"> for a source picture/diagram at the corresponding original PDF page and region. Available image addresses and bounding boxes (PDF points from top-left):\n'+json.dumps(inventory,ensure_ascii=False)
+    inventory=[]
+    for a in assets:
+        item={k:a[k] for k in ('uri','page','index','bbox')}
+        # Old immutable asset records may lack dimensions; inspect the same PNG bytes.
+        if 'width_px' in a and 'height_px' in a:w,h=a['width_px'],a['height_px']
+        else:
+            with Image.open(io.BytesIO(base64.b64decode(a['data_url'].split(',')[1]))) as im:w,h=im.size
+        item.update(width_px=w,height_px=h,aspect_ratio=w/h)
+        inventory.append(item)
+    return 'Image address mapping only: use <img src="urs-image:PAGE:INDEX"> for a source picture/diagram at the corresponding original PDF page and region. Available image addresses, bounding boxes (PDF points from top-left), actual crop pixel width/height and width-to-height ratio (no resizing):\n'+json.dumps(inventory,ensure_ascii=False)
 
 def report_quote(workspace,owner,document,count=False):
     from urs.ai_settings import effective
@@ -137,4 +145,5 @@ def report_quote(workspace,owner,document,count=False):
     original=workspace.original(owner,document);config=effective(workspace.workflow,document=document);prompt=workspace.report_settings(owner)['prompt']
     if not prompt.strip():raise CostError('보고서 프롬프트를 먼저 저장하세요.')
     request=payload(config,original['original'],original['name'],[{'type':'input_text','text':prompt},{'type':'input_text','text':image_guide(crop_images(original['original']))},{'type':'input_text','text':TEXT}])
-    return quote(workspace.workflow,request,count)
+    result=quote(workspace.workflow,request,count)
+    return {**result,'layout_refinement_max_calls':1,'refinement_cost_note':'위 금액은 최초 생성 요청의 예상 상한입니다. 배치 문제가 있으면 같은 모델로 최대 1회 추가 다듬기합니다. 실제 다듬기 자료로 비용을 다시 계산하고, 최초 사용액(미정산이면 예약 상한)+다듬기 예상액이 같은 실행 한도를 넘으면 추가 유료 호출하지 않습니다.'}

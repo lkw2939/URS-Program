@@ -1,0 +1,12 @@
+test_good_first_reply_needs_no_refinement (test_layout_refinement.RefinementTests.test_good_first_reply_needs_no_refinement) ... ok
+test_incomplete_refinement_keeps_existing_report_and_diagnostics (test_layout_refinement.RefinementTests.test_incomplete_refinement_keeps_existing_report_and_diagnostics) ... ok
+test_known_usage_settles_before_refinement_and_same_model_settings_are_used (test_layout_refinement.RefinementTests.test_known_usage_settles_before_refinement_and_same_model_settings_are_used) ... ok
+test_refined_model_html_is_saved_with_only_image_addresses_changed (test_layout_refinement.RefinementTests.test_refined_model_html_is_saved_with_only_image_addresses_changed) ... ok
+test_still_bad_response_is_not_retried (test_layout_refinement.RefinementTests.test_still_bad_response_is_not_retried) ... ok
+test_text_or_image_change_is_rejected_and_previous_report_is_kept (test_layout_refinement.RefinementTests.test_text_or_image_change_is_rejected_and_previous_report_is_kept) ... ok
+test_unknown_initial_usage_keeps_reservation_and_blocks_overall_execution_cap (test_layout_refinement.RefinementTests.test_unknown_initial_usage_keeps_reservation_and_blocks_overall_execution_cap) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 27.984s
+
+OK

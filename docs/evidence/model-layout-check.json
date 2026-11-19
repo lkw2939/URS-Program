@@ -1,0 +1,17 @@
+{
+  "scope": "local actual web generation + model layout refinement route; both model replies mocked; no paid calls; temporary DB only",
+  "mock_author_calls": 1,
+  "mock_layout_refinement_calls": 1,
+  "program_pagination": false,
+  "content_and_image_references_preserved": true,
+  "source_pages": 25,
+  "final_sheets": 25,
+  "visible_images": 3,
+  "page9_and_page23_visible": true,
+  "a4_screen_both_dimensions": true,
+  "overflow": false,
+  "download_same_bytes": true,
+  "downloaded_bytes_offline_no_javascript": true,
+  "narrow_screen_same_dimensions": true,
+  "sha256": "097adcf5e900db31af0b7adfa1089752df2a79a62fb66df36df48a1eabeb1c1c"
+}

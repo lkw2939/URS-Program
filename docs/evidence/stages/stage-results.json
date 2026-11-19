@@ -36,7 +36,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "foundation-2.txt",
-        "duration_seconds": 1.15
+        "duration_seconds": 0.863
       },
       {
         "command": [
@@ -53,7 +53,7 @@
         "exit_code": 0,
         "tests": 1,
         "log": "foundation-3.txt",
-        "duration_seconds": 0.073
+        "duration_seconds": 0.066
       },
       {
         "command": [
@@ -70,7 +70,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "foundation-4.txt",
-        "duration_seconds": 0.172
+        "duration_seconds": 0.146
       }
     ]
   },
@@ -94,7 +94,7 @@
         "exit_code": 0,
         "tests": 16,
         "log": "employee-original-1.txt",
-        "duration_seconds": 5.016
+        "duration_seconds": 3.84
       },
       {
         "command": [
@@ -111,7 +111,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-2.txt",
-        "duration_seconds": 17.148
+        "duration_seconds": 11.759
       },
       {
         "command": [
@@ -128,7 +128,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "employee-original-3.txt",
-        "duration_seconds": 29.873
+        "duration_seconds": 29.689
       }
     ]
   },
@@ -152,7 +152,7 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-1.txt",
-        "duration_seconds": 0.325
+        "duration_seconds": 0.3
       },
       {
         "command": [
@@ -169,7 +169,7 @@
         "exit_code": 0,
         "tests": 2,
         "log": "pdf-source-2.txt",
-        "duration_seconds": 0.238
+        "duration_seconds": 0.294
       }
     ]
   },
@@ -193,7 +193,7 @@
         "exit_code": 0,
         "tests": 11,
         "log": "technical-meaning-guards-1.txt",
-        "duration_seconds": 0.074
+        "duration_seconds": 0.065
       },
       {
         "command": [
@@ -210,7 +210,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "technical-meaning-guards-2.txt",
-        "duration_seconds": 0.238
+        "duration_seconds": 0.197
       },
       {
         "command": [
@@ -227,7 +227,7 @@
         "exit_code": 0,
         "tests": 8,
         "log": "technical-meaning-guards-3.txt",
-        "duration_seconds": 0.932
+        "duration_seconds": 0.806
       },
       {
         "command": [
@@ -244,7 +244,7 @@
         "exit_code": 0,
         "tests": 10,
         "log": "technical-meaning-guards-4.txt",
-        "duration_seconds": 7.952
+        "duration_seconds": 6.763
       },
       {
         "command": [
@@ -261,7 +261,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "technical-meaning-guards-5.txt",
-        "duration_seconds": 14.431
+        "duration_seconds": 8.722
       },
       {
         "command": [
@@ -278,7 +278,7 @@
         "exit_code": 0,
         "tests": 4,
         "log": "technical-meaning-guards-6.txt",
-        "duration_seconds": 0.256
+        "duration_seconds": 0.188
       },
       {
         "command": [
@@ -295,14 +295,14 @@
         "exit_code": 0,
         "tests": 20,
         "log": "technical-meaning-guards-7.txt",
-        "duration_seconds": 2.305
+        "duration_seconds": 2.348
       }
     ]
   },
   {
     "id": "document-pipeline",
     "status": "PASS",
-    "tests": 103,
+    "tests": 110,
     "commands": [
       {
         "command": [
@@ -319,7 +319,7 @@
         "exit_code": 0,
         "tests": 12,
         "log": "document-pipeline-1.txt",
-        "duration_seconds": 32.505
+        "duration_seconds": 20.013
       },
       {
         "command": [
@@ -336,7 +336,7 @@
         "exit_code": 0,
         "tests": 14,
         "log": "document-pipeline-2.txt",
-        "duration_seconds": 34.192
+        "duration_seconds": 20.109
       },
       {
         "command": [
@@ -353,7 +353,7 @@
         "exit_code": 0,
         "tests": 13,
         "log": "document-pipeline-3.txt",
-        "duration_seconds": 19.329
+        "duration_seconds": 11.129
       },
       {
         "command": [
@@ -370,7 +370,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "document-pipeline-4.txt",
-        "duration_seconds": 31.802
+        "duration_seconds": 16.797
       },
       {
         "command": [
@@ -387,7 +387,7 @@
         "exit_code": 0,
         "tests": 9,
         "log": "document-pipeline-5.txt",
-        "duration_seconds": 27.837
+        "duration_seconds": 16.538
       },
       {
         "command": [
@@ -404,7 +404,7 @@
         "exit_code": 0,
         "tests": 13,
         "log": "document-pipeline-6.txt",
-        "duration_seconds": 36.366
+        "duration_seconds": 28.752
       },
       {
         "command": [
@@ -421,7 +421,7 @@
         "exit_code": 0,
         "tests": 10,
         "log": "document-pipeline-7.txt",
-        "duration_seconds": 38.625
+        "duration_seconds": 31.03
       },
       {
         "command": [
@@ -438,7 +438,7 @@
         "exit_code": 0,
         "tests": 7,
         "log": "document-pipeline-8.txt",
-        "duration_seconds": 4.925
+        "duration_seconds": 6.786
       },
       {
         "command": [
@@ -455,7 +455,7 @@
         "exit_code": 0,
         "tests": 8,
         "log": "document-pipeline-9.txt",
-        "duration_seconds": 0.207
+        "duration_seconds": 0.224
       },
       {
         "command": [
@@ -472,7 +472,7 @@
         "exit_code": 0,
         "tests": 5,
         "log": "document-pipeline-10.txt",
-        "duration_seconds": 1.028
+        "duration_seconds": 1.29
       },
       {
         "command": [
@@ -489,7 +489,24 @@
         "exit_code": 0,
         "tests": 3,
         "log": "document-pipeline-11.txt",
-        "duration_seconds": 4.27
+        "duration_seconds": 6.666
+      },
+      {
+        "command": [
+          "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_layout_refinement.py",
+          "-v"
+        ],
+        "exit_code": 0,
+        "tests": 7,
+        "log": "document-pipeline-12.txt",
+        "duration_seconds": 28.329
       }
     ]
   }

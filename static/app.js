@@ -1,7 +1,7 @@
 function failureText(reason){return reason.includes('대기시간(90초)')?'이전 실행 실패 기록 (당시 90초 제한): '+reason+' 다음 실행부터는 무제한 대기 정책을 적용합니다.':'최근 실패: '+reason;}
 let reportCost=null;
 function costText(q){if(!q||q.status!=='READY')return '예상 비용 미확인 · '+(q?.reason||'먼저 무료 비용 계산을 누르세요.')+' 입력 토큰 계산만 하며 보고서를 생성하지 않습니다.';
-return `이번 1회 (설정 단가 기준): 입력 ${q.input_tokens.toLocaleString()} 토큰 $${q.input_cost_usd.toFixed(6)} + 최대 출력 ${q.max_output_tokens.toLocaleString()} 토큰 $${q.max_output_cost_usd.toFixed(6)} = 예상 상한 $${q.estimated_max_usd.toFixed(6)} / 1회 실행 한도 $${q.cap_usd.toFixed(2)}${q.blocked?' · 한도 초과':''}. 문서 누적액과 OpenAI 잔액은 별개이며 계정 잔액은 자동 조회하지 않습니다. 캐시 할인 전 예상 상한이며 실제 사용액은 응답 사용량으로 정산합니다.`;}
+return `이번 1회 (설정 단가 기준): 입력 ${q.input_tokens.toLocaleString()} 토큰 $${q.input_cost_usd.toFixed(6)} + 최대 출력 ${q.max_output_tokens.toLocaleString()} 토큰 $${q.max_output_cost_usd.toFixed(6)} = 예상 상한 $${q.estimated_max_usd.toFixed(6)} / 1회 실행 한도 $${q.cap_usd.toFixed(2)}${q.blocked?' · 한도 초과':''}. 문서 누적액과 OpenAI 잔액은 별개이며 계정 잔액은 자동 조회하지 않습니다. 캐시 할인 전 예상 상한이며 실제 사용액은 응답 사용량으로 정산합니다.`+(q.layout_refinement_max_calls?" "+q.refinement_cost_note:"");}
 'use strict';
 let csrf = '', selected = null;
 const a4Selections=new Map();
@@ -74,7 +74,7 @@ function renderReview(){
  $('current-layout-status').textContent=detail.current_layout?.status==='PASS'?`사진 삽입 후 브라우저 A4 크기·넘침·표시 검사 통과 · 사진/도면 ${detail.current_layout.visible_image_count??detail.current_layout.image_count}개 표시 확인`:current?'기존 저장 보고서를 유지합니다. A4 배치/사진 표시는 확인 필요합니다. 새 보고서를 자동 생성하지 않습니다.':'';
  if(detail.latest_layout&&detail.latest_layout.status!=='PASS'){const pages=[...(detail.latest_layout.pages||[]),...(detail.latest_layout.narrow_pages||[]).map(p=>({...p,page:p.page+' (좁은 화면)'}))].filter(p=>p.issues.length).map(p=>`원문 ${p.page}쪽: ${p.issues.join(', ')}`).join(' · ');$('current-layout-status').textContent+=' 최근 생성의 배치 확인 필요: '+(pages||detail.latest_layout.reason||(detail.latest_layout.issues||[]).join(', '));}
  if(detail.current_layout?.status==='PASS'&&detail.current_layout.image_display_method!=='chromium-js-on-off-offline-v2')$('current-layout-status').textContent='기존 A4 배치 검사 기록입니다. 새 사진 표시 검사는 아직 하지 않았습니다. 저장된 파일은 그대로 유지합니다.';
- $('generation-contract').textContent=(detail.image_presentation_version?'실행 중인 서버의 사진 표시 자동 정리: '+detail.image_presentation_version:'실행 중인 서버에서 사진 표시 자동 정리 버전을 확인할 수 없습니다. 서버 업데이트·재시작이 필요합니다.')+'\n'+(detail.generation_contract||'');
+ $('generation-contract').textContent=(detail.layout_refinement_version?'실행 중인 서버: '+detail.layout_refinement_version+' · 최초 이미지 크기 안내 → 사진 연결 → 실제 화면 검사 → 필요 시 Terra 다듬기 최대 1회. 프로그램 자동 분할 없음.':'실행 중인 서버의 Terra 배치 다듬기 지원은 미확인입니다. 서버 업데이트·재시작 상태를 확인하세요.')+'\n'+(detail.generation_contract||'');
  $('record-html').href=base+'/verification.html';$('record-json').href=base+'/verification.json';
  const displayPassed=s=>s.id==='report'?!!current&&detail.current_layout?.status==='PASS':s.id==='verify'||s.id==='analyze'?currentReview?.reviews[s.id]?.status==='PASS':s.passed;
  $('checklist-summary').textContent=`완료 ${state.stages.filter(displayPassed).length} / ${state.stages.length} · ${state.approved?'승인 완료':'승인 전'}`;
@@ -123,11 +123,11 @@ function renderReview(){
   $('view-html').onclick=()=>{show();$('html-result').scrollIntoView({behavior:'auto',block:'start'});};
   show();
   $('final-html').href=view;$('raw-html').hidden=!saved.raw_available;
-  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 최초 응답 원문 (직원 수정 전·이미지 연결 전 .html)':'Terra 응답 원문 다운로드 (이미지 연결 전 .html)';
+  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 최초 응답 원문 (직원 수정 전·이미지 연결 전 .html)':(saved.metadata?.layout_refinement_accepted?'Terra 최초 응답 원문 (배치 다듬기 전 .html)':'Terra 응답 원문 다운로드 (이미지 연결 전 .html)');
   if(saved.raw_available)$('raw-html').href=base+`/report.raw.html?revision=${saved.revision}`;
   const meta=saved.metadata||{};
   const bindings=reports.state==='current'?detail['image-bindings']:null;
-  $('image-summary').textContent=`${reports.state==='previous'?'이전 보고서':'현재 보고서'} · 리비전 ${saved.revision} · 생성 설정: ${meta.model||'미기록'} / ${meta.reasoning_effort||'기본 또는 미기록 effort'} / ${meta.max_output_tokens?meta.max_output_tokens+' 토큰':'출력 한도 미기록'} · ${saved.integrity==='verified'?'원본/최종본 무결성 확인':'복구 파일 · 무결성 메타데이터 미기록'}${meta.image_presentation_version?' · PDF 재선택 코드 제거·사진 표시 정리 적용':''}`;
+  $('image-summary').textContent=`${reports.state==='previous'?'이전 보고서':'현재 보고서'} · 리비전 ${saved.revision} · 생성 설정: ${meta.model||'미기록'} / ${meta.reasoning_effort||'기본 또는 미기록 effort'} / ${meta.max_output_tokens?meta.max_output_tokens+' 토큰':'출력 한도 미기록'} · ${saved.integrity==='verified'?'원본/최종본 무결성 확인':'복구 파일 · 무결성 메타데이터 미기록'}${meta.layout_refinement_version?(meta.layout_refinement_accepted?' · Terra 배치 다듬기 1회 채택 · 프로그램은 이미지 주소만 연결':' · Terra 최초 배치 사용 · 프로그램은 이미지 주소만 연결'):(meta.image_presentation_version?' · 이전 사진 표시 정리 적용':'')}`;
   $('missing-images').replaceChildren();for(const slot of bindings?.unresolved||[])$('missing-images').append(element('li',`미연결: ${slot.uri} · HTML 위치 ${slot.offset}`));
  }
  for(const [stage,buttonId,noteId,endpoint] of [['verify','view-verification','verification-result-note','review-verification.html'],['analyze','view-analysis','analysis-result-note','review-analysis.html']]){

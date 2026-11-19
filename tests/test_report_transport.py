@@ -73,7 +73,7 @@ class ReportTransportTests(unittest.TestCase):
         self.run_report(response=Partial());self.assertEqual(self.record()['outcome'],'timeout_reading_response')
     def test_image_binding_failure_recorded_without_mutating_old_report(self):
         self.run_report();old=self.w.report_html('alice',self.doc,revision=1)
-        with patch('urs.processing.bind_images',side_effect=ValueError('PRIVATE')):self.run_report()
+        with patch('urs.layout_refinement.bind_images',side_effect=ValueError('PRIVATE')):self.run_report()
         self.assertEqual(self.record()['processing_phase'],'image_binding');self.assertEqual(self.record()['outcome'],'html_processing_error')
         self.assertEqual(self.w.report_html('alice',self.doc,revision=1),old)
     def test_web_accepts_and_polls_while_openai_pending_without_second_paid_request(self):

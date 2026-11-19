@@ -149,6 +149,7 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             try:data['latest_layout']=workspace.processing.get(document,'layout-audit',data['status']['revision'])
                             except Blocked:data['latest_layout']=None
                             data['generation_contract']=__import__('urs.report_contract',fromlist=['TEXT']).TEXT
+                            data['layout_refinement_version']=__import__('urs.layout_refinement',fromlist=['VERSION']).VERSION
                             data['image_presentation_version']=__import__('urs.image_presentation',fromlist=['VERSION']).VERSION
                             try:data['current_layout']=workspace.processing.get(document,'layout-audit',selected['revision']) if selected else None
                             except Blocked:data['current_layout']={'status':'UNVERIFIED','reason':'기존 보고서는 A4 화면 검사를 받지 않았습니다. 사진 표시·배치를 점검해야 합니다.'}

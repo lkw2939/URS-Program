@@ -28,12 +28,12 @@ def diagnostics(workflow,document):
     with workflow.connect() as db:
         return [json.loads(r[0]) for r in db.execute('SELECT payload FROM report_diagnostics WHERE document=? ORDER BY call_id',(document,))]
 
-def request(client,req,call_id,limit,timeout):
+def request(client,req,call_id,limit,timeout,task="report_html"):
     from datetime import datetime,timezone
     with client.workflow.connect() as db:
         row=db.execute('SELECT revision FROM jobs WHERE id=?',(client.document,)).fetchone()
         revision=row[0] if row else None
-    d={'call_id':call_id,'revision':revision,'max_output_tokens':limit,'timeout_seconds':timeout,'started_at':datetime.now(timezone.utc).isoformat(),
+    d={'task':task,'call_id':call_id,'revision':revision,'max_output_tokens':limit,'timeout_seconds':timeout,'started_at':datetime.now(timezone.utc).isoformat(),
        'elapsed_seconds':0,'elapsed_scope':'api_exchange','timeout_kind':'none' if timeout is None else 'socket_io','timeout_policy':'unlimited' if timeout is None else 'finite','http_status':None,'response_status':None,'incomplete_reason':None,'outcome':'waiting_response','error_type':None}
     def save():
         with client.workflow.connect() as db:db.execute('INSERT OR REPLACE INTO report_diagnostics VALUES(?,?,?)',(call_id,client.document,json.dumps(d)))

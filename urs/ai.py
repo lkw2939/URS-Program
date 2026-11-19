@@ -29,14 +29,27 @@ def requested_effort():
 class OpenAI:
     def __init__(self, workflow, document, settings=None, authorized_quotes=None):
         self.request_manifest=None
+        self.report_execution_call_ids=[]
         self.workflow, self.document = workflow, document
         self.authorized_quotes=authorized_quotes if authorized_quotes is not None else {}
         self.settings=dict(settings) if settings is not None else None
 
     def report_html(self, pdf, filename, prompt, image_guide):
         """Report authoring: saved prompt plus the user-authorized A4 output contract."""
+        self.report_execution_call_ids=[]
         return self._pdf_request('report_html', pdf, filename,
             [{'type':'input_text','text':prompt}, {'type':'input_text','text':image_guide}, {'type':'input_text','text':__import__('urs.report_contract',fromlist=['TEXT']).TEXT}], False)
+
+    def refine_report_html(self,pdf,filename,prompt,image_guide,raw,audit,screenshots):
+        from urs.layout_refinement import INSTRUCTION
+        parts=[{'type':'input_text','text':prompt},{'type':'input_text','text':image_guide},
+               {'type':'input_text','text':__import__('urs.report_contract',fromlist=['TEXT']).TEXT},
+               {'type':'input_text','text':INSTRUCTION},{'type':'input_text','text':raw},
+               {'type':'input_text','text':'실제 사진 삽입 후 브라우저 검사: '+json.dumps(audit,ensure_ascii=False)}]
+        for image in screenshots:
+            parts.extend([{'type':'input_text','text':'실제 렌더링 · 원문 '+image['page']+'쪽'},
+                          {'type':'input_image','image_url':image['image_url'],'detail':'auto'}])
+        return self._pdf_request('report_layout_refine',pdf,filename,parts,False)
 
     def review_pdf(self, task, pdf, filename, html):
         from urs.costing import review_parts
@@ -58,13 +71,24 @@ class OpenAI:
             if authorized is not None:
                 q=costing.quote(self.workflow,payload)
                 if q['status']!='READY' or q['fingerprint']!=authorized:raise costing.CostError('화면에서 확인한 비용과 실행 자료/설정이 달라졌습니다. 무료 비용 계산을 다시 확인하세요. 유료 호출하지 않았습니다.')
+            if task=='report_layout_refine':
+                q=costing.quote(self.workflow,payload,True)
+                from decimal import Decimal
+                spent=Decimal(0)
+                with self.workflow.connect() as db:
+                    for ident in self.report_execution_call_ids:
+                        record=json.loads(db.execute('SELECT payload FROM ai_call_costs WHERE call_id=?',(ident,)).fetchone()[0])
+                        spent+=Decimal(str(record['actual_cost_usd'] if record['actual_cost_usd'] is not None else record['quote']['estimated_max_usd']))
+                if spent+Decimal(str(q['estimated_max_usd']))>Decimal(str(q['cap_usd'])):
+                    raise costing.CostError(f"이번 보고서 실행의 기존 사용/미정산 예약액 ${spent:.6f} + 다듬기 예상 상한 ${q['estimated_max_usd']:.6f}가 실행 한도 ${q['cap_usd']:.6f}를 넘습니다. 다듬기 유료 호출하지 않았습니다.")
             call_id=costing.reserve(self.workflow,self.document,task,payload)
+            if task in ('report_html','report_layout_refine'):self.report_execution_call_ids.append(call_id)
         except costing.CostError as exc:raise AIBlocked(str(exc)) from None
         req=urllib.request.Request('https://api.openai.com/v1/responses',data=json.dumps(payload).encode(),
             headers={'Authorization':'Bearer '+key,'Content-Type':'application/json'},method='POST')
-        if task=='report_html':
+        if task in ('report_html','report_layout_refine'):
             from urs.report_transport import request
-            return request(self,req,call_id,output_limit,api_timeout)
+            return request(self,req,call_id,output_limit,api_timeout,task=task)
         from urs.request_evidence import manifest
         self.request_manifest=manifest(task,req);self.request_manifest['request_attempted']=True
         started=time.monotonic();http_status=None;result=None

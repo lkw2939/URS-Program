@@ -50,9 +50,10 @@ def crop_images(payload):
                     sx,sy = image.width/w,image.height/h
                     for index,b in enumerate(boxes,1):
                         crop=image.crop((int(b[0]*sx),int(b[1]*sy),min(image.width,int(b[2]*sx+0.999)),min(image.height,int(b[3]*sy+0.999))))
+                        width_px,height_px=crop.size
                         out=io.BytesIO();crop.save(out,format='PNG');crop.close()
                         data=out.getvalue()
-                        assets.append({'uri':f'urs-image:{number}:{index}','page':number,'index':index,'bbox':list(b),
+                        assets.append({'uri':f'urs-image:{number}:{index}','page':number,'index':index,'bbox':list(b),'width_px':width_px,'height_px':height_px,'aspect_ratio':width_px/height_px,
                                        'sha256':hashlib.sha256(data).hexdigest(), 'data_url':'data:image/png;base64,'+base64.b64encode(data).decode()})
                         if sum(len(a['data_url']) for a in assets)>90*1024*1024:
                             raise ValueError('원본 그림 저장 한도를 초과했습니다.')

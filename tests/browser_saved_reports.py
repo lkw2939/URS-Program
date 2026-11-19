@@ -69,7 +69,8 @@ def main():
                 assert '사진 표시/배치 확인이 필요합니다' in page.locator('#check-results').inner_text()
                 assert '기존 보고서 유지' in page.locator('#html-availability').inner_text()
                 if not page.locator('#html-files').evaluate('(e)=>e.open'):page.locator('#html-files summary').focus();page.locator('#html-files summary').press('Enter');page.wait_for_function("() => document.querySelector('#html-files').open")
-                with page.expect_download() as download:page.locator('#stored-review').click()
+                with page.expect_download() as download:
+                    page.locator('#stored-review').focus();page.locator('#stored-review').press('Enter')
                 import zipfile,io,json
                 with zipfile.ZipFile(download.value.path()) as z:
                     assert z.read('report.html')==before

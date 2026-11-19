@@ -20,7 +20,7 @@ def main(legacy=False):
  calls=[]
  def network(req,**kwargs):
   wire=json.loads(req.data);content=wire['input'][0]['content'];assert base64.b64decode(content[0]['file_data'].split(',')[1])==pdf;assert content[1]['text']==prompt;assert content[3]['text']==TEXT;calls.append(req.full_url)
-  value={'input_tokens':2100} if req.full_url.endswith('/input_tokens') else {'status':'completed','usage':{'input_tokens':2100,'output_tokens':1800},'output':[{'content':[{'type':'output_text','text':raw}]}]}
+  value={'input_tokens':2100} if req.full_url.endswith('/input_tokens') else {'status':'completed','usage':{'input_tokens':2100,'output_tokens':1800},'output':[{'content':[{'type':'output_text','text':(__import__('urs.image_presentation',fromlist=['prepare']).prepare(raw)[0] if legacy and len(calls)>2 else raw)}]}]}
   response=io.BytesIO(json.dumps(value).encode());response.status=200;return response
  def visible(page):
   page.locator('img').first.wait_for();page.wait_for_function('() => [...document.images].every(i=>i.complete&&i.naturalWidth>0)')
@@ -35,11 +35,11 @@ def main(legacy=False):
   try:
    with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Immediate image fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
-    page.wait_for_function("() => document.querySelector('#generation-contract').textContent.includes('embedded-image-presentation-v1')")
+    page.wait_for_function("() => document.querySelector('#generation-contract').textContent.includes('terra-layout-refinement-v1')")
     assert calls==[];page.get_by_role('button',name='HTML 보고서 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='보고서 생성').disabled")
     page.get_by_role('button',name='보고서 생성',exact=True).click();page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True).wait_for();page.wait_for_function("() => !document.querySelector('#view-html').disabled")
     page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True).click();frame=page.frame_locator('#report-preview');frame.locator('img').first.wait_for();actual_frame=page.locator('#report-preview').element_handle().content_frame();displayed=visible(actual_frame)
-    assert calls==['https://api.openai.com/v1/responses/input_tokens','https://api.openai.com/v1/responses'];assert w.status('fixture',doc)['revision']==1
+    assert calls==['https://api.openai.com/v1/responses/input_tokens','https://api.openai.com/v1/responses']*(2 if legacy else 1);assert w.status('fixture',doc)['revision']==1
     saved=w.report_html('fixture',doc);from urs.image_presentation import prepare
     assert saved==bind_images(prepare(raw)[0],assets)[0].encode();assert w.report_html('fixture',doc,True)==raw.encode();assert w.report_settings('fixture')['prompt']==prompt
     audit=w.processing.get(doc,'layout-audit');assert audit['status']=='PASS' and audit['visible_image_count']==3
@@ -48,7 +48,7 @@ def main(legacy=False):
     downloaded=Path(download.value.path()).read_bytes();assert downloaded==saved;local=Path(tmp)/'report.html';local.write_bytes(downloaded)
     offline=b.new_context(offline=True,java_script_enabled=False,viewport={'width':1000,'height':1200});standalone=offline.new_page();standalone.set_content(local.read_text(),wait_until='load');assert visible(standalone)==displayed
     standalone.screenshot(path=str(ROOT/'docs/evidence/immediate-original-images.png'),full_page=True);offline.close();b.close()
-    (ROOT/'docs/evidence/immediate-image-check.json').write_text(json.dumps({'scope':'Synthetic PDF/text, mock OpenAI transport; no paid calls or operating data changes','mock_generation_requests':1,'html_check_clicked':True,'original_photos_visible':2,'original_vector_diagrams_visible':1,'same_page_pixel_checks':displayed,'offline_without_javascript':True,'pdf_reselection_controls':0,'pdfjs_dependencies':0,'legacy_pdf_loader_normalized':legacy,'only_image_addresses_changed':not legacy,'stored_final_sha256':hashlib.sha256(saved).hexdigest()},ensure_ascii=False,indent=2)+'\n')
+    (ROOT/'docs/evidence/immediate-image-check.json').write_text(json.dumps({'scope':'Synthetic PDF/text, mock OpenAI transport; no paid calls or operating data changes','mock_generation_requests':1,'html_check_clicked':True,'original_photos_visible':2,'original_vector_diagrams_visible':1,'same_page_pixel_checks':displayed,'offline_without_javascript':True,'pdf_reselection_controls':0,'pdfjs_dependencies':0,'legacy_pdf_loader_fixed_by_mock_model':legacy,'only_image_addresses_changed':not legacy,'stored_final_sha256':hashlib.sha256(saved).hexdigest()},ensure_ascii=False,indent=2)+'\n')
     print('PASS: login -> one report generation(mock) -> original PDF crop binding -> final save -> HTML 확인 click; 2 source photos with distinct red/blue pixels + source vector diagram visibly rendered in correct slots; byte-identical downloaded HTML renders in an offline browser document with JavaScript disabled and no PDF selection/PDF.js; raw HTML/prompt preserved, paid calls=0.')
   finally:server.shutdown();server.server_close();thread.join()
 if __name__=='__main__':main();main(legacy=True)

@@ -28,7 +28,7 @@ class PresentationTests(unittest.TestCase):
  def test_generation_storage_integrity_and_tamper_detection(self):
   with tempfile.TemporaryDirectory() as tmp,patch('urllib.request.urlopen',side_effect=AssertionError('no API')):
    w=Workspace(Path(tmp)/'fixture.sqlite');w.add_user('a','fixture-password-123');p=w.create_project('a','Synthetic');doc=w.upload('a',p,'fixture.pdf',visual_pdf());w.save_report_settings('a',PROMPT)
-   raw=legacy_image_loader(RAW.replace('src=urs-image:9:8','src=urs-image:1:1'));w.processing.provider=ReportAI(raw);w.run('a',doc,'report')
+   raw=legacy_image_loader(RAW.replace('src=urs-image:9:8','src=urs-image:1:1'));w.processing.provider=ReportAI(raw);w.processing.provider.refine_report_html=lambda *args:prepare(raw)[0];w.run('a',doc,'report')
    self.assertEqual(w.report_html('a',doc,True),raw.encode());self.assertEqual(w.processing.get(doc,'layout-audit')['status'],'PASS')
    expected=bind_images(prepare(raw)[0],w.processing.get(doc,'report-images'))[0];self.assertEqual(w.report_html('a',doc),expected.encode());self.assertEqual(w.processing.checked_html(doc),expected.encode())
    self.assertFalse(w.processing.get(doc,'image-bindings')['only_image_addresses_changed'])
@@ -36,5 +36,5 @@ class PresentationTests(unittest.TestCase):
    target=f'displayed:{doc}:1'
    with w.workflow.connect() as db:attempt=db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(target,'verify','finished','FAIL',json.dumps({'status':'FAIL','issues':[{'page':1,'severity':'오류','before':'120 mm','after':'125 mm'}]}),'{}','2026-11-18T00:00:00+00:00')).lastrowid
    plan=corrections.preview(w,'a',doc,target,attempt,[{'issue_id':'0','before':'120 mm','after':'125 mm'}]);new=corrections.apply(w,'a',doc,plan['plan_id']);self.assertEqual(new['revision'],2);self.assertEqual(w.report_html('a',doc),expected.replace('120 mm','125 mm').encode())
-   with w.workflow.connect() as db:db.execute("UPDATE artifacts SET payload=? WHERE document=? AND kind='report.prepared.html'",(b'altered',doc))
+   with w.workflow.connect() as db:db.execute("UPDATE artifacts SET payload=? WHERE document=? AND kind='report.refinement-response.html'",(b'altered',doc))
    with self.assertRaises(Blocked):w.report_html('a',doc)

@@ -44,6 +44,7 @@ def main():
    with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Correction workflow',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
+    page.wait_for_function("() => document.querySelector('#review').getAttribute('aria-busy')==='false'")
     page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.locator('#confirm-review-run').wait_for();assert len(calls)==1 and calls[0][0].endswith('/input_tokens')
     page.locator('#confirm-review-run').click();page.wait_for_function("() => !document.querySelector('#view-verification').disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()

@@ -36,7 +36,7 @@
   "offline_without_javascript": true,
   "pdf_reselection_controls": 0,
   "pdfjs_dependencies": 0,
-  "legacy_pdf_loader_normalized": true,
+  "legacy_pdf_loader_fixed_by_mock_model": true,
   "only_image_addresses_changed": false,
   "stored_final_sha256": "9aa5d843d0c53f691f4bf08712d4a28f38d3c9e3e58b3c1bdf1ef334fe793433"
 }

@@ -40,7 +40,7 @@ class Processing:
         with self.workflow.connect() as db:
             row=db.execute('SELECT payload FROM artifacts WHERE document=? AND revision=? AND kind=?',(document,revision,kind)).fetchone()
         if row is None:raise Blocked('필요한 결과물이 아직 생성되지 않았습니다.')
-        return bytes(row['payload']) if kind.endswith(('.pdf','.docx','.html')) else json.loads(row['payload'])
+        return bytes(row['payload']) if kind.endswith(('.pdf','.docx','.html','.png')) else json.loads(row['payload'])
 
     def put(self, document, revision, kind, value):
         payload=value if isinstance(value,bytes) else json.dumps(value,ensure_ascii=False).encode()
@@ -70,48 +70,30 @@ class Processing:
         assets=crop_images(pdf)
         from urs.costing import image_guide
         guide=image_guide(assets)
-        raw=self.provider_for(document,config).report_html(pdf,name,prompt,guide)
+        provider=self.provider_for(document,config)
+        raw=provider.report_html(pdf,name,prompt,guide)
         if not isinstance(raw,str) or not raw:raise ValueError('HTML 응답이 없습니다.')
-        from urs.image_presentation import prepare
-        prepared,presentation=prepare(raw)
-        try:final,comparison=bind_images(prepared,assets)
+        from urs.layout_refinement import refine,VERSION as REFINE_VERSION,sha
+        from urs.report_contract import VERSION
+        from pypdf import PdfReader
+        import io
+        try:chosen,final,comparison,layout,refinement,extras=refine(raw,assets,len(PdfReader(io.BytesIO(pdf)).pages),provider,pdf,name,prompt,guide)
         except Exception as error:
             from urs.report_transport import diagnostics
             records=diagnostics(self.workflow,document)
-            exc=AIError('OpenAI 응답 후 이미지 연결 처리 실패.')
+            exc=AIError('OpenAI 응답 후 HTML/이미지 처리 실패.')
             if records and records[-1]['revision']==revision:
-                info={**records[-1],'outcome':'html_processing_error','processing_phase':'image_binding','error_type':type(error).__name__}
+                info={**records[-1],'outcome':'html_processing_error','processing_phase':getattr(error,'processing_phase','html_layout_processing'),'error_type':getattr(error,'cause_type',type(error).__name__)}
                 with self.workflow.connect() as db:db.execute('UPDATE report_diagnostics SET payload=? WHERE call_id=?',(json.dumps(info),info['call_id']))
                 exc.diagnostics=info
             raise exc from None
-        from urs.layout_audit import inspect
-        from urs.report_contract import VERSION,check
-        from pypdf import PdfReader
-        import io
-        from urs.a4_pages import paginate
-        final,pagination=paginate(final,len(PdfReader(io.BytesIO(pdf)).pages))
-        comparison['image_bound_sha256']=comparison['final_sha256']
-        comparison['final_sha256']=hashlib.sha256(final.encode()).hexdigest()
-        layout=inspect(final,len(PdfReader(io.BytesIO(pdf)).pages))
-        if pagination.get('issues'):
-            layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).extend(item['reason'] for item in pagination['issues'])
-        contract_issues=check(prepared)
-        if contract_issues:
-            layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).extend(contract_issues)
-        layout['contract_issues']=contract_issues
-        layout['source_image_candidates']=len(assets);layout['bound_image_slots']=len(comparison['replacements'])
-        if assets and not comparison['replacements']:
-            layout['status']='NEEDS_REVIEW';layout.setdefault('issues',[]).append('원본 그림 후보가 있으나 최종 HTML에 연결된 그림이 없습니다.')
-        comparison.update(raw_sha256=hashlib.sha256(raw.encode()).hexdigest(),prepared_sha256=presentation['prepared_sha256'],only_image_addresses_changed=not presentation['changed'] and not pagination['changed'])
-        data={'a4-pagination':pagination,'layout-audit':layout,'report.raw.html':raw.encode(),'report.html':final.encode(),
-              'report-images':assets,'image-bindings':comparison,
+        refinement['api_call_ids']=getattr(provider,'report_execution_call_ids',[])
+        comparison.update(raw_sha256=sha(raw),binding_raw_sha256=sha(chosen),only_image_addresses_changed=chosen==raw,only_image_addresses_changed_from_chosen=True)
+        data={'layout-refinement':refinement,'layout-audit':layout,'report.raw.html':raw.encode(),'report.html':final.encode(),
+              'report-images':assets,'image-bindings':comparison,**extras,
               'report-metadata':{'prompt':prompt,'settings_version':settings['version'],
-                  'source_sha256':hashlib.sha256(pdf).hexdigest(),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
-                  'api_timeout_seconds':None,'api_wait_policy':'unlimited','a4_pagination_sha256':hashlib.sha256(json.dumps(pagination,ensure_ascii=False).encode()).hexdigest(),'a4_pagination_changed':pagination['changed'],'a4_pagination_version':pagination['version'],'layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256']}}
-        if presentation['changed']:
-            comparison['binding_source']='report.prepared.html'
-            data['report.prepared.html']=prepared.encode();data['image-presentation']=presentation
-            data['report-metadata'].update(image_presentation_version=presentation['version'],image_presentation_sha256=hashlib.sha256(json.dumps(presentation,ensure_ascii=False).encode()).hexdigest(),prepared_sha256=presentation['prepared_sha256'])
+                  'source_sha256':sha(pdf),'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),
+                  'api_timeout_seconds':None,'api_wait_policy':'unlimited','layout_refinement_version':REFINE_VERSION,'layout_refinement_accepted':refinement['accepted'],'layout_refinement_sha256':sha(json.dumps(refinement,ensure_ascii=False)),'binding_raw_sha256':sha(chosen),'layout_contract':VERSION,'layout_status':layout['status'],'image_guide':guide,'raw_sha256':sha(raw),'final_sha256':sha(final)}}
         # Append-only report artifacts. Retries/regeneration must use a new revision.
         with self.workflow.connect() as db:
             if self.workflow._job(db,document)['revision']!=revision:raise Blocked('보고서 생성 중 문서가 변경되었습니다.')
@@ -120,14 +102,14 @@ class Processing:
                 db.execute('INSERT INTO artifacts VALUES(?,?,?,?)',(document,revision,kind,payload))
         complete=layout['status']=='PASS'
         return (Status.PASS if complete else Status.UNVERIFIED if layout['status']=='UNVERIFIED' else Status.NEEDS_REVIEW), {'layout_status':layout['status'],'layout_issues':layout.get('issues',[]),'visible_image_count':layout.get('visible_image_count'),'raw_sha256':comparison['raw_sha256'],'final_sha256':comparison['final_sha256'],
-            'only_image_addresses_changed':comparison['only_image_addresses_changed'],'image_presentation':presentation,'unresolved':comparison['unresolved'],
+            'only_image_addresses_changed':comparison['only_image_addresses_changed'],'layout_refinement':refinement,'unresolved':comparison['unresolved'],
             'outputs':{k:hashlib.sha256(v if isinstance(v,bytes) else json.dumps(v,ensure_ascii=False).encode()).hexdigest() for k,v in data.items()},
-            'reason':('최종 HTML 저장·사진 표시 확인 완료' if complete else 'HTML은 보존했으나 사진 표시/배치 확인이 필요합니다.')+(' · PDF 재선택 코드·이미지 숨김 선언 정리 적용' if presentation['changed'] else '')+f" · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"+((' · '+' · '.join(layout.get('issues',[]))) if not complete else '')}
+            'reason':('최종 HTML 저장·사진 표시 확인 완료' if complete else 'HTML은 보존했으나 사진 표시/배치 확인이 필요합니다.')+(' · Terra 배치 다듬기 1회 채택' if refinement['accepted'] else '')+f" · 이미지 주소 {len(comparison['replacements'])}개 연결 · 미연결 {len(comparison['unresolved'])}개"+((' · '+' · '.join(layout.get('issues',[]))) if not complete else '')}
 
     def checked_html(self, document, revision=None):
         revision=revision or self._revision(document)
         with self.workflow.connect() as db:
-            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind IN ('correction-patch','image-presentation','a4-pagination')",(document,revision)).fetchone()
+            corrected=db.execute("SELECT 1 FROM artifacts WHERE document=? AND revision=? AND kind IN ('correction-patch','image-presentation','a4-pagination','layout-refinement')",(document,revision)).fetchone()
             if corrected:
                 from urs.saved_reports import read_final
                 return read_final(db,document,revision)[0]
@@ -144,7 +126,7 @@ class Processing:
         document,revision,pdf,name=self._input(content)
         config=effective(self.workflow,document=document)
         self.checked_html(document,revision)
-        input_kind='report.html' if (self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' or self.get(document,'report-metadata',revision).get('image_presentation_version') or self.get(document,'report-metadata',revision).get('a4_pagination_changed')) else 'report.raw.html'
+        input_kind='report.html' if (self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' or self.get(document,'report-metadata',revision).get('image_presentation_version') or self.get(document,'report-metadata',revision).get('a4_pagination_changed') or self.get(document,'report-metadata',revision).get('layout_refinement_accepted')) else 'report.raw.html'
         raw=self.get(document,input_kind,revision).decode()
         result=self.provider_for(document,config).review_pdf(task,pdf,name,raw)
         if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):

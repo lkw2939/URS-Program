@@ -7,6 +7,6 @@ test_missing_result_blocks (test_gates.GateTests.test_missing_result_blocks) ...
 test_no_evidence_reference_blocks (test_gates.GateTests.test_no_evidence_reference_blocks) ... ok
 
 ----------------------------------------------------------------------
-Ran 7 tests in 0.001s
+Ran 7 tests in 0.000s
 
 OK

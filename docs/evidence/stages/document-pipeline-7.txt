@@ -10,6 +10,6 @@ test_stale_result_cannot_patch_corrected_report (test_corrections.CorrectionTest
 test_wrong_owner_cannot_read_preview_or_apply (test_corrections.CorrectionTests.test_wrong_owner_cannot_read_preview_or_apply) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 38.378s
+Ran 10 tests in 30.810s
 
 OK
