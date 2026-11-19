@@ -11,7 +11,7 @@ GROUPS=[
     ('employee-original',['test_workspace.py','test_backup.py','test_service.py']),
     ('pdf-source',['test_pdf_variants.py','test_blank_pages.py']),
     ('technical-meaning-guards',['test_quantity_units.py','test_terminology.py','test_ai_and_evaluation.py','test_api_diagnostic.py','test_ai_settings.py','test_ai_limits_inspector.py','test_costing.py']),
-    ('document-pipeline',['test_processing.py','test_saved_reports.py','test_report_transport.py','test_reviews.py','test_targets.py','test_layout_flow.py','test_corrections.py','test_image_presentation.py','test_review_presentation.py']),
+    ('document-pipeline',['test_processing.py','test_saved_reports.py','test_report_transport.py','test_reviews.py','test_targets.py','test_layout_flow.py','test_corrections.py','test_image_presentation.py','test_review_presentation.py','test_report_view.py']),
 ]
 
 

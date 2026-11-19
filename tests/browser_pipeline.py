@@ -51,7 +51,7 @@ def main():
                 page.get_by_role('button',name='원본 등록',exact=True).click()
                 page.get_by_role('button',name='보고서 검토',exact=True).click()
                 page.get_by_role('button',name='HTML 보고서 비용 확인 (무료)',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#process-buttons button')].find(b=>b.textContent==='보고서 생성').disabled");page.get_by_role('button',name='보고서 생성',exact=True).click()
-                page.get_by_role('button',name='HTML 확인',exact=True).click()
+                page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True).click()
                 page.locator('#html-result').wait_for(state='visible')
                 frame=page.frame_locator('#report-preview')
                 frame.locator('h1').wait_for()

@@ -144,6 +144,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             selected=data['reports']['selected']
                             data['current_report']=selected
                             data['current_review']=target_tasks.status(owner,document,f"displayed:{document}:{selected['revision']}") if selected else None
+                            from urs.report_view import context
+                            data['staff_report']=context(workspace,owner,document,selected,data['current_review'])
                             try:data['latest_layout']=workspace.processing.get(document,'layout-audit',data['status']['revision'])
                             except Blocked:data['latest_layout']=None
                             data['generation_contract']=__import__('urs.report_contract',fromlist=['TEXT']).TEXT

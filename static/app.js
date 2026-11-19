@@ -64,13 +64,13 @@ async function waitCurrentReview(stage,target){
  while(true){await new Promise(resolve=>setTimeout(resolve,1000));const state=await api(`/api/documents/${doc.id}/target-status?target=${target}`);if(!state.reviews[stage].running)break;}
  if(activeDoc?.id===doc.id)await refreshReview();
 }
-async function openReview(doc){reportCost=null;activeDoc=doc;$('review').hidden=false;await refreshReview();$('review').scrollIntoView({behavior:'smooth'});if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.current_review?.reviews[stage]?.running)await waitCurrentReview(stage,detail.current_review.id);}
-async function refreshReview(){if(!activeDoc)return;detail=await api(`/api/documents/${activeDoc.id}/detail`);renderReview();await documents();}
+async function openReview(doc){reportCost=null;activeDoc=doc;const panel=$('review');panel.hidden=false;panel.inert=true;panel.setAttribute('aria-busy','true');panel.scrollIntoView({behavior:'auto'});try{await refreshReview();}catch(error){if(activeDoc?.id===doc.id){panel.hidden=true;$('report-preview').removeAttribute('src');}throw error;}finally{if(activeDoc?.id===doc.id){panel.inert=false;panel.setAttribute('aria-busy','false');}}if(activeDoc?.id!==doc.id)return;if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.current_review?.reviews[stage]?.running)await waitCurrentReview(stage,detail.current_review.id);}
+async function refreshReview(){const doc=activeDoc;if(!doc)return;const fresh=await api(`/api/documents/${doc.id}/detail`);if(activeDoc?.id!==doc.id)return;detail=fresh;renderReview();await documents();}
 function renderReview(){
  renderTargets();
  const state=detail.status;const current=detail.current_report;const currentReview=detail.current_review;const base=`/api/documents/${activeDoc.id}`;
- $('review-title').textContent=`${activeDoc.name} · ${current?'현재 저장 보고서 '+current.revision:'저장 보고서 없음'}`;
- $('current-report-context').textContent=current?`화면과 독립검증의 공통 대상: URS 최종 HTML(사진 포함) · 저장 이력 ${current.revision} · 최근 생성 시도 ${state.revision}와 별도 · SHA-256 ${currentReview?.sha256||current.metadata.final_sha256||'미기록'}`:'정상 저장된 보고서가 없습니다. 최근 생성 결과를 확인하세요.';
+ $('review-title').textContent=`${activeDoc.name} · ${current?'현재 직원용 보고서 버전 '+current.revision:'저장 보고서 없음'}`;
+ $('current-report-context').textContent=current?`화면과 독립검증의 공통 대상: 직원용 report.html · 보고서 버전 ${current.revision} · 최근 생성 시도 ${state.revision}와 별도`:'정상 저장된 보고서가 없습니다. 최근 생성 결과를 확인하세요.';
  $('current-layout-status').textContent=detail.current_layout?.status==='PASS'?`사진 삽입 후 브라우저 A4 크기·넘침·표시 검사 통과 · 사진/도면 ${detail.current_layout.visible_image_count??detail.current_layout.image_count}개 표시 확인`:current?'기존 저장 보고서를 유지합니다. A4 배치/사진 표시는 확인 필요합니다. 새 보고서를 자동 생성하지 않습니다.':'';
  if(detail.latest_layout&&detail.latest_layout.status!=='PASS'){const pages=[...(detail.latest_layout.pages||[]),...(detail.latest_layout.narrow_pages||[]).map(p=>({...p,page:p.page+' (좁은 화면)'}))].filter(p=>p.issues.length).map(p=>`원문 ${p.page}쪽: ${p.issues.join(', ')}`).join(' · ');$('current-layout-status').textContent+=' 최근 생성의 배치 확인 필요: '+(pages||detail.latest_layout.reason||(detail.latest_layout.issues||[]).join(', '));}
  if(detail.current_layout?.status==='PASS'&&detail.current_layout.image_display_method!=='chromium-js-on-off-offline-v2')$('current-layout-status').textContent='기존 A4 배치 검사 기록입니다. 새 사진 표시 검사는 아직 하지 않았습니다. 저장된 파일은 그대로 유지합니다.';
@@ -102,10 +102,16 @@ function renderReview(){
  $('html-result').hidden=true;$('approval-panel').hidden=!current||current.revision!==state.revision;
  $('reviewed-html').checked=false;$('approval-note').value='';
  $('view-html').disabled=!ready;
- $('view-html').textContent='HTML 확인';
- $('html-availability').textContent=!ready?(reports?.stored_revisions?.length?'저장된 HTML은 있으나 사진 표시·배치·문서 완전성 확인이 필요합니다':'아직 열 수 있는 완성 HTML이 없습니다'):`현재 열람 보고서 · 저장 이력 ${saved.revision}${reports.state==='previous'?' · 새 생성 실패/미완료로 기존 보고서 유지':''}`;
+ $('view-html').textContent='최종 보고서 보기(사진 포함)';
+ $('html-availability').textContent=!ready?(reports?.stored_revisions?.length?'저장된 HTML은 있으나 사진 표시·배치·문서 완전성 확인이 필요합니다':'아직 열 수 있는 완성 HTML이 없습니다'):`현재 직원용 보고서 · 버전 ${saved.revision}${reports.state==='previous'?' · 새 생성 실패/미완료로 기존 보고서 유지':''}`;
+ const viewInfo=detail.staff_report||(ready?{filename:'report.html',revision:saved.revision,sha256:currentReview?.sha256||saved.metadata?.final_sha256||'미기록',report_url:base+`/report.html?revision=${saved.revision}`} :null);
+ $('report-file-identity').textContent=viewInfo?`열람 파일: ${viewInfo.filename} · 저장 버전 ${viewInfo.revision} · 파일 지문 ${viewInfo.sha256.slice(0,12)}…`:'열 수 있는 직원용 최종 보고서가 없습니다.';
+ $('report-download-identity').textContent=viewInfo?`${viewInfo.report_url} · SHA-256 ${viewInfo.sha256}`:'';
+ $('report-preview-identity').textContent=viewInfo?`위 기본 버튼과 다운로드는 동일한 report.html · 저장 버전 ${viewInfo.revision}을 엽니다.`:'';
+ $('report-photo-facts').textContent=viewInfo?.picture_facts?viewInfo.picture_facts.message+(viewInfo.picture_facts.pdf_selection_controls?' PDF 재선택 입력칸도 남아 있습니다.':''):ready?'저장 보고서는 있습니다. 현재 서버에서 새 사진 진단 정보를 제공하지 않아 표시 상태는 미확인입니다. 서버 업데이트·재시작 후 확인하세요.':'';
+ renderVerificationGuide(viewInfo?.verification,ready);
  const storedRevision=reports?.stored_revisions?.[0];$('stored-review').hidden=!storedRevision;
- if(storedRevision)$('stored-review').href=base+`/stored-review.zip?revision=${storedRevision}`;else $('stored-review').removeAttribute('href');
+ if(storedRevision){$('stored-review').href=base+`/stored-review.zip?revision=${storedRevision}`;$('stored-review').textContent=`진단용 저장 HTML·응답 기록 (.zip) · 저장 이력 ${storedRevision} · 직원용 보고서 아님`;}else $('stored-review').removeAttribute('href');
  $('html-failure').textContent=[reports?.current_failure?`현재 생성 실패: ${reports.current_failure.reason}`:'',...(reports?.invalid||[]).map(x=>`리비전 ${x.revision}: ${x.reason}`)].filter(Boolean).join(' · ');
  if(!ready)$('report-preview').removeAttribute('src');
  $('final-html').removeAttribute('href');$('raw-html').removeAttribute('href');
@@ -114,10 +120,10 @@ function renderReview(){
   const view=base+`/report.html?revision=${saved.revision}`;
   if(reports.state==='previous'&&$('report-preview').getAttribute('src')!==view)$('report-preview').removeAttribute('src');
   const show=()=>{$('html-result').hidden=false;if($('report-preview').getAttribute('src')!==view)$('report-preview').src=view;};
-  $('view-html').onclick=show;
+  $('view-html').onclick=()=>{show();$('html-result').scrollIntoView({behavior:'auto',block:'start'});};
   show();
   $('final-html').href=view;$('raw-html').hidden=!saved.raw_available;
-  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 원본 HTML (수정 전 생성본)':'Terra 원본 HTML 다운로드';
+  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 최초 응답 원문 (직원 수정 전·이미지 연결 전 .html)':'Terra 응답 원문 다운로드 (이미지 연결 전 .html)';
   if(saved.raw_available)$('raw-html').href=base+`/report.raw.html?revision=${saved.revision}`;
   const meta=saved.metadata||{};
   const bindings=reports.state==='current'?detail['image-bindings']:null;
@@ -131,6 +137,16 @@ function renderReview(){
  }
  $('analysis-panel').hidden=true;
  $('approve-document').disabled=state.approved||state.stages.filter(s=>s.id!=='approval').some(s=>!s.passed);
+}
+function renderVerificationGuide(info,available=false){
+ $('verification-start-rule').textContent=info?(info.can_execute?'실행 선행 조건: 저장 보고서 확인됨. 실행 직전에 무료 비용 계산·API 설정·1회 한도를 확인하며, 이 과정에서 차단될 수 있습니다.':'실행 불가: '+info.execution_blocked_reason):available?'저장 보고서는 있으나 현재 서버에서 새 실행/PASS 진단 정보를 제공하지 않았습니다. 최신 서버로 재시작 후 확인하세요.':'실행하려면 정상적으로 열 수 있는 저장 보고서가 있어야 합니다.';
+ $('verification-pass-rule').textContent=info?info.pass_rule:'PASS는 해당 보고서의 검토 완료 응답이 PASS이고 발견 항목이 없어야 합니다.';
+ const box=$('verification-current-blockers');box.replaceChildren();if(!info)return;
+ if(info.latest_attempt_state==='failed')box.append(element('p','최근 실행 실패: '+(info.latest_attempt_reason||'실패 이유 미기록')+' · 이전 결과가 있으면 별도로 보존합니다.'));
+ box.append(element('p',info.saved_result_status?`${info.previous_attempt_result?'이전 저장 결과':'현재 저장 결과'}: ${info.saved_result_status} · 버전 ${detail.current_report.revision}`:'현재 보고서의 저장된 독립검증 결과가 없습니다. 실행 가능과 PASS는 별개입니다.'));
+ for(const issue of info.findings){const kind={error:'번역 오류',review:'고객 확인',program:'프로그램 점검',layout:'표시 차이'}[issue.kind];const text=element('p',`${kind} · ${issue.pages.length?issue.pages.join('·')+'쪽':'쪽 미기록'} · ${issue.problem||issue.title}`);if(issue.question)text.append(element('span',' · 질문: '+issue.question));box.append(text);}
+ if(info.findings.some(i=>i.kind==='review'))box.append(element('p','담당 직원이 고객/RFQ 책임자에게 질문을 확인해야 합니다. 현재 웹에는 고객 답변·근거를 저장하는 전용 입력칸이 없습니다. 확인했다고 체크하거나 번역 수정칸에 답을 적는 것으로 PASS 처리할 수 없습니다.','notice'));
+ if(info.findings.some(i=>i.kind==='program'))box.append(element('p','프로그램 점검은 개발/운영 담당자가 직원용 report.html과 실제 전송 사본을 대조해야 합니다. 번역 문구 수정칸에서 고치지 않습니다.','notice'));
 }
 function renderAISettings(config){
  $('ai-model').value=config.model;$('ai-effort').value=config.effort||'';$('ai-output-tokens').value=String(config.max_output_tokens);

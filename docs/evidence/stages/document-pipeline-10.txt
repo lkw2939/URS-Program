@@ -1,0 +1,10 @@
+test_can_run_is_not_pass_and_customer_has_no_recording_ui (test_report_view.ReportViewTests.test_can_run_is_not_pass_and_customer_has_no_recording_ui) ... ok
+test_failed_latest_attempt_does_not_relabel_previous_findings (test_report_view.ReportViewTests.test_failed_latest_attempt_does_not_relabel_previous_findings) ... ok
+test_image_absence_unresolved_and_visible_data_are_separate (test_report_view.ReportViewTests.test_image_absence_unresolved_and_visible_data_are_separate) ... ok
+test_reading_never_changes_saved_report_or_verification (test_report_view.ReportViewTests.test_reading_never_changes_saved_report_or_verification) ... ok
+test_same_employee_file_identity_and_legacy_hidden_structure (test_report_view.ReportViewTests.test_same_employee_file_identity_and_legacy_hidden_structure) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.864s
+
+OK

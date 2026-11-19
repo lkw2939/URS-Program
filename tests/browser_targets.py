@@ -21,8 +21,10 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
    with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});page.goto(f'http://127.0.0.1:{server.server_port}')
     page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='A4 registration fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
-    page.locator('#advanced-targets > summary').click()
-    page.locator('#a4-import-options summary').click()
+    page.wait_for_function("() => document.querySelector('#review').getAttribute('aria-busy')==='false'")
+    # Exercise native keyboard disclosure controls after the sandboxed preview is ready.
+    page.locator('#advanced-targets > summary').focus();page.locator('#advanced-targets > summary').press('Enter');page.wait_for_function("() => document.querySelector('#advanced-targets').open")
+    page.locator('#a4-import-options summary').focus();page.locator('#a4-import-options summary').press('Enter');page.wait_for_function("() => document.querySelector('#a4-import-options').open")
     page.locator('#a4-parent').select_option('1');page.locator('#a4-file').set_input_files({'name':'report-a4.html','mimeType':'text/html','buffer':a4});page.get_by_role('button',name='A4 검증 대상 등록',exact=True).click()
     page.wait_for_function("() => document.querySelector('#a4-target-info').textContent.includes('부모 리비전 1')")
     assert '현재 작업 리비전 2와 별도' in page.locator('#a4-target-info').inner_text()

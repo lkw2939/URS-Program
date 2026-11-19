@@ -22,11 +22,12 @@
  const message=text=>{$('correction-status').textContent=text;};
  function update(){
   const current=data.execution_report;const verify=current?.reviews.verify,analyze=current?.reviews.analyze;
+  if($('report-version-context'))$('report-version-context').textContent='검증 대상: 보고서 버전 '+data.revision+' · 현재 직원용: '+(current?'보고서 버전 '+current.revision:'열람 가능한 보고서 없음');
   $('preview-corrections').disabled=!data.can_edit||!data.current_matches||!data.error_count;
   $('reverify').disabled=!verify?.can_run;$('analyze-current').disabled=!analyze?.can_run;
   $('analysis-wait').textContent=analyze?.can_run?'현재 보고서의 독립검증이 통과했습니다. 기술분석을 실행할 수 있습니다.':analyze?.blocked_reason||'현재 보고서의 독립검증 PASS 후 기술분석을 실행할 수 있습니다.';
-  if(current){$('corrected-report').href=base+'/report.html?revision='+current.revision;$('corrected-report').textContent=current.revision!==data.revision?'수정된 보고서 보기':'현재 보고서 보기';}
-  if(!data.current_matches){$('verification-state').textContent='현재 보고서는 버전 '+(current?.revision||'미확인')+'입니다. 이 화면은 수정 전 버전 '+data.revision+'의 검증 결과입니다. 수정본의 독립 재검증이 필요합니다.';$('preview-corrections').disabled=true;for(const input of document.querySelectorAll('[data-select],[data-delete]'))input.disabled=true;for(const input of document.querySelectorAll('[data-before],[data-after]'))input.readOnly=true;}
+  if(current){$('corrected-report').hidden=current.revision===data.revision;$('corrected-report').href=base+'/report.html?revision='+current.revision;$('corrected-report').textContent=current.revision!==data.revision?'수정된 보고서 보기':'현재 보고서 보기';}
+  if(!data.current_matches){if($('verified-report'))$('verified-report').textContent='수정 전 검증대상 보고서 보기 · 버전 '+data.revision;$('verification-state').textContent='현재 보고서는 버전 '+(current?.revision||'미확인')+'입니다. 이 화면은 수정 전 버전 '+data.revision+'의 검증 결과입니다. 수정본의 독립 재검증이 필요합니다.';$('preview-corrections').disabled=true;for(const input of document.querySelectorAll('[data-select],[data-delete]'))input.disabled=true;for(const input of document.querySelectorAll('[data-before],[data-after]'))input.readOnly=true;}
  }
  async function refresh(){data=await api(base+'/review-result-data?target='+encodeURIComponent(data.target)+'&attempt='+data.attempt);update();}
  if(location.protocol==='file:'){for(const b of document.querySelectorAll('button'))b.disabled=true;message('내려받은 HTML은 읽기 전용입니다. 수정·재검증은 로그인한 URS 웹 화면에서 진행하세요.');return;}

@@ -174,11 +174,15 @@ def render(workspace,owner,document,target,attempt):
     data=load(workspace,owner,document,target,attempt);esc=html.escape;base=f'/api/documents/{document}'
     ready=data['execution_report'];editable=data['can_edit']
     next_step='오류 항목의 수정안을 확인하고 필요한 항목만 선택해 적용하세요.' if data['error_count'] else '확인 필요 항목을 고객·직원에게 확인하세요.' if data['review_count'] else '프로그램 점검 항목의 발생 위치를 확인하세요. 번역문은 바꾸지 않습니다.' if data['program_count'] else '이 보고서의 독립검증이 통과했다면 기술분석으로 이어갈 수 있습니다.'
-    s=f'<header><p class="eyebrow">독립검증 결과</p><h1>{esc(data["report_name"])}</h1><p>보고서 버전 {data["revision"]} · 검증 일시 {esc(data["verified_at"])}</p></header>'
+    current_version='보고서 버전 '+str(ready['revision']) if ready else '열람 가능한 보고서 없음'
+    s=f'<header><p class="eyebrow">독립검증 결과</p><h1>{esc(data["report_name"])}</h1><p id="report-version-context">검증 대상: 보고서 버전 {data["revision"]} · 현재 직원용: {esc(current_version)}</p><p>검증 일시 {esc(data["verified_at"])}</p></header>'
     if not data['current_matches']:s+='<p class="notice" id="historical-note">수정 전 또는 이전 보고서의 검증 결과입니다. 현재 보고서의 검증 결과로 사용하지 않습니다.</p>'
     elif data['older_attempt']:s+='<p class="notice">같은 보고서의 이전 실행 결과입니다. 최신 검증 결과를 확인하세요.</p>'
     s+=f'<section class="summary"><strong>번역 오류 {data["error_count"]}건</strong><strong>고객 확인 필요 {data["review_count"]}건</strong><strong>프로그램 점검 {data["program_count"]}건</strong><p>다음에 할 일 · {esc(next_step)}</p></section>'
-    s+=f'<nav class="screen-only"><a href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증한 보고서 HTML 보기</a><a href="/">URS 보고서 검토로 돌아가기</a></nav>'
+    verdict={'PASS':'통과','NEEDS_REVIEW':'확인 필요','FAIL':'해결할 항목 있음'}.get(data['status'],'미확인')
+    s+='<p id="verification-verdict">저장된 검증 판정: '+esc(data['status'])+' · '+verdict+'. 번역 오류가 0건이어도 고객 확인·프로그램 항목이 남아 있으면 PASS가 아닙니다.</p>'
+    s+=f'<nav class="screen-only"><a id="verified-report" href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증에 사용한 직원용 보고서 보기 · 버전 {data["revision"]}</a><a href="/">URS 보고서 검토로 돌아가기</a></nav>'
+    if data['review_count']:s+='<p class="notice">고객 확인은 담당 직원이 고객/RFQ 책임자에게 받아야 합니다. 현재 웹에는 고객 답변·근거를 기록하는 전용 칸이 없습니다. 확인했다고 표시하거나 번역 수정칸에 답을 적는 것으로 PASS 처리되지 않습니다.</p>'
     s+='<section id="findings"><h2>확인할 내용</h2>'
     if not data['issues']:s+='<p>저장된 발견 항목이 없습니다. 본문 전체의 정확성을 자동 보증한다는 뜻은 아닙니다.</p>'
     for item in data['issues']:
@@ -210,9 +214,9 @@ def render(workspace,owner,document,target,attempt):
         s+='</article>'
     s+='</section>'
     if data['layout_count']:s+='<details class="layout-notes"><summary>쪽수·줄바꿈 등 표시 차이 '+str(data['layout_count'])+'건 (번역 오류 수에 포함하지 않음)</summary>'+''.join('<p>'+esc(i['problem'] or i['title'])+'</p>' for i in data['issues'] if i['kind']=='layout')+'</details>'
-    s+='<section class="actions-panel screen-only"><h2>선택한 오류 수정</h2><p>수정안을 비교한 뒤 적용해야 새 보고서로 저장됩니다. 원본 보고서와 검증 기록은 이력으로 남습니다.</p><button id="preview-corrections" '+'disabled'+'>선택 항목 수정 전후 확인</button><div id="correction-preview" hidden></div><button id="apply-corrections" hidden>선택한 수정 적용</button><p id="correction-status" role="status"></p></section>'
+    s+='<section class="actions-panel screen-only" '+('hidden' if not data['error_count'] else '')+'><h2>선택한 오류 수정</h2><p>수정안을 비교한 뒤 적용해야 새 보고서로 저장됩니다. 원본 보고서와 검증 기록은 이력으로 남습니다.</p><button id="preview-corrections" '+'disabled'+'>선택 항목 수정 전후 확인</button><div id="correction-preview" hidden></div><button id="apply-corrections" hidden>선택한 수정 적용</button><p id="correction-status" role="status"></p></section>'
     current_link=base+'/report.html?revision='+str(ready['revision']) if ready else '#'
-    s+='<section class="actions-panel screen-only" id="next-actions"><h2>수정 후 확인·재검증</h2><a id="corrected-report" href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><p id="verification-state">'+('수정된 보고서는 독립 재검증 전입니다. 아래 실행은 현재 보고서에 연결됩니다.' if ready and ready['revision']!=data['revision'] else '현재 보고서에 대해 다시 검증할 수 있습니다.')+'</p><button id="reverify" disabled>독립 재검증 실행</button><button id="analyze-current" disabled>기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></section>'
+    s+='<section class="actions-panel screen-only" id="next-actions"><h2>'+('수정 후 확인·재검증' if data['error_count'] else '다음 단계')+'</h2><a id="corrected-report" '+('hidden' if ready and ready['revision']==data['revision'] else '')+' href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><p id="verification-state">'+('수정된 보고서는 독립 재검증 전입니다. 아래 실행은 현재 보고서에 연결됩니다.' if ready and ready['revision']!=data['revision'] else '현재 보고서에 대해 다시 검증할 수 있습니다.')+'</p><button id="reverify" disabled>독립 재검증 실행</button><button id="analyze-current" disabled>기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></section>'
     s+='<details class="technical"><summary>검증 요청 자료·실제 전송·결과 형식 상세</summary><h3>1. 검증을 요청한 보고서</h3><p>'+esc(data['report_name'])+' · 저장 버전 '+str(data['revision'])+'</p><p>저장 최종 HTML SHA-256: <code>'+esc(data['stored_html_sha256'])+'</code></p><h3>2. AI에 실제 보낸 자료</h3>'
     m=data['transport']
     if m and m.get('recording')=='inference_request_boundary':
