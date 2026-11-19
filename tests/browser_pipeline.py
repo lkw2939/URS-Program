@@ -33,6 +33,7 @@ def main():
                 page.get_by_label('직원 ID').fill('browser-fixture');page.get_by_label('비밀번호',exact=True).fill(password)
                 page.get_by_role('button',name='로그인',exact=True).click()
                 page.locator('#workspace').wait_for(state='visible')
+                page.locator('#workspace-settings summary').first.click()
                 page.locator('#ai-model').fill('fixture-terra')
                 page.locator('#ai-effort').select_option('xhigh')
                 page.get_by_role('button',name='32,000',exact=True).click()

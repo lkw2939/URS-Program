@@ -19,6 +19,7 @@ STATIC = Path(__file__).resolve().parents[1] / 'static'
 
 
 def make_app(workspace, port=8795, secure_cookie=False):
+    __import__('urs.layout_edit',fromlist=['recover']).recover(workspace)
     from urs.report_tasks import ReportTasks
     tasks=ReportTasks(workspace)
     from urs import targets
@@ -149,6 +150,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             try:data['latest_layout']=workspace.processing.get(document,'layout-audit',data['status']['revision'])
                             except Blocked:data['latest_layout']=None
                             data['generation_contract']=__import__('urs.report_contract',fromlist=['TEXT']).TEXT
+                            data['report_diagnostics']=__import__('urs.report_transport',fromlist=['diagnostics']).diagnostics(workspace.workflow,document)
+                            data['layout_edit']=__import__('urs.layout_edit',fromlist=['latest']).latest(workspace,owner,document)
                             data['layout_refinement_version']=__import__('urs.layout_refinement',fromlist=['VERSION']).VERSION
                             data['image_presentation_version']=__import__('urs.image_presentation',fromlist=['VERSION']).VERSION
                             try:data['current_layout']=workspace.processing.get(document,'layout-audit',selected['revision']) if selected else None
@@ -268,6 +271,10 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             self.reply(200,payload,mime,attachment=action)
                         elif post and action == 'approve':
                             self.reply(200,workspace.approve_document(owner,document,body['revision'],body['note'],body['reviewed_outputs']))
+                        elif action == 'layout-edit':
+                            from urs import layout_edit
+                            if post:self.reply(202,layout_edit.start(workspace,owner,document,body['revision'],body.get('notes','')))
+                            else:self.reply(200,layout_edit.latest(workspace,owner,document))
                         elif not post and action == 'report-task':
                             workspace.original(owner,document)
                             self.reply(200,tasks.status(document))

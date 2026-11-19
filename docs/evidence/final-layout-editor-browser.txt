@@ -1,0 +1,1 @@
+PASS: logged-in CSS edit button -> one mock layout API -> preserved text/photos -> new version2 -> preview/download exact saved bytes; version1 retained; no generation/reverification/paid calls; technical details collapsed.

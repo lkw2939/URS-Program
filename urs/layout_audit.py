@@ -24,7 +24,7 @@ MEASURE=r'''() => {
    if(s.zoom&&Number(s.zoom)<.99)problems.push('강제 축소 배치');
    const own=[...e.childNodes].filter(x=>x.nodeType===3).map(x=>x.textContent).join('').trim();
    if(own&&(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0||q.width<1||q.height<1))problems.push('숨겨진 본문');
-   if(own&&s.display!=='none'&&parseFloat(s.fontSize)<(e.closest('table,figcaption')?12:13)-.1)problems.push('작은 글자');
+   if(own&&s.display!=='none'&&parseFloat(s.fontSize)<(e.closest('table,figcaption,.page-number,.page-head,.page-footer,.info,.small,footer')?12:13)-.1)problems.push('작은 글자');
    if(s.display!=='none'&&q.width&&q.height&&(q.bottom>r.bottom+2||q.right>r.right+2||q.left<r.left-2||q.top<r.top-2))problems.push('페이지 밖 내용');
    if((e.scrollHeight>e.clientHeight+2&&/hidden|clip/.test(s.overflowY))||(e.scrollWidth>e.clientWidth+2&&/hidden|clip/.test(s.overflowX)))problems.push('영역에서 내용 잘림');
    if(e.tagName==='IMG'){

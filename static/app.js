@@ -102,7 +102,15 @@ function renderReview(){
  $('html-result').hidden=true;$('approval-panel').hidden=!current||current.revision!==state.revision;
  $('reviewed-html').checked=false;$('approval-note').value='';
  $('view-html').disabled=!ready;
- $('view-html').textContent='최종 보고서 보기(사진 포함)';
+ const history=$('generation-history');history.replaceChildren();
+ const attempts=[...(detail.report_diagnostics||[])].reverse();const older=element('details');older.append(element('summary','이전 생성 이력'));for(const [index,attempt] of attempts.entries())(index?older:history).append(element('p',`생성 이력 · 대상 버전 ${attempt.revision} · ${attempt.started_at?new Date(attempt.started_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' (한국시간)':'시각 미기록'} · ${attempt.task==='report_layout_refine'?'배치 다듬기':'새 보고서 생성'} · API ${attempt.response_status||attempt.outcome} · ${attempt.elapsed_seconds??'?'}초 · 출력 한도 ${attempt.max_output_tokens}`));
+ if(attempts.length>1)history.append(older);
+ const latestStored=reports?.stored_revisions?.[0];
+ if(latestStored&&(!ready||latestStored!==saved.revision)){
+  history.append(element('p',`새 생성 버전 ${latestStored}은 검사 미완료/확인 필요입니다. 아래 기존 보고서는 새 생성 결과가 아닙니다. ${detail.latest_layout?.reason||''}`));
+  const candidate=element('a',`새 생성 버전 ${latestStored} HTML 보기·다운로드 (검사 미완료)`,'download');candidate.href=base+`/report.html?revision=${latestStored}`;candidate.target='_blank';candidate.rel='noopener';history.append(candidate);
+ }
+ $('view-html').textContent=reports?.state==='previous'?`이전 보고서 보기 · 버전 ${saved.revision} (새 결과 아님)`:'최종 보고서 보기(사진 포함)';
  $('html-availability').textContent=!ready?(reports?.stored_revisions?.length?'저장된 HTML은 있으나 사진 표시·배치·문서 완전성 확인이 필요합니다':'아직 열 수 있는 완성 HTML이 없습니다'):`현재 직원용 보고서 · 버전 ${saved.revision}${reports.state==='previous'?' · 새 생성 실패/미완료로 기존 보고서 유지':''}`;
  const viewInfo=detail.staff_report||(ready?{filename:'report.html',revision:saved.revision,sha256:currentReview?.sha256||saved.metadata?.final_sha256||'미기록',report_url:base+`/report.html?revision=${saved.revision}`} :null);
  $('report-file-identity').textContent=viewInfo?`열람 파일: ${viewInfo.filename} · 저장 버전 ${viewInfo.revision} · 파일 지문 ${viewInfo.sha256.slice(0,12)}…`:'열 수 있는 직원용 최종 보고서가 없습니다.';
@@ -110,11 +118,14 @@ function renderReview(){
  $('report-preview-identity').textContent=viewInfo?`위 기본 버튼과 다운로드는 동일한 report.html · 저장 버전 ${viewInfo.revision}을 엽니다.`:'';
  $('report-photo-facts').textContent=viewInfo?.picture_facts?viewInfo.picture_facts.message+(viewInfo.picture_facts.pdf_selection_controls?' PDF 재선택 입력칸도 남아 있습니다.':''):ready?'저장 보고서는 있습니다. 현재 서버에서 새 사진 진단 정보를 제공하지 않아 표시 상태는 미확인입니다. 서버 업데이트·재시작 후 확인하세요.':'';
  renderVerificationGuide(viewInfo?.verification,ready);
+ const editHistory=$('layout-edit-history');editHistory.replaceChildren();for(const entry of detail.layout_edit?.history||[]){const row=element('p',`${new Date(entry.created).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})} · 원본 버전 ${entry.parent}${entry.result_revision?' → 새 버전 '+entry.result_revision:''} · ${entry.reason||entry.state}`);if(entry.result_revision){const link=element('a',' 결과 보기');link.href=base+`/report.html?revision=${entry.result_revision}`;link.target='_blank';row.append(link);}editHistory.append(row);}
+ const editRevision=reports?.stored_revisions?.[0];if(['running','queued'].includes(detail.layout_edit?.state)){const loadingDoc=activeDoc.id;setTimeout(()=>{if(activeDoc?.id===loadingDoc)refreshReview().catch(e=>message(e.message));},2000);}$('edit-layout').disabled=!detail.layout_edit||!editRevision||['running','queued'].includes(detail.layout_edit?.state);$('layout-edit-state').textContent=!detail.layout_edit?'현재 실행 중인 서버에 CSS 다듬기 기능이 적용되지 않았습니다. 업데이트·재시작을 확인하세요.':['running','queued'].includes(detail.layout_edit?.state)?'CSS·배치 다듬기 실행 중 · 기존 보고서는 유지됩니다.':detail.layout_edit?.state==='failed'?detail.layout_edit.reason:detail.layout_edit?.state==='finished'?`최근 배치 수정: 버전 ${detail.layout_edit.parent} → ${detail.layout_edit.result_revision} · 완료. 현재 대상 ${editRevision}.`:editRevision?`다듬기 대상: 저장 버전 ${editRevision}. 성공하면 새 버전으로 저장합니다.`:'먼저 HTML 보고서를 생성하세요.';
+ $('edit-layout').onclick=()=>busy($('edit-layout'),async()=>{const docId=activeDoc.id;await api(base+'/layout-edit',{revision:editRevision,notes:$('layout-notes').value});$('layout-edit-state').textContent='CSS·배치 다듬기 접수 · 기존 보고서를 유지하며 실행 중입니다.';while(true){await new Promise(r=>setTimeout(r,1000));const job=await api(base+'/layout-edit');if(job.state==='failed'){$('layout-edit-state').textContent=job.reason;throw new Error(job.reason);}if(job.state==='finished'){if(activeDoc?.id===docId){await refreshReview();$('layout-edit-state').textContent=`배치 수정 완료 · 새 버전 ${job.result_revision}. 최종 보고서 보기에서 확인하세요. 독립검증은 다시 실행하지 않았습니다.`;}return;}}throw new Error('작업 상태를 다시 확인하세요. 자동 재호출하지 않습니다.');});
  const storedRevision=reports?.stored_revisions?.[0];$('stored-review').hidden=!storedRevision;
  if(storedRevision){$('stored-review').href=base+`/stored-review.zip?revision=${storedRevision}`;$('stored-review').textContent=`진단용 저장 HTML·응답 기록 (.zip) · 저장 이력 ${storedRevision} · 직원용 보고서 아님`;}else $('stored-review').removeAttribute('href');
  $('html-failure').textContent=[reports?.current_failure?`현재 생성 실패: ${reports.current_failure.reason}`:'',...(reports?.invalid||[]).map(x=>`리비전 ${x.revision}: ${x.reason}`)].filter(Boolean).join(' · ');
  if(!ready)$('report-preview').removeAttribute('src');
- $('final-html').removeAttribute('href');$('raw-html').removeAttribute('href');
+ $('final-html').hidden=!ready;$('final-html').removeAttribute('href');$('raw-html').removeAttribute('href');
  $('view-html').onclick=null;
  if(ready){
   const view=base+`/report.html?revision=${saved.revision}`;
@@ -122,8 +133,9 @@ function renderReview(){
   const show=()=>{$('html-result').hidden=false;if($('report-preview').getAttribute('src')!==view)$('report-preview').src=view;};
   $('view-html').onclick=()=>{show();$('html-result').scrollIntoView({behavior:'auto',block:'start'});};
   show();
+  $('final-html').textContent=reports.state==='previous'?`이전 보고서 다운로드 · 버전 ${saved.revision} (새 결과 아님)`:'직원용 최종 보고서 다운로드 (.html)';
   $('final-html').href=view;$('raw-html').hidden=!saved.raw_available;
-  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 최초 응답 원문 (직원 수정 전·이미지 연결 전 .html)':(saved.metadata?.layout_refinement_accepted?'Terra 최초 응답 원문 (배치 다듬기 전 .html)':'Terra 응답 원문 다운로드 (이미지 연결 전 .html)');
+  if(saved.raw_available)$('raw-html').textContent=saved.metadata?.generation_kind==='model_layout_edit'?'배치 수정에 보낸 HTML (이미지 연결 전 .html)':saved.metadata?.generation_kind==='employee_selected_correction'?'Terra 최초 응답 원문 (직원 수정 전·이미지 연결 전 .html)':(saved.metadata?.layout_refinement_accepted?'Terra 최초 응답 원문 (배치 다듬기 전 .html)':'Terra 응답 원문 다운로드 (이미지 연결 전 .html)');
   if(saved.raw_available)$('raw-html').href=base+`/report.raw.html?revision=${saved.revision}`;
   const meta=saved.metadata||{};
   const bindings=reports.state==='current'?detail['image-bindings']:null;

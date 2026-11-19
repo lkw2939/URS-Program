@@ -69,14 +69,22 @@ class Service:
     def start(self, automatic=False):
         return self._control(lambda:self._start(automatic))
 
-    def restart(self):
-        return self._control(lambda: self._stop() or self._start())
+    def _browser_ready(self):
+        from urs.browser_setup import ensure
+        return ensure(self.root,self.python)
 
-    def _start(self, automatic=False):
+    def restart(self):
+        def restart_ready():
+            if not self._browser_ready():return 1
+            return self._stop() or self._start(browser_ready=True)
+        return self._control(restart_ready)
+
+    def _start(self, automatic=False, browser_ready=False):
         if automatic and self.disabled.exists():
             print('수동 종료 상태입니다. python service.py start 로 다시 켜세요.');return 0
         if not self.has_account():
             print('첫 실행: python start.py 로 직원 계정을 먼저 만들어 주세요.');return 0 if automatic else 1
+        if not browser_ready and not self.running() and not self._browser_ready():return 1
         if not automatic:self.disabled.unlink(missing_ok=True)
         if not self.running():
             from urs.launcher import release_owned_port,StartupError

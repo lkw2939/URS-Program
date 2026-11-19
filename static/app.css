@@ -17,3 +17,7 @@
 #process-buttons{display:block}.execution-cost{border:1px solid #d8e4eb;border-radius:10px;padding:16px;margin:12px 0;min-width:0}.execution-cost h4{margin:0 0 12px}.execution-cost p{overflow-wrap:anywhere}#usage-preview{overflow-x:auto}
 
 .review-confirm{max-width:560px;border:1px solid #a8bfce;border-radius:12px;padding:24px;color:#183449}.review-confirm::backdrop{background:#17344988}.review-confirm p{line-height:1.7}
+
+#layout-editor{margin:18px 0;padding:18px;border:1px solid #d6e4e8;border-radius:10px;background:#f7fafb}#layout-editor textarea{min-height:70px}#generation-history>p{margin:8px 0}#workspace-settings>summary,#technical-details>summary{cursor:pointer;font-weight:700;padding:8px 0}#technical-details{margin:20px 0;border-top:1px solid #d6e4e8;padding-top:12px}
+
+#review[aria-busy="true"]{pointer-events:none;opacity:.6}#review[aria-busy="true"]::before{content:"보고서 정보를 불러오는 중…";display:block;font-weight:bold;padding:12px;color:#087778}

@@ -33,6 +33,7 @@ def main():
     page.locator('#process-buttons').screenshot(path=str(ROOT/'docs/evidence/cost-preview.png'))
     page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("() => !document.querySelector('#view-verification').disabled")
     assert len(calls)==2 and calls[1][0].endswith('/responses');assert calls[0][1]['input']==calls[1][1]['input'];assert calls[1][1]['max_output_tokens']==16000 and calls[1][1]['reasoning']=={'effort':'high'}
+    page.locator('#technical-details > summary').click()
     page.get_by_role('button',name='누적 사용량·정산 이력 (조회만)',exact=True).click();page.locator('#usage-preview').wait_for(state='visible');assert '정산 완료' in page.locator('#usage-preview').inner_text();assert '$0.014000' in page.locator('#usage-preview').inner_text();assert '미정산 4건' in page.locator('#usage-preview').inner_text()
     page.locator('#usage-preview').screenshot(path=str(ROOT/'docs/evidence/cost-ledger.png'))
     with w.workflow.connect() as db:assert before==[tuple(r) for r in db.execute('SELECT * FROM ai_usage WHERE id<=4')]

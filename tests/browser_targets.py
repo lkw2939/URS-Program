@@ -23,6 +23,7 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
     page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='A4 registration fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
     page.wait_for_function("() => document.querySelector('#review').getAttribute('aria-busy')==='false'")
     # Exercise native keyboard disclosure controls after the sandboxed preview is ready.
+    page.locator('#technical-details > summary').click()
     page.locator('#advanced-targets > summary').focus();page.locator('#advanced-targets > summary').press('Enter');page.wait_for_function("() => document.querySelector('#advanced-targets').open")
     page.locator('#a4-import-options summary').focus();page.locator('#a4-import-options summary').press('Enter');page.wait_for_function("() => document.querySelector('#a4-import-options').open")
     page.locator('#a4-parent').select_option('1');page.locator('#a4-file').set_input_files({'name':'report-a4.html','mimeType':'text/html','buffer':a4});page.get_by_role('button',name='A4 검증 대상 등록',exact=True).click()
@@ -36,12 +37,12 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
     with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
     assert page.get_by_role('button',name='독립 검증 실행',exact=True).is_enabled()
     assert page.get_by_role('button',name='A4 독립검증 실행',exact=True).is_disabled()
-    page.get_by_role('button',name='A4 독립검증 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
+    page.get_by_role('button',name='A4 독립검증 비용 확인 (무료)',exact=True).focus();page.get_by_role('button',name='A4 독립검증 비용 확인 (무료)',exact=True).press('Enter');page.wait_for_timeout(200)
     assert page.get_by_role('button',name='A4 기술분석 실행',exact=True).is_disabled()
     page.locator('#a4-target-panel').screenshot(path=str(ROOT/'docs/evidence/a4-target-registration.png'))
-    page.get_by_role('button',name='A4 독립검증 실행',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][0].disabled")
-    page.get_by_role('button',name='A4 기술분석 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
-    page.get_by_role('button',name='A4 기술분석 실행',exact=True).click();page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][1].disabled")
+    page.get_by_role('button',name='A4 독립검증 실행',exact=True).focus();page.get_by_role('button',name='A4 독립검증 실행',exact=True).press('Enter');page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][0].disabled")
+    page.get_by_role('button',name='A4 기술분석 비용 확인 (무료)',exact=True).focus();page.get_by_role('button',name='A4 기술분석 비용 확인 (무료)',exact=True).press('Enter');page.wait_for_timeout(200)
+    page.get_by_role('button',name='A4 기술분석 실행',exact=True).focus();page.get_by_role('button',name='A4 기술분석 실행',exact=True).press('Enter');page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][1].disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='A4 기술분석 결과 보기',exact=True).click()
     result=opened.value;result.wait_for_load_state();assert '등록 A4 HTML' in result.locator('body').inner_text();assert '부모 리비전 1' in result.locator('body').inner_text()
     assert len(provider.calls)==3

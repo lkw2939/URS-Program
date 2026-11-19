@@ -17,9 +17,9 @@ def main():
    with sync_playwright() as p:
     b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('viewer');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Saved report fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
-    primary=page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True);primary.wait_for();assert primary.count()==1;assert page.get_by_role('button',name='HTML 확인',exact=True).count()==0
-    assert not page.locator('#html-files').evaluate('(e)=>e.open');assert page.locator('#final-html').is_hidden() and page.locator('#raw-html').is_hidden()
-    assert 'report.html' in page.locator('#report-file-identity').inner_text() and '버전 1' in page.locator('#report-file-identity').inner_text();assert '사진 데이터 3개' in page.locator('#report-photo-facts').inner_text();assert '숨김 CSS' in page.locator('#report-photo-facts').inner_text()
+    primary=page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True);primary.wait_for();page.wait_for_function("()=>document.querySelector('#review').getAttribute('aria-busy')==='false'");assert primary.count()==1;assert page.get_by_role('button',name='HTML 확인',exact=True).count()==0
+    assert not page.locator('#html-files').evaluate('(e)=>e.open');assert page.locator('#final-html').is_visible() and page.locator('#raw-html').is_hidden()
+    assert 'report.html' in page.locator('#report-file-identity').text_content() and '버전 1' in page.locator('#report-file-identity').text_content();assert '사진 데이터 3개' in page.locator('#report-photo-facts').text_content();assert '숨김 CSS' in page.locator('#report-photo-facts').text_content()
     page.locator('#html-access').screenshot(path=str(ROOT/'docs/evidence/staff-report-primary.png'))
     primary.click();frame=page.frame_locator('#report-preview');frame.locator('#page-23').wait_for()
     src=page.locator('#report-preview').get_attribute('src');assert src==f'/api/documents/{doc}/report.html?revision=1';assert page.request.get(f'http://127.0.0.1:{server.server_port}'+src).body()==final
@@ -33,6 +33,7 @@ def main():
     assert Path(download.value.path()).read_bytes()==final
     with page.expect_download() as download:page.locator('#raw-html').click()
     assert Path(download.value.path()).read_bytes()==raw;assert raw!=final;assert page.locator('#final-html').get_attribute('href')==src
+    page.locator('#technical-details > summary').click()
     guide=page.locator('#verification-guide').inner_text();assert '저장 보고서 확인됨' in guide and 'NEEDS_REVIEW' in guide and '실행 가능 상태는 PASS와 다릅니다' in guide;assert '고객 답변·근거를 저장하는 전용 입력칸이 없습니다' in guide;assert '번역 문구 수정칸에서 고치지 않습니다' in guide
     page.locator('#verification-guide').screenshot(path=str(ROOT/'docs/evidence/staff-report-pass-guide.png'))
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
@@ -40,7 +41,7 @@ def main():
     # New static UI with an older server response must not claim the saved report is absent.
     def older_api(route):
      response=route.fetch();data=response.json();data.pop('staff_report',None);route.fulfill(response=response,json=data)
-    page.route('**/api/documents/*/detail',older_api);page.reload();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Saved report fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click();page.wait_for_function("() => document.querySelector('#report-photo-facts').textContent.includes('새 사진 진단 정보')");assert 'report.html' in page.locator('#report-file-identity').inner_text();assert '저장 보고서는 있습니다' in page.locator('#report-photo-facts').inner_text();assert page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True).is_enabled();b.close()
+    page.route('**/api/documents/*/detail',older_api);page.reload();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Saved report fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click();page.wait_for_function("() => document.querySelector('#report-photo-facts').textContent.includes('새 사진 진단 정보')");assert 'report.html' in page.locator('#report-file-identity').text_content();assert '저장 보고서는 있습니다' in page.locator('#report-photo-facts').text_content();assert page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True).is_enabled();b.close()
    with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
    network.assert_not_called();print('PASS: existing-history-only login -> one primary employee report button -> report.html revision1 exact bytes; page9 diagram and page23 photos are embedded but CSS-hidden in legacy fixture; final download matches preview, raw download differs and all secondary files are in closed details; can-run vs NEEDS_REVIEW separated, customer-recording gap disclosed, program issues excluded from translation fields; artifacts/results unchanged; generation/review/API calls=0.')
   finally:server.shutdown();server.server_close();thread.join()

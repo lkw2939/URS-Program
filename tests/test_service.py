@@ -41,6 +41,11 @@ class ServiceTests(unittest.TestCase):
             time.sleep(.1)
         self.fail('Service condition did not become true')
 
+    def test_restart_does_not_stop_existing_server_when_browser_setup_fails(self):
+        from unittest.mock import patch
+        with patch.object(self.service,'_browser_ready',return_value=False),patch.object(self.service,'_stop') as stop:
+            self.assertEqual(self.service.restart(),1);stop.assert_not_called()
+
     def test_detached_survives_start_command_exit_and_start_is_idempotent(self):
         first=self.command('start');self.assertEqual(first.returncode,0,first.stdout+first.stderr)
         self.assertTrue(self.service.healthy());self.assertTrue(self.service.running())
