@@ -27,6 +27,15 @@ class LayoutEditTests(unittest.TestCase):
   layout_edit.schema(self.w)
   with self.w.workflow.connect() as db:db.execute("INSERT INTO layout_edit_attempts(document,parent,state,created) VALUES(?,?,?,?)",(self.d,1,'queued','2026-11-19'))
   layout_edit.recover(self.w);self.assertEqual(layout_edit.latest(self.w,'a',self.d)['state'],'failed');self.assertIn('자동 유료 재시도하지 않았습니다',layout_edit.latest(self.w,'a',self.d)['reason']);self.assertEqual(len(self.provider.calls),1)
+ def test_css_only_rejects_structure_or_attribute_changes(self):
+  from urs.css_only import unchanged_outside_styles
+  self.assertFalse(unchanged_outside_styles(self.raw,self.raw.replace('<h1>','<h1 class="new">')))
+  self.assertFalse(unchanged_outside_styles(self.raw,self.raw.replace('src=urs-image:1:1','src="urs-image:1:1"')))
+  self.assertFalse(unchanged_outside_styles(self.raw,self.raw+'\n'))
+ def test_css_only_allows_existing_style_contents_only(self):
+  from urs.css_only import unchanged_outside_styles
+  self.assertTrue(unchanged_outside_styles(self.raw,self.raw.replace('margin: 23px','margin: 25px')))
+  self.assertFalse(unchanged_outside_styles(self.raw,self.raw.replace('<style>','<style media="screen">')))
  def test_browser_failure_blocks_before_paid_call(self):
   with patch('urs.layout_audit.inspect',return_value={'status':'UNVERIFIED'}):
    with self.assertRaises(Blocked):layout_edit.run(self.w,'a',self.d,1,'')

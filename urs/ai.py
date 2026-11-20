@@ -42,6 +42,8 @@ class OpenAI:
 
     def refine_report_html(self,pdf,filename,prompt,image_guide,raw,audit,screenshots):
         from urs.layout_refinement import INSTRUCTION
+        if audit.get('css_only'):
+            from urs.css_only import INSTRUCTION
         parts=[{'type':'input_text','text':prompt},{'type':'input_text','text':image_guide},
                {'type':'input_text','text':__import__('urs.report_contract',fromlist=['TEXT']).TEXT},
                {'type':'input_text','text':INSTRUCTION},{'type':'input_text','text':raw},

@@ -5,6 +5,6 @@ test_reading_never_changes_saved_report_or_verification (test_report_view.Report
 test_same_employee_file_identity_and_legacy_hidden_structure (test_report_view.ReportViewTests.test_same_employee_file_identity_and_legacy_hidden_structure) ... ok
 
 ----------------------------------------------------------------------
-Ran 5 tests in 0.747s
+Ran 5 tests in 0.972s
 
 OK

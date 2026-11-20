@@ -1,11 +1,13 @@
 test_browser_failure_blocks_before_paid_call (test_layout_edit.LayoutEditTests.test_browser_failure_blocks_before_paid_call) ... ok
 test_content_change_is_rejected_and_recorded (test_layout_edit.LayoutEditTests.test_content_change_is_rejected_and_recorded) ... ok
+test_css_only_allows_existing_style_contents_only (test_layout_edit.LayoutEditTests.test_css_only_allows_existing_style_contents_only) ... ok
+test_css_only_rejects_structure_or_attribute_changes (test_layout_edit.LayoutEditTests.test_css_only_rejects_structure_or_attribute_changes) ... ok
 test_latest_unverified_report_is_editable_without_regeneration (test_layout_edit.LayoutEditTests.test_latest_unverified_report_is_editable_without_regeneration) ... ok
 test_layout_edit_saves_new_report_without_generation_or_overwriting (test_layout_edit.LayoutEditTests.test_layout_edit_saves_new_report_without_generation_or_overwriting) ... ok
 test_page_number_uses_caption_size_without_false_body_warning (test_layout_edit.LayoutEditTests.test_page_number_uses_caption_size_without_false_body_warning) ... ok
 test_server_restart_records_interrupted_job_without_retry (test_layout_edit.LayoutEditTests.test_server_restart_records_interrupted_job_without_retry) ... ok
 
 ----------------------------------------------------------------------
-Ran 6 tests in 25.950s
+Ran 8 tests in 28.972s
 
 OK
