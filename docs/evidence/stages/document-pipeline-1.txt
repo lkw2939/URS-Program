@@ -12,6 +12,6 @@ test_settings_are_owner_scoped_and_append_only_no_regeneration (test_processing.
 test_transport_exact_pdf_prompt_no_system_terminology_template_or_images (test_processing.ProcessingTests.test_transport_exact_pdf_prompt_no_system_terminology_template_or_images) ... ok
 
 ----------------------------------------------------------------------
-Ran 12 tests in 20.656s
+Ran 12 tests in 20.414s
 
 OK

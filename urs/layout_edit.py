@@ -33,7 +33,8 @@ def run(workspace,owner,document,parent,notes,ident=None):
    if ident is None:ident=db.execute('INSERT INTO layout_edit_attempts(document,parent,state,reason,created) VALUES(?,?,?,?,?)',(document,parent,'running','CSS·배치 다듬기',datetime.now(timezone.utc).isoformat())).lastrowid
    else:db.execute("UPDATE layout_edit_attempts SET state='running' WHERE id=?",(ident,))
   from urs.layout_audit import inspect
-  audit=inspect(final.decode(),original['pages'])
+  from urs.css_only import layout_policy
+  audit=layout_policy(inspect(final.decode(),original['pages']))
   if audit['status']=='UNVERIFIED':raise Blocked('브라우저 검사를 실행할 수 없어 유료 호출을 시작하지 않았습니다. 서버의 Playwright·Chromium 설치/실행 상태를 확인하세요.')
   raw=final.decode();mapping={a['data_url']:a['uri'] for a in assets};by_uri={a['uri']:a['data_url'] for a in assets}
   with workspace.workflow.connect() as db:
@@ -57,6 +58,7 @@ def run(workspace,owner,document,parent,notes,ident=None):
   if not unchanged_outside_styles(raw,response):raise Blocked('CSS 수정 거절: <style> 밖의 HTML이 달라졌습니다. 기존 보고서를 유지했습니다.')
   if not preserved(raw,response):raise Blocked('CSS 수정 응답에서 본문·수치·표·캡션·그림 연결이 달라져 저장하지 않았습니다.')
   result,binding,quality=evaluate(response,assets,original['pages'])
+  quality=layout_policy(quality)
   if quality['status']!='PASS':raise Blocked('다듬기 후 화면 검사 미통과: '+' · '.join(quality.get('issues',[]))+'. 기존 보고서를 유지했습니다.')
   receipt={'version':VERSION,'accepted':True,'attempted':True,'max_refinements':1,'initial_raw_sha256':sha(raw),'chosen_raw_sha256':sha(response),'final_sha256':sha(result),'parent_revision':parent,'parent_sha256':sha(final),'program_pagination':False,'screenshots':[{'page':s['page'],'sha256':s['sha256']} for s in screens]}
   meta={**info['metadata'],'generation_kind':'model_layout_edit','raw_input_kind':'saved_report_with_source_image_slots','parent_revision':parent,'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_signature':signature(config),'raw_sha256':sha(raw),'final_sha256':sha(result),'binding_raw_sha256':sha(response),'layout_refinement_version':VERSION,'layout_refinement_accepted':True,'layout_refinement_sha256':sha(json.dumps(receipt,ensure_ascii=False)),'layout_status':'PASS'}

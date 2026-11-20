@@ -48,6 +48,8 @@ class OpenAI:
                {'type':'input_text','text':__import__('urs.report_contract',fromlist=['TEXT']).TEXT},
                {'type':'input_text','text':INSTRUCTION},{'type':'input_text','text':raw},
                {'type':'input_text','text':'실제 사진 삽입 후 브라우저 검사: '+json.dumps(audit,ensure_ascii=False)}]
+        if audit.get('css_only'):
+            parts=[{'type':'input_text','text':INSTRUCTION},{'type':'input_text','text':image_guide},{'type':'input_text','text':raw},{'type':'input_text','text':'현재 화면 측정 (글자 크기·축소 측정은 참고이며 배치 강제 지시가 아닙니다): '+json.dumps(audit,ensure_ascii=False)}]
         for image in screenshots:
             parts.extend([{'type':'input_text','text':'실제 렌더링 · 원문 '+image['page']+'쪽'},
                           {'type':'input_image','image_url':image['image_url'],'detail':'auto'}])

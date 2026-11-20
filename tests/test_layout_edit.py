@@ -36,6 +36,15 @@ class LayoutEditTests(unittest.TestCase):
   from urs.css_only import unchanged_outside_styles
   self.assertTrue(unchanged_outside_styles(self.raw,self.raw.replace('margin: 23px','margin: 25px')))
   self.assertFalse(unchanged_outside_styles(self.raw,self.raw.replace('<style>','<style media="screen">')))
+ def test_design_size_warnings_do_not_block_but_clipping_still_does(self):
+  from urs.css_only import layout_policy
+  a={'status':'NEEDS_REVIEW','issues':['A4 크기/넘침/읽기 크기/이미지 확인 필요'],'pages':[{'page':'1','issues':['작은 글자','모델 확인 필요: 이전 배치의 참고 메모']}],'narrow_pages':[]}
+  self.assertEqual(layout_policy(a)['status'],'PASS');a['pages'][0]['issues'].append('영역에서 내용 잘림');self.assertEqual(layout_policy(a)['status'],'NEEDS_REVIEW')
+ def test_css_request_does_not_send_translation_prompt_or_generation_contract(self):
+  from urs.ai import OpenAI
+  client=OpenAI(self.w.workflow,self.d)
+  with patch.object(client,'_pdf_request',return_value=self.raw) as request:client.refine_report_html(b'pdf','source.pdf','TRANSLATION-PROMPT','IMAGE-GUIDE',self.raw,{'css_only':True},[])
+  texts=[x.get('text','') for x in request.call_args.args[3]];self.assertNotIn('TRANSLATION-PROMPT',texts);self.assertIn('IMAGE-GUIDE',texts)
  def test_browser_failure_blocks_before_paid_call(self):
   with patch('urs.layout_audit.inspect',return_value={'status':'UNVERIFIED'}):
    with self.assertRaises(Blocked):layout_edit.run(self.w,'a',self.d,1,'')
