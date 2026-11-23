@@ -10,6 +10,6 @@ test_page_number_uses_caption_size_without_false_body_warning (test_layout_edit.
 test_server_restart_records_interrupted_job_without_retry (test_layout_edit.LayoutEditTests.test_server_restart_records_interrupted_job_without_retry) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 33.130s
+Ran 10 tests in 49.637s
 
 OK

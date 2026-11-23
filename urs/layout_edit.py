@@ -52,7 +52,8 @@ def run(workspace,owner,document,parent,notes,ident=None):
   if any(uri not in by_uri for _,_,uri in ImageSlots(raw).slots):raise Blocked('연결되지 않은 원본 그림 주소가 있어 CSS 호출 전에 중단했습니다.')
   screens=captures(final.decode(),{**audit,'pages':[{**p,'issues':['직원이 요청한 배치 개선']} for p in audit['pages']]})
   config=effective(workspace.workflow,document=document);provider=workspace.processing.provider_for(document,config);prompt=info['metadata'].get('prompt') or workspace.report_settings(owner)['prompt'];from urs.costing import image_guide
-  requested={**audit,'css_only':True,'employee_layout_request':notes or '번역 내용을 바꾸지 말고 사진·표 크기와 여백, 제목·본문 배치를 전문적인 기술 보고서로 다듬으세요.'}
+  from urs.css_only import DEFAULT_REQUEST
+  requested={**audit,'css_only':True,'employee_layout_request':notes or DEFAULT_REQUEST}
   response=provider.refine_report_html(original['original'],original['name'],prompt,image_guide(assets),raw,requested,screens)
   from urs.css_only import unchanged_outside_styles
   if not unchanged_outside_styles(raw,response):raise Blocked('CSS 수정 거절: <style> 밖의 HTML이 달라졌습니다. 기존 보고서를 유지했습니다.')

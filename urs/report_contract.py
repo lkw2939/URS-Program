@@ -1,7 +1,7 @@
 """User-authorized output mechanics; Terra owns translation and page design."""
 import re
 from html.parser import HTMLParser
-VERSION='a4-model-layout-v4'
+VERSION='a4-readable-layout-v5'
 TEXT='''현재 URS 보고서의 출력 요구사항(저장 프롬프트에 원본 PDF 재선택·PDF.js 방식이 있어도 아래 방식이 우선):
 번역·문서 구성·HTML/CSS 디자인과 각 쪽 내부 재배치는 모델이 직접 작성한다. 처음부터 첨부 원본 PDF의 사진·도면과 이미지 목록의 실제 width_px·height_px·aspect_ratio를 확인하고, A4 안에 본문과 함께 들어갈 표시 크기를 직접 지정한다. 픽셀 수를 CSS 표시 크기로 그대로 쓰지 말고 원본 비율을 유지한다. 원문 내용을 삭제·요약·잘라내지 않는다.
 브라우저에서도 원본 1쪽당 section[data-urs-page="원문쪽번호"] 구역을 만들고 각 장의 border-box를 210mm × 297mm A4 세로로 지정한다. @page 인쇄 설정만으로 대신하지 않는다. 좁은 화면에서도 A4 CSS 크기를 유지하고 수평 스크롤을 허용하며 미디어쿼리로 페이지를 축소하지 않는다.
@@ -12,6 +12,9 @@ TEXT='''현재 URS 보고서의 출력 요구사항(저장 프롬프트에 원�
 사진을 숨기는 CSS(display:none, visibility:hidden, opacity:0, content-visibility:hidden 등)를 만들지 않는다. ready 클래스, 파일 선택, PDF.js, onload/onerror, src 접두어를 찾는 스크립트, 클릭·스크롤 이벤트에 사진 표시를 의존하지 않는다. 치환된 img는 JavaScript와 인터넷 연결 없이도 즉시 보여야 한다.
 원본 PDF 재선택/업로드 input, PDF.js 및 PDF worker 로딩, 원본 PDF 뷰어/렌더링 코드를 넣지 않는다. 사진·도면 비율을 유지하고 object-fit:cover나 잘림을 사용하지 않는다. 디자인·배치 선택은 모델이 담당한다.
 실제 완성 HTML만 <!DOCTYPE html>부터 </html>까지 출력하고 마크다운 코드펜스를 붙이지 않는다.'''
+
+from urs.css_only import DEFAULT_REQUEST
+TEXT+='\n'+DEFAULT_REQUEST
 
 class _Contract(HTMLParser):
     def __init__(self,raw):
