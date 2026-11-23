@@ -4,12 +4,13 @@ test_chain_integrity_and_backup_restore (test_corrections.CorrectionTests.test_c
 test_confirmations_and_layout_items_cannot_be_applied (test_corrections.CorrectionTests.test_confirmations_and_layout_items_cannot_be_applied) ... ok
 test_deletion_requires_explicit_choice_and_preview (test_corrections.CorrectionTests.test_deletion_requires_explicit_choice_and_preview) ... ok
 test_entities_roundtrip_without_adding_markup_or_touching_css_images (test_corrections.CorrectionTests.test_entities_roundtrip_without_adding_markup_or_touching_css_images) ... ok
+test_partial_corrections_do_not_unlock_css_workflow (test_corrections.CorrectionTests.test_partial_corrections_do_not_unlock_css_workflow) ... ok
 test_preview_is_read_only_and_only_explicit_apply_creates_new_history (test_corrections.CorrectionTests.test_preview_is_read_only_and_only_explicit_apply_creates_new_history) ... ok
 test_result_distinguishes_errors_confirmation_layout_and_unknown_transport (test_corrections.CorrectionTests.test_result_distinguishes_errors_confirmation_layout_and_unknown_transport) ... ok
 test_stale_result_cannot_patch_corrected_report (test_corrections.CorrectionTests.test_stale_result_cannot_patch_corrected_report) ... ok
 test_wrong_owner_cannot_read_preview_or_apply (test_corrections.CorrectionTests.test_wrong_owner_cannot_read_preview_or_apply) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 26.002s
+Ran 11 tests in 29.890s
 
 OK

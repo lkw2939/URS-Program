@@ -23,12 +23,13 @@ def run(workspace,owner,document,parent,notes,ident=None):
  with workspace._locks_guard:lock=workspace._run_locks.setdefault(document,threading.Lock())
  if not lock.acquire(False):raise Blocked('다른 문서 작업이 실행 중입니다.')
  try:
+  selected=workspace.report_availability(owner,document)['selected']
   with workspace.workflow.connect() as db:
    from urs.saved_reports import read_final
    final,info=read_final(db,document,parent)
    current=workspace.workflow._job(db,document)['revision']
    newest=db.execute("SELECT MAX(revision) FROM artifacts WHERE document=? AND kind='report.html'",(document,)).fetchone()[0]
-   if parent!=newest:raise Blocked('보고서가 변경됐습니다. 화면을 새로고침하세요.')
+   if parent!=newest and (not selected or parent!=selected['revision']):raise Blocked('보고서가 변경됐습니다. 화면을 새로고침하세요.')
    assets=json.loads(db.execute("SELECT payload FROM artifacts WHERE document=? AND revision=? AND kind='report-images'",(document,parent)).fetchone()[0])
    if ident is None:ident=db.execute('INSERT INTO layout_edit_attempts(document,parent,state,reason,created) VALUES(?,?,?,?,?)',(document,parent,'running','CSS·배치 다듬기',datetime.now(timezone.utc).isoformat())).lastrowid
    else:db.execute("UPDATE layout_edit_attempts SET state='running' WHERE id=?",(ident,))

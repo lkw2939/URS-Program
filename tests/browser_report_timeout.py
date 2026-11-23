@@ -20,7 +20,7 @@ def main():
         server=make_app(w,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         try:
             with sync_playwright() as p:
-                b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':960})
+                b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':960});__import__("component_harness").install(page)
                 page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible')
                 page.locator('#workspace-settings summary').first.click()
                 page.locator('#ai-output-tokens').fill('16000');page.get_by_role('button',name='AI 설정 저장',exact=True).click();page.wait_for_function("() => document.querySelector('#ai-settings-summary').textContent.includes('저장 버전')")

@@ -26,7 +26,7 @@ def main():
         try:
             with sync_playwright() as p:
                 browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
-                page=browser.new_page(viewport={'width':1440,'height':1080},reduced_motion='reduce');errors=[]
+                page=browser.new_page(viewport={'width':1440,'height':1080},reduced_motion='reduce');__import__("component_harness").install(page);errors=[]
                 page.on('pageerror',lambda e:errors.append(str(e)))
                 page.goto(f'http://127.0.0.1:{server.server_port}')
                 assert '추출' not in page.locator('body').inner_text()
@@ -42,7 +42,7 @@ def main():
                 assert workspace.ai_settings('browser-fixture')['max_output_tokens']==32000
                 assert workspace.ai_settings('browser-fixture')['model']=='fixture-terra'
                 assert provider.calls==[],'Saving settings must not invoke AI'
-                page.locator('#report-settings summary').click()
+                page.locator('#report-settings').evaluate('(e)=>e.open=true')
                 page.locator('#report-prompt').fill(PROMPT)
                 page.get_by_role('button',name='프롬프트 저장',exact=True).click()
                 page.wait_for_function("() => document.getElementById('prompt-version').textContent.includes('1')")
@@ -71,6 +71,11 @@ def main():
                 assert page.locator('#checklist-steps li').count()==5
                 assert page.get_by_role('button',name='현재 리비전 최종 승인').is_disabled()
                 for label,stage in [('독립 검증 실행','verify'),('기술 분석 실행','analyze')]:
+                    if stage=='analyze':
+                        provider.refine_report_html=lambda *a:a[4].replace('margin: 23px','margin: 25px')
+                        page.locator('#edit-layout').click();page.wait_for_function("()=>document.querySelector('#layout-edit-state').textContent.includes('새 버전 2')")
+                        page.get_by_role('button',name='독립 검증 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(300)
+                        page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("()=>[...document.querySelectorAll('#check-results .result')].some(e=>e.textContent.includes('독립 검증 · PASS · 화면의 현재 보고서 2'))")
                     with page.expect_response(lambda r:r.url.endswith('/cost-preview')) as response:
                         page.get_by_role('button',name=label.replace(' 실행',' 비용 확인 (무료)'),exact=True).focus();page.get_by_role('button',name=label.replace(' 실행',' 비용 확인 (무료)'),exact=True).press('Enter')
                     assert response.value.status==200 and response.value.json()['status']=='READY'
@@ -87,19 +92,19 @@ def main():
                         print('UI ERROR:',page.locator('#message').inner_text(),page.locator('#process-buttons').inner_text(),page.locator('#check-results').inner_text(),flush=True)
                         raise
                 assert workspace.report_settings('browser-fixture')['prompt']==PROMPT
-                assert [c[0] for c in provider.calls]==['report','independent_verify','technical_analysis']
+                assert [c[0] for c in provider.calls]==['report','independent_verify','independent_verify','technical_analysis']
                 doc=workspace.documents('browser-fixture',workspace.projects('browser-fixture')[0]['id'])[0]['id']
                 before=workspace.report_html('browser-fixture',doc)
                 metadata=workspace.artifact('browser-fixture',doc,'report-metadata')
                 assert metadata['model']=='fixture-terra' and metadata['max_output_tokens']==32000 and metadata['reasoning_effort']=='xhigh'
-                page.locator('#report-settings summary').click()
+                page.locator('#report-settings').evaluate('(e)=>e.open=true')
                 page.locator('#html-result').scroll_into_view_if_needed()
                 page.screenshot(path=str(evidence/'html-report-desktop.png'),full_page=True)
                 page.set_viewport_size({'width':390,'height':844})
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), page.evaluate("() => ({w:innerWidth,doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,items:[...document.querySelectorAll('body *')].filter(e=>e.scrollWidth>e.clientWidth+1).map(e=>({tag:e.tagName,id:e.id,sw:e.scrollWidth,cw:e.clientWidth,vis:getComputedStyle(e).display,text:e.textContent.slice(0,70)})).slice(0,20)})")
                 page.screenshot(path=str(evidence/'html-report-mobile.png'),full_page=True)
                 page.set_viewport_size({'width':1440,'height':1080})
-                page.locator('#ai-settings').scroll_into_view_if_needed()
+                page.locator('#close-review').evaluate('(e)=>e.click()');page.locator('#workspace').wait_for(state='visible');page.locator('#workspace-settings').evaluate('(e)=>e.open=true');page.locator('#ai-settings').scroll_into_view_if_needed()
                 page.screenshot(path=str(evidence/'ai-settings-desktop.png'),full_page=False)
                 page.set_viewport_size({'width':390,'height':844})
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'), page.locator('body *').evaluate_all('(xs)=>xs.filter(x=>x.getBoundingClientRect().right>innerWidth+.1).slice(0,15).map(x=>({tag:x.tagName,id:x.id,right:x.getBoundingClientRect().right,scroll:x.scrollWidth,width:x.getBoundingClientRect().width,text:x.textContent.slice(0,50)}))')
@@ -108,7 +113,7 @@ def main():
                 page.wait_for_function("() => document.getElementById('ai-output-tokens').value==='32000'")
                 assert page.locator('#ai-model').input_value()=='fixture-terra'
                 assert page.locator('#ai-effort').input_value()=='xhigh'
-                assert len(provider.calls)==3,'Reload must never regenerate reports'
+                assert len(provider.calls)==4,'Reload must never regenerate reports'
                 assert workspace.report_html('browser-fixture',doc)==before
                 assert not errors,errors
                 browser.close()

@@ -71,3 +71,9 @@ class CorrectionTests(unittest.TestCase):
  def test_deletion_requires_explicit_choice_and_preview(self):
   with self.assertRaises(ValueError):self.proposed([{'issue_id':'0','before':BEFORE,'after':''}])
   p=self.proposed([{'issue_id':'0','before':BEFORE,'after':'','delete':True}]);corrections.apply(self.w,'alice',self.doc,p['plan_id']);self.assertNotIn(BEFORE.encode(),self.w.report_html('alice',self.doc,revision=3))
+
+ def test_partial_corrections_do_not_unlock_css_workflow(self):
+  from urs.flow import state,enter
+  p=self.proposed();new=corrections.apply(self.w,'alice',self.doc,p['plan_id'])
+  info=state(self.w,'alice',self.doc);self.assertEqual(info['revision'],new['revision']);self.assertFalse(info['steps'][1]['passed']);self.assertFalse(info['steps'][2]['can_enter'])
+  with self.assertRaises(Blocked):enter(self.w,'alice',self.doc,2,new['revision'])

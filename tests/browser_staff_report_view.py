@@ -15,7 +15,7 @@ def main():
   server=make_app(w,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
   try:
    with sync_playwright() as p:
-    b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+    b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});__import__("component_harness").install(page);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('viewer');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Saved report fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
     primary=page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True);primary.wait_for();page.wait_for_function("()=>document.querySelector('#review').getAttribute('aria-busy')==='false'");assert primary.count()==1;assert page.get_by_role('button',name='HTML 확인',exact=True).count()==0
     assert not page.locator('#html-files').evaluate('(e)=>e.open');assert page.locator('#final-html').is_visible() and page.locator('#raw-html').is_hidden()

@@ -4,12 +4,13 @@ test_css_only_allows_existing_style_contents_only (test_layout_edit.LayoutEditTe
 test_css_only_rejects_structure_or_attribute_changes (test_layout_edit.LayoutEditTests.test_css_only_rejects_structure_or_attribute_changes) ... ok
 test_css_request_does_not_send_translation_prompt_or_generation_contract (test_layout_edit.LayoutEditTests.test_css_request_does_not_send_translation_prompt_or_generation_contract) ... ok
 test_design_size_warnings_do_not_block_but_clipping_still_does (test_layout_edit.LayoutEditTests.test_design_size_warnings_do_not_block_but_clipping_still_does) ... ok
+test_displayed_report_remains_css_target_after_newer_failed_layout (test_layout_edit.LayoutEditTests.test_displayed_report_remains_css_target_after_newer_failed_layout) ... ok
 test_latest_unverified_report_is_editable_without_regeneration (test_layout_edit.LayoutEditTests.test_latest_unverified_report_is_editable_without_regeneration) ... ok
 test_layout_edit_saves_new_report_without_generation_or_overwriting (test_layout_edit.LayoutEditTests.test_layout_edit_saves_new_report_without_generation_or_overwriting) ... ok
 test_page_number_uses_caption_size_without_false_body_warning (test_layout_edit.LayoutEditTests.test_page_number_uses_caption_size_without_false_body_warning) ... ok
 test_server_restart_records_interrupted_job_without_retry (test_layout_edit.LayoutEditTests.test_server_restart_records_interrupted_job_without_retry) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 32.175s
+Ran 11 tests in 39.129s
 
 OK

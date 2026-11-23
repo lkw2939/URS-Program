@@ -19,7 +19,7 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
   server=make_app(w,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
   try:
    with sync_playwright() as p:
-    b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});page.goto(f'http://127.0.0.1:{server.server_port}')
+    b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});__import__("component_harness").install(page);page.goto(f'http://127.0.0.1:{server.server_port}')
     page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='A4 registration fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
     page.wait_for_function("() => document.querySelector('#review').getAttribute('aria-busy')==='false'")
     # Exercise native keyboard disclosure controls after the sandboxed preview is ready.

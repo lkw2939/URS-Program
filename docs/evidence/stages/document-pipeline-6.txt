@@ -11,8 +11,9 @@ test_javascript_cannot_hide_and_then_reveal_images_to_pass_audit (test_layout_fl
 test_non_compliant_generated_html_preserved_but_not_completed (test_layout_flow.LayoutFlowTests.test_non_compliant_generated_html_preserved_but_not_completed) ... ok
 test_overflow_is_reported_not_clipped_or_reflowed (test_layout_flow.LayoutFlowTests.test_overflow_is_reported_not_clipped_or_reflowed) ... ok
 test_print_rule_alone_is_not_a4_screen (test_layout_flow.LayoutFlowTests.test_print_rule_alone_is_not_a4_screen) ... ok
+test_wizard_requires_each_step_and_allows_back_without_mutation (test_layout_flow.LayoutFlowTests.test_wizard_requires_each_step_and_allows_back_without_mutation) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 26.505s
+Ran 14 tests in 32.332s
 
 OK

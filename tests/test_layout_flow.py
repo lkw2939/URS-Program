@@ -72,3 +72,24 @@ class LayoutFlowTests(unittest.TestCase):
  def test_contract_requires_plain_img_and_overrides_legacy_pdf_selection_prompt(self):
   from urs.report_contract import TEXT
   self.assertIn('<img src="urs-image:1:2"',TEXT);self.assertIn('PDF.js 방식이 있어도 아래 방식이 우선',TEXT);self.assertIn('JavaScript와 인터넷 연결 없이',TEXT)
+ def test_wizard_requires_each_step_and_allows_back_without_mutation(self):
+  from urs.flow import state,enter
+  from urs.layout_edit import run as css
+  from urs.workflow import Blocked
+  self.generate();old=self.w.report_html('alice',self.doc,revision=1)
+  info=state(self.w,'alice',self.doc);self.assertEqual([s['can_enter'] for s in info['steps']],[True,True,False,False,False,False])
+  with self.assertRaises(Blocked):enter(self.w,'alice',self.doc,4,1)
+  with patch.object(self.provider,'review_pdf',return_value={'status':'NEEDS_REVIEW','issues':[{'page':1,'issue_type':'customer','reason':'원문 조건 확인','question_ko':'시험 시간 기준은 무엇인가요?'}]}):targets.run(self.w,'alice',self.doc,f'displayed:{self.doc}:1','verify')
+  self.assertTrue(state(self.w,'alice',self.doc)['steps'][2]['can_enter'])
+  self.assertFalse(state(self.w,'alice',self.doc)['steps'][4]['can_enter'])
+  self.provider.refine_report_html=lambda *args:args[4].replace('margin: 23px','margin: 25px')
+  css(self.w,'alice',self.doc,1,'배치 조정')
+  info=state(self.w,'alice',self.doc);self.assertEqual(info['revision'],2);self.assertTrue(info['steps'][3]['can_enter']);self.assertFalse(info['steps'][4]['can_enter'])
+  with self.assertRaises(Blocked):enter(self.w,'alice',self.doc,3,1)
+  before=self.w.report_html('alice',self.doc,revision=2);enter(self.w,'alice',self.doc,0,2);self.assertEqual(self.w.report_html('alice',self.doc,revision=2),before)
+  targets.run(self.w,'alice',self.doc,f'displayed:{self.doc}:2','verify');self.assertTrue(state(self.w,'alice',self.doc)['steps'][4]['can_enter'])
+  from urs.review_policy import customer_context
+  carried=customer_context(self.w,f'displayed:{self.doc}:2');self.assertEqual(len(carried),1);self.assertEqual(carried[0]['origin_target'],f'displayed:{self.doc}:1')
+  targets.run(self.w,'alice',self.doc,f'displayed:{self.doc}:2','analyze');self.assertTrue(state(self.w,'alice',self.doc)['steps'][5]['can_enter']);self.assertEqual(self.w.report_html('alice',self.doc,revision=1),old)
+  with self.w.workflow.connect() as db:db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(f'displayed:{self.doc}:2','verify','failed','FAIL',None,'{}','later'))
+  self.assertFalse(state(self.w,'alice',self.doc)['steps'][4]['can_enter']);enter(self.w,'alice',self.doc,0,2)

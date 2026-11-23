@@ -49,3 +49,10 @@ class LayoutEditTests(unittest.TestCase):
   with patch('urs.layout_audit.inspect',return_value={'status':'UNVERIFIED'}):
    with self.assertRaises(Blocked):layout_edit.run(self.w,'a',self.d,1,'')
   self.assertIn('유료 호출',layout_edit.latest(self.w,'a',self.d)['reason'])
+
+ def test_displayed_report_remains_css_target_after_newer_failed_layout(self):
+  self.provider.raw=self.raw.replace('width:210mm','width:260mm');self.w.run('a',self.d,'report');failed=self.w.report_html('a',self.d,revision=2)
+  self.assertEqual(self.w.report_availability('a',self.d)['selected']['revision'],1)
+  self.provider.refine_report_html=lambda *args:args[4].replace('margin: 23px','margin: 25px')
+  result=layout_edit.run(self.w,'a',self.d,1,'현재 보고서 배치 수정')
+  self.assertEqual(result['revision'],3);self.assertEqual(self.w.report_html('a',self.d,revision=1),self.before);self.assertEqual(self.w.report_html('a',self.d,revision=2),failed);self.assertIn(b'margin: 25px',self.w.report_html('a',self.d,revision=3))

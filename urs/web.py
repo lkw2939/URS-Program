@@ -44,7 +44,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
             if attachment:
                 self.send_header('Content-Disposition', 'attachment; filename="' + attachment + '"')
             self.end_headers()
-            self.wfile.write(data)
+            try:self.wfile.write(data)
+            except (BrokenPipeError,ConnectionResetError):pass  # User closed/switched a preview; not an AI failure.
 
         def cookie(self, token, expire=False):
             return ('urs_session=' + token + '; Path=/; HttpOnly; SameSite=Strict; Max-Age=' +
@@ -158,7 +159,12 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             except Blocked:data['current_layout']={'status':'UNVERIFIED','reason':'기존 보고서는 A4 화면 검사를 받지 않았습니다. 사진 표시·배치를 점검해야 합니다.'}
                             for stage in ('verify','analyze'):
                                 if tasks.status(document,stage)['state']=='running':data['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다. 결과가 저장될 때까지 기다려 주세요.')
+                            from urs.flow import state as flow_state
+                            data['flow']=flow_state(workspace,owner,document)
                             self.reply(200, data)
+                        elif post and action=='workflow-step':
+                            from urs.flow import enter
+                            self.reply(200,enter(workspace,owner,document,body['step'],body.get('revision')))
                         elif not post and action=='review-result-data':
                             from urllib.parse import parse_qs
                             from urs.review_results import load
@@ -182,6 +188,9 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             info=targets.overview(workspace,owner,document,target)
                             if body.get('expected_revision')!=selected['revision'] or body.get('expected_sha256')!=info['sha256']:raise Blocked('현재 보고서가 바뀌었습니다. 화면을 새로고침해 주세요.')
                             stage=body['stage']
+                            if stage=='analyze':
+                                from urs.flow import enter
+                                enter(workspace,owner,document,4,selected['revision'])
                             if info['reviews'][stage]['running']:raise Blocked('이미 실행 중입니다. 결과를 기다려 주세요.')
                             if stage=='analyze' and info['reviews']['verify']['status']!='PASS':raise Blocked('현재 보고서의 독립검증 PASS 후 기술분석을 실행할 수 있습니다.')
                             self.reply(200,review_quote(workspace,owner,document,target,stage,True))
@@ -199,6 +208,9 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             selected=workspace.report_availability(owner,document)['selected']
                             if not selected:raise Blocked('정상 저장된 보고서가 없습니다. 생성 실패 또는 배치 확인 이력을 확인하세요.')
                             if body['stage'] not in ('verify','analyze'):raise ValueError('검토 단계를 확인하세요.')
+                            if body['stage']=='analyze':
+                                from urs.flow import enter
+                                enter(workspace,owner,document,4,selected['revision'])
                             ident=f"displayed:{document}:{selected['revision']}"
                             visible,_=targets.get(workspace,owner,document,ident)
                             if body.get('expected_revision')!=selected['revision'] or body.get('expected_sha256')!=visible['sha256']:raise Blocked('보고서가 갱신됐거나 화면과 다릅니다. 새로고침해 현재 보고서를 확인한 뒤 실행하세요. API를 호출하지 않았습니다.')
@@ -270,10 +282,15 @@ def make_app(workspace, port=8795, secure_cookie=False):
                             mime = 'application/pdf' if kind.endswith('.pdf') else 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
                             self.reply(200,payload,mime,attachment=action)
                         elif post and action == 'approve':
+                            from urs.flow import enter
+                            enter(workspace,owner,document,5,body['revision'])
                             self.reply(200,workspace.approve_document(owner,document,body['revision'],body['note'],body['reviewed_outputs']))
                         elif action == 'layout-edit':
                             from urs import layout_edit
-                            if post:self.reply(202,layout_edit.start(workspace,owner,document,body['revision'],body.get('notes','')))
+                            if post:
+                                from urs.flow import enter
+                                enter(workspace,owner,document,2,body['revision'])
+                                self.reply(202,layout_edit.start(workspace,owner,document,body['revision'],body.get('notes','')))
                             else:self.reply(200,layout_edit.latest(workspace,owner,document))
                         elif not post and action == 'report-task':
                             workspace.original(owner,document)

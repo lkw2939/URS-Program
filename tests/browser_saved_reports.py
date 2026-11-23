@@ -21,7 +21,7 @@ def main():
         try:
             with sync_playwright() as p:
                 browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
-                page=browser.new_page(viewport={'width':1280,'height':960});errors=[]
+                page=browser.new_page(viewport={'width':1280,'height':960});__import__("component_harness").install(page);errors=[]
                 page.on('pageerror',lambda error:errors.append(str(error)))
                 page.goto(f'http://127.0.0.1:{server.server_port}')
                 page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123')
@@ -49,7 +49,7 @@ def main():
                 button=page.locator('#view-html')
                 assert button.is_enabled();assert '이전 보고서 보기' in button.inner_text();assert '기존 보고서 유지' in page.locator('#html-availability').inner_text()
                 assert '16,000' in page.locator('#html-failure').inner_text()
-                assert page.locator('#html-result').is_visible();assert page.locator('#approval-panel').is_hidden()
+                assert page.locator('#html-result').is_visible();assert page.locator('#approve-document').is_disabled()
                 button.click();page.frame_locator('#report-preview').locator('h1').wait_for()
                 assert 'revision=1' in page.locator('#final-html').get_attribute('href')
                 assert 'revision=1' in page.locator('#raw-html').get_attribute('href')

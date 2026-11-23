@@ -42,7 +42,7 @@ def main():
   server=make_app(w,0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
   try:
    with sync_playwright() as p:
-    b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+    b=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=b.new_page(viewport={'width':1280,'height':1000});__import__("component_harness").install(page);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Correction workflow',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click()
     page.wait_for_function("() => document.querySelector('#review').getAttribute('aria-busy')==='false'")
     page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.locator('#confirm-review-run').wait_for();assert len(calls)==1 and calls[0][0].endswith('/input_tokens')
@@ -66,10 +66,10 @@ def main():
     with page.context.expect_page() as opened:result.locator('#corrected-report').click()
     report=opened.value;report.wait_for_load_state();assert TYPED_AFTER in report.locator('body').inner_text() and BEFORE not in report.locator('body').inner_text();assert report.locator('img').count()==3;report.wait_for_function('() => [...document.images].every(i=>i.complete&&i.naturalWidth>0&&i.getBoundingClientRect().width>0&&i.getBoundingClientRect().height>0&&getComputedStyle(i).display!=="none"&&getComputedStyle(i).visibility==="visible")');report.screenshot(path=str(ROOT/'docs/evidence/correction-report-images.png'));report.close()
     result.locator('#next-actions').screenshot(path=str(ROOT/'docs/evidence/correction-result-applied.png'))
-    result.locator('#reverify').click();result.locator('#confirm-review-run').wait_for();assert len(calls)==3;result.locator('#confirm-review-run').click();result.locator('#new-result').wait_for(state='visible');result.wait_for_function("() => !document.querySelector('#analyze-current').disabled")
+    result.locator('#reverify').click();result.locator('#confirm-review-run').wait_for();assert len(calls)==3;result.locator('#confirm-review-run').click();result.locator('#new-result').wait_for(state='visible');assert result.locator('#analyze-current').is_disabled()
     assert len(calls)==4 and TYPED_AFTER in calls[-1][1]['input'][0]['content'][2]['text'];assert base64.b64decode(calls[-1][1]['input'][0]['content'][0]['file_data'].split(',')[1])==pdf
     result.locator('#new-result').click();result.wait_for_load_state();assert '보고서 버전 3' in result.locator('header').inner_text();assert '오류 0건' in result.locator('.summary').inner_text();result.screenshot(path=str(ROOT/'docs/evidence/correction-result-reverified.png'),full_page=True)
     with w.workflow.connect() as db:assert old_artifacts==[tuple(r) for r in db.execute('SELECT * FROM artifacts WHERE revision<=2')]
-    assert not errors,errors;b.close();print('PASS: real logged-in buttons, no separate mandatory cost button; exact PDF + prepared final HTML + PNG image inputs recorded at request boundary; Korean result cards -> preview (no mutation) -> selected error applied to new version3 preserving versions1/2 -> corrected report opens -> integrated-cost recheck(mock) uses version3 -> new result and technical-analysis unlock; uncertain/layout items untouched; paid API calls=0.')
+    assert not errors,errors;b.close();print('PASS: real logged-in buttons, no separate mandatory cost button; exact PDF + prepared final HTML + PNG image inputs recorded at request boundary; Korean result cards -> preview (no mutation) -> selected error applied to new version3 preserving versions1/2 -> corrected report opens -> integrated-cost recheck(mock) uses version3 -> new result; technical analysis remains locked until CSS/final verification in the workflow; uncertain/layout items untouched; paid API calls=0.')
   finally:server.shutdown();server.server_close();thread.join()
 if __name__=='__main__':main()

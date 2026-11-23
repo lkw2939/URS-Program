@@ -1,0 +1,6 @@
+test_wizard_requires_each_step_and_allows_back_without_mutation (test_layout_flow.LayoutFlowTests.test_wizard_requires_each_step_and_allows_back_without_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 6.554s
+
+OK
