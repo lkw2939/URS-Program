@@ -14,6 +14,6 @@ test_raw_only_is_not_a_final_report (test_saved_reports.SavedReportsTests.test_r
 test_truncated_saved_final_is_not_presented_as_complete (test_saved_reports.SavedReportsTests.test_truncated_saved_final_is_not_presented_as_complete) ... ok
 
 ----------------------------------------------------------------------
-Ran 14 tests in 19.136s
+Ran 14 tests in 19.392s
 
 OK

@@ -40,8 +40,15 @@ def main():
     browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox']);page=browser.new_page(viewport={'width':1280,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
     page.goto(f'http://127.0.0.1:{server.server_port}');page.get_by_label('직원 ID').fill('fixture');page.get_by_label('비밀번호',exact=True).fill('fixture-password-123');page.get_by_role('button',name='로그인',exact=True).click();page.get_by_role('button',name='단계별 검토 시험',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click();page.wait_for_function("()=>document.querySelector('#review').getAttribute('aria-busy')==='false'")
     def screen(index):
-     page.wait_for_function('(i)=>document.querySelector("#flow-panel-"+i).hidden===false',arg=index)
+     page.wait_for_function('(i)=>document.querySelector("#flow-panel-"+i)?.hidden===false',arg=index)
+     page.wait_for_function("()=>document.querySelector('#review').getAttribute('aria-busy')==='false'")
+     assert page.locator('.flow-panel').count()==1
      assert page.locator('.flow-panel:visible').count()==1
+     assert f'step={index+1}' in page.url
+     assert page.locator('#flow-details').count()==0
+     if index!=0:assert page.locator('#html-access').count()==0
+     if index!=2:assert page.locator('#layout-editor').count()==0
+     if index!=5:assert page.locator('#approval-panel').count()==0
     def next_step(index):page.locator('#flow-next').click();screen(index)
     def run_review(name):
      page.get_by_role('button',name=name,exact=True).click();dialog=page.locator('#confirm-review-run');dialog.wait_for();dialog.click();page.wait_for_function("()=>document.querySelector('#message').textContent==='처리를 완료했습니다.'")
@@ -51,15 +58,20 @@ def main():
     guards=page.evaluate('''async ({doc,sha})=>{const me=await(await fetch('/api/me')).json();const send=async(action,body)=>(await fetch('/api/documents/'+doc+'/'+action,{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':me.csrf},body:JSON.stringify(body)})).status;return [await send('layout-edit',{revision:1,notes:''}),await send('review-prepare',{stage:'analyze',expected_revision:1,expected_sha256:sha}),await send('approve',{revision:1,note:'먼저 승인 불가',reviewed_outputs:['report.html']})]}''',{'doc':doc,'sha':hashlib.sha256(original).hexdigest()});assert guards==[409,409,409] and len(paid)==0
     page.frame_locator('#report-preview').locator('img').first.wait_for();assert page.frame_locator('#report-preview').locator('img').evaluate_all('(imgs)=>imgs.every(i=>i.complete&&i.naturalWidth>0&&getComputedStyle(i).display!=="none")')
     page.screenshot(path=str(ROOT/'docs/evidence/workflow-report.png'),full_page=True);next_step(1);assert page.locator('#flow-next').is_disabled();run_review('독립 검증 실행');assert len(paid)==1 and page.locator('#flow-next').is_disabled()
+    page.reload();page.locator('#review').wait_for(state='visible');screen(1);assert len(paid)==1
+    with page.context.expect_page() as denied:
+     page.evaluate("url=>window.open(url,'_blank')",f'http://127.0.0.1:{server.server_port}/?document={doc}&step=6')
+    blocked=denied.value;blocked.wait_for_load_state();blocked.wait_for_function("()=>document.querySelector('#review').dataset.currentStep==='1'");blocked.wait_for_function("()=>document.querySelector('#message').textContent.includes('먼저')");assert blocked.locator('.flow-panel').count()==1;blocked.close();assert len(paid)==1
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
     result=opened.value;result.wait_for_load_state();result.locator('[data-before]').fill(BEFORE);result.locator('[data-after]').fill(AFTER);result.locator('[data-select]').check();result.locator('#preview-corrections').click();result.locator('#apply-corrections').wait_for(state='visible');result.locator('#apply-corrections').click();result.wait_for_function("()=>document.querySelector('#correction-status').textContent.includes('버전 2')")
     page.wait_for_function("()=>!document.querySelector('#flow-next').disabled");assert len(paid)==1;assert AFTER.encode() in w.report_html('fixture',doc,revision=2);assert original==w.report_html('fixture',doc,revision=1);result.close()
-    page.screenshot(path=str(ROOT/'docs/evidence/workflow-corrected.png'),full_page=True);next_step(2);assert page.locator('#flow-next').is_disabled();assert '버전 2' in page.locator('#layout-edit-state').inner_text();page.locator('#edit-layout').click();page.wait_for_function("()=>document.querySelector('#layout-edit-state').textContent.includes('새 버전 3')",timeout=60000);assert len(paid)==2
+    page.screenshot(path=str(ROOT/'docs/evidence/workflow-corrected.png'),full_page=True);next_step(2);page.go_back();screen(1);page.go_forward();screen(2);assert page.locator('#flow-next').is_disabled();assert '버전 2' in page.locator('#layout-edit-state').inner_text();page.locator('#edit-layout').click();page.wait_for_function("()=>document.querySelector('#layout-edit-state').textContent.includes('새 버전 3')",timeout=60000);assert len(paid)==2
     page.screenshot(path=str(ROOT/'docs/evidence/workflow-css.png'),full_page=True);next_step(3);assert page.locator('#flow-next').is_disabled();run_review('독립 검증 실행');assert len(paid)==3;next_step(4);assert page.locator('#flow-next').is_disabled();run_review('기술 분석 실행');assert len(paid)==4
     with page.context.expect_page() as opened:page.get_by_role('button',name='기술분석 결과 보기',exact=True).click()
     technical=opened.value;technical.wait_for_load_state();assert '시험 시간의 적용 기준은 무엇인가요?' in technical.locator('body').inner_text();technical.close()
     # All previous stages remain freely accessible, with no API or report writes.
     next_step(5)
+    page.locator('#approval-note').fill('직원 검토 메모 임시 저장');page.locator('#flow-back').click();screen(4);next_step(5);assert page.locator('#approval-note').input_value()=='직원 검토 메모 임시 저장'
     for i in (4,3,2,1,0):page.locator('#flow-back').click();screen(i)
     assert len(paid)==4;assert page.locator('#flow-back').is_disabled();assert original==w.report_html('fixture',doc,revision=1)
     final=w.report_html('fixture',doc,revision=3);assert AFTER.encode() in final and BEFORE.encode() not in final and b'margin: 25px' in final
@@ -69,6 +81,13 @@ def main():
     saved=Path(tmp)/'report.html';saved.write_bytes(final);offline=browser.new_context(offline=True,java_script_enabled=False);local=offline.new_page();local.set_content(saved.read_text(),wait_until='load');local.locator('img').first.wait_for();assert local.locator('img').evaluate_all('(imgs)=>imgs.every(i=>i.complete&&i.naturalWidth>0&&getComputedStyle(i).display!=="none")');box=local.locator('[data-urs-page]').bounding_box();assert abs(box['width']-210*96/25.4)<2 and abs(box['height']-297*96/25.4)<2
     page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');page.screenshot(path=str(ROOT/'docs/evidence/workflow-mobile.png'),full_page=True)
     page.locator('#close-review').click();page.locator('#workspace').wait_for(state='visible');assert page.locator('#review').is_hidden()
-    assert not errors,errors;browser.close();print('PASS: unmodified logged-in wizard; exactly one stage visible; forged jump blocked HTTP409; stored report -> FAIL -> typed correction saved v2 -> CSS on corrected v2 saves v3 -> final verification PASS -> analysis -> approval screen; free back navigation; earlier reports preserved; exact downloaded HTML bytes render offline with visible photos and A4 dimensions. Four mocked paid requests, zero real API calls. Approval remains subject to existing real qualification requirements.')
+    upgrade_context=browser.new_context(storage_state=page.context.storage_state());upgrade=upgrade_context.new_page()
+    def older_markup(route):
+     response=route.fetch();html=response.text().replace('<template id="review-controls">','').replace('</template>','');route.fulfill(response=response,body=html)
+    upgrade.route(f'http://127.0.0.1:{server.server_port}/?*',older_markup);upgrade.goto(f'http://127.0.0.1:{server.server_port}/?document={doc}&step=2');upgrade.wait_for_function("()=>document.querySelector('#review').dataset.currentStep==='2'&&document.querySelector('#review').getAttribute('aria-busy')==='false'");assert upgrade.locator('.flow-panel').count()==1;assert upgrade.locator('#technical-details,#check-results,#layout-editor').count()==0;upgrade_context.close();assert len(paid)==4
+    def old_server(route):
+     response=route.fetch();data=response.json();data.pop('flow',None);route.fulfill(response=response,json=data)
+    page.route('**/api/documents/'+doc+'/detail',old_server);page.get_by_role('button',name='단계별 검토 시험',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click();page.wait_for_function("()=>document.querySelector('#message').textContent.includes('재시작')");assert page.locator('#workspace').is_visible();assert page.locator('.flow-panel').count()==0;assert len(paid)==4
+    assert not errors,errors;browser.close();print('PASS: unmodified logged-in wizard; only the active stage is connected to the document; step-specific URLs, reload, browser Back/Forward, blocked deep links and preserved approval drafts; missing workflow API never falls back to a stacked screen; forged jump blocked HTTP409; stored report -> FAIL -> typed correction saved v2 -> CSS on corrected v2 saves v3 -> final verification PASS -> analysis -> approval screen; free back navigation; earlier reports preserved; exact downloaded HTML bytes render offline with visible photos and A4 dimensions. Four mocked paid requests, zero real API calls. Approval remains subject to existing real qualification requirements.')
   finally:server.shutdown();server.server_close();thread.join()
 if __name__=='__main__':main()

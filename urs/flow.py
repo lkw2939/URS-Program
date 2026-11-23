@@ -56,7 +56,7 @@ def state(workspace,owner,document):
         if patch.get('source_attempt'):
             with workspace.workflow.connect() as db:initial=db.execute('SELECT * FROM target_reviews WHERE id=?',(patch['source_attempt'],)).fetchone()
     initial_info={'target':initial['target'],'attempt':initial['id'],'revision':int(initial['target'].rsplit(':',1)[1])} if initial and initial['payload'] and initial['state']=='finished' else None
-    return {'initial_review':initial_info,'revision':revision,'steps':steps,'frontier':next((s['index'] for s in steps if not s['passed']),5),'text_note':why}
+    return {'document_name':original['name'],'initial_review':initial_info,'revision':revision,'steps':steps,'frontier':next((s['index'] for s in steps if not s['passed']),5),'text_note':why}
 
 def enter(workspace,owner,document,index,revision):
     info=state(workspace,owner,document)

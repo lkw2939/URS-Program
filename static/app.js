@@ -1,25 +1,37 @@
+const flowBank=document.createDocumentFragment();
+const flowControlTemplate=document.getElementById('review-controls');
+if(flowControlTemplate){flowBank.append(flowControlTemplate.content);flowControlTemplate.remove();}
+else for(const id of ['process-buttons','html-access','html-result','technical-details','review-results','check-results','analysis-panel','approval-panel']){const node=document.getElementById(id);if(node)flowBank.append(node);}
+const flowOperations=new Map();
+let flowRouteTicket=0,approvalDraftContext=null;
 const flowScreens=new Map();
 function mountFlow(){
- if(!detail.flow)return;
+ if(!activeDoc||!detail)return;
+ if(!detail.flow)throw new Error('단계별 화면 API가 없는 이전 서버입니다. 서버 업데이트·재시작이 필요합니다.');
  const root=$('review');
  if(!$('flow-header')){
   const header=element('section','','flow-header');header.id='flow-header';const label=element('div');const count=element('p','','flow-kicker');count.id='flow-count';const title=element('h3');title.id='flow-title';label.append(count,title);const dots=element('div','','flow-dots');dots.id='flow-dots';dots.setAttribute('aria-label','작업 진행');header.append(label,dots);root.querySelector('.intro').after(header);
-  let previous=header;for(let i=0;i<6;i++){const panel=element('section','','flow-panel');panel.id='flow-panel-'+i;panel.dataset.workflowPanel=i;panel.setAttribute('aria-labelledby','flow-title');previous.after(panel);previous=panel;}
+  let previous=header;for(let i=0;i<6;i++){const panel=element('section','','flow-panel');panel.id='flow-panel-'+i;panel.dataset.workflowPanel=i;panel.setAttribute('aria-labelledby','flow-title');flowBank.append(panel);previous=panel;}
   const nav=element('nav','','flow-nav');nav.id='flow-nav';nav.setAttribute('aria-label','단계 이동');const back=element('button','← 이전 단계');back.id='flow-back';back.type='button';const note=element('p','','flow-state');note.id='flow-state';note.setAttribute('role','status');const next=element('button','다음 단계 →','primary');next.id='flow-next';next.type='button';nav.append(back,note,next);root.append(nav);
-  const details=element('details');details.id='flow-details';details.append(element('summary','실행 기록·상세 정보'),$('technical-details'),$('check-results'));root.append(details);
+  const historyLink=element('a','실행 기록 보기');historyLink.id='flow-history-link';historyLink.target='_blank';historyLink.rel='noopener';root.querySelector('.intro').append(historyLink);
   const link=element('a');link.id='flow-report-link';link.target='_blank';link.rel='noopener';root.querySelector('.intro').append(link);
  }
  const info=detail.flow;let index=flowScreens.get(activeDoc.id)??0;
  while(index>0&&!info.steps[index].can_enter)index--;flowScreens.set(activeDoc.id,index);
- for(let i=0;i<6;i++)$('flow-panel-'+i).hidden=i!==index;
+ for(let i=0;i<6;i++){const page=$('flow-panel-'+i);page.hidden=false;if(i!==index&&page.parentNode!==flowBank)flowBank.append(page);}
+ if($('flow-panel-'+index).parentNode!==root)root.insertBefore($('flow-panel-'+index),$('flow-nav').nextSibling);root.dataset.currentStep=String(index+1);
+ document.title=`${index+1}단계 · ${info.steps[index].title} | URS`;
+ writeFlowLocation(index,'replace');
+ $('flow-history-link').href=`/api/documents/${activeDoc.id}/verification.html`;
  $('flow-count').textContent=`${index+1} / ${info.steps.length} 단계`;$('flow-title').textContent=info.steps[index].title;
  $('flow-dots').replaceChildren();for(const step of info.steps){const dot=element('span','','flow-dot'+(step.passed?' done':'')+(step.index===index?' active':''));dot.setAttribute('aria-label',`${step.index+1}단계 ${step.passed?'완료':'미완료'}`);if(step.index===index)dot.setAttribute('aria-current','step');$('flow-dots').append(dot);}
  const panels=Array.from({length:6},(_,i)=>$('flow-panel-'+i));
- panels[0].append($('html-access'),$('html-result'));panels[2].append($('layout-editor'));
- const verifyBox=$('view-verification').parentElement;panels[index===3?3:1].append(verifyBox);panels[4].append($('view-analysis').parentElement);panels[5].append($('approval-panel'));
+ for(const id of ['html-access','html-result'])if($(id).parentNode!==panels[0])panels[0].append($(id));if($('layout-editor').parentNode!==panels[2])panels[2].append($('layout-editor'));
+ const verifyBox=$('view-verification').parentElement;const verifyPanel=panels[index===3?3:1];if(verifyBox.parentNode!==verifyPanel)verifyPanel.append(verifyBox);const analysisBox=$('view-analysis').parentElement;if(analysisBox.parentNode!==panels[4])panels[4].append(analysisBox);if($('approval-panel').parentNode!==panels[5])panels[5].append($('approval-panel'));
  $('review-results').hidden=true;$('advanced-targets').hidden=true;$('approval-panel').hidden=false;
- panels[index].prepend($('process-buttons'));
- for(const group of $('process-buttons').children){const kind=group.dataset.operation;group.hidden=!(kind==='report'&&index===0||kind==='verify'&&(index===1||index===3)||kind==='analyze'&&index===4);
+ if($('process-buttons').parentNode!==panels[index])panels[index].prepend($('process-buttons'));
+ for(const group of [...$('process-buttons').children])if(group.dataset.operation)flowOperations.set(group.dataset.operation,group);
+ for(const [kind,group] of flowOperations){group.hidden=false;const belongs=kind==='report'&&index===0||kind==='verify'&&(index===1||index===3)||kind==='analyze'&&index===4;const host=belongs?$('process-buttons'):flowBank;if(group.parentNode!==host)host.append(group);
   if(!group.querySelector('.flow-cost')){const folded=element('details','','flow-cost');folded.append(element('summary','예상 비용·설정 상세'));for(const n of [...group.querySelectorAll('p.small')])if(n.textContent.startsWith('이번 1회')||n.textContent.startsWith('예상 비용'))folded.append(n);const estimate=[...group.querySelectorAll('button')].find(b=>b.textContent.includes('비용 확인'));if(estimate)folded.append(estimate);group.append(folded);}
  }
  // The second verification screen always operates on the final CSS version, not its parent.
@@ -29,10 +41,43 @@ function mountFlow(){
  $('flow-back').disabled=index===0;$('flow-next').disabled=index===5||!info.steps[index].passed||!info.steps[index+1].can_enter;
  $('flow-state').textContent=info.steps[index].passed?(index===1?info.text_note+' 다음 CSS 단계로 이동하세요.':'이 단계가 완료됐습니다. 다음 단계로 이동하세요.'):info.steps[index].reason;$('flow-state').classList.toggle('passed',info.steps[index].passed);
  $('flow-report-link').hidden=!info.revision;if(info.revision){$('flow-report-link').href=`/api/documents/${activeDoc.id}/report.html?revision=${info.revision}`;$('flow-report-link').textContent=`사진 포함 보고서 열기 · 버전 ${info.revision}`;}
- const move=async step=>{const accepted=await api(`/api/documents/${activeDoc.id}/workflow-step`,{step,revision:info.revision});flowScreens.set(activeDoc.id,accepted.active);renderReview();$('flow-header').scrollIntoView({block:'start'});};
- const navigate=async target=>{$('flow-back').disabled=true;$('flow-next').disabled=true;try{await move(target);}catch(error){message(error.message);}finally{mountFlow();}};
+ const move=async step=>{const accepted=await api(`/api/documents/${activeDoc.id}/workflow-step`,{step,revision:info.revision});detail.flow=accepted;flowScreens.set(activeDoc.id,accepted.active);writeFlowLocation(accepted.active,'push');renderReview();$('flow-header').scrollIntoView({block:'start'});};
+ const navigate=async target=>{root.inert=true;root.setAttribute('aria-busy','true');$('flow-back').disabled=true;$('flow-next').disabled=true;try{await move(target);}catch(error){message(error.message);}finally{mountFlow();root.inert=false;root.setAttribute('aria-busy','false');}};
  $('flow-back').onclick=()=>navigate(index-1);$('flow-next').onclick=()=>navigate(index+1);
 }
+
+function writeFlowLocation(index,method='replace'){
+ if(!activeDoc)return;const url=new URL(location.href);url.searchParams.set('document',activeDoc.id);url.searchParams.set('step',String(index+1));
+ if(method==='push'&&url.href===location.href)method='replace';history[method+'State']({document:activeDoc.id,step:index+1},'',url);
+}
+function closeFlowScreen(method=null){
+ $('review').hidden=true;$('workspace').hidden=!csrf;activeDoc=null;$('report-preview').removeAttribute('src');
+ for(let i=0;i<6;i++){const panel=$('flow-panel-'+i);if(panel)flowBank.append(panel);}
+ document.title='URS AI REPORT SYSTEM';
+ const url=new URL(location.href);url.searchParams.delete('document');url.searchParams.delete('step');
+ if(method)history[method+'State']({},'',url);
+}
+async function restoreFlowLocation(){
+ const ticket=++flowRouteTicket;const url=new URL(location.href),id=url.searchParams.get('document');
+ if(!id){if(activeDoc)closeFlowScreen();return;}
+ if(!/^[a-f0-9]{32}$/i.test(id)){closeFlowScreen('replace');message('문서 주소를 확인하세요.');return;}
+ const value=Number(url.searchParams.get('step')||1),step=Number.isInteger(value)&&value>=1&&value<=6?value-1:0;
+ try{
+  if(activeDoc?.id===id){
+   const accepted=await api(`/api/documents/${id}/workflow-step`,{step,revision:detail.flow.revision});if(ticket!==flowRouteTicket)return;
+   detail.flow=accepted;flowScreens.set(id,accepted.active);renderReview();$('flow-header').scrollIntoView({block:'start'});
+  }else{
+   const found=await api(`/api/documents/${id}/detail`);if(ticket!==flowRouteTicket)return;
+   if(!found.flow)throw new Error('현재 서버에 단계별 화면 API가 없습니다. 업데이트 후 서버를 재시작해 주세요.');
+   await openReview({id,name:found.flow.document_name||'URS 보고서'},step,true);
+  }
+ }catch(error){
+  if(ticket!==flowRouteTicket)return;
+  if(activeDoc?.id===id){flowScreens.set(id,0);await refreshReview();writeFlowLocation(0,'replace');}else closeFlowScreen('replace');
+  message(error.message);
+ }
+}
+window.addEventListener('popstate',()=>{if(csrf)restoreFlowLocation().catch(error=>message(error.message));});
 
 function failureText(reason){return reason.includes('대기시간(90초)')?'이전 실행 실패 기록 (당시 90초 제한): '+reason+' 다음 실행부터는 무제한 대기 정책을 적용합니다.':'최근 실패: '+reason;}
 let reportCost=null;
@@ -42,7 +87,7 @@ return `이번 1회 (설정 단가 기준): 입력 ${q.input_tokens.toLocaleStri
 let csrf = '', selected = null;
 const a4Selections=new Map();
 let a4PollTimer=null;
-const $ = id => document.getElementById(id);
+const $ = id => document.getElementById(id)||flowBank.querySelector('#'+id);
 const stageNames = {source:'원본 보관',report:'HTML 보고서',verify:'독립 검증',analyze:'기술 분석',approval:'직원 승인'};
 function message(text) { $('message').textContent = text; }
 async function api(path, data) {
@@ -75,7 +120,7 @@ async function documents() {
   }
 }
 async function submit(form, fn) { const button=form.querySelector('button[type="submit"]')||form.querySelector('button');button.disabled=true;message('');try{await fn();}catch(e){message(e.message);}finally{button.disabled=false;} }
-$('login').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{const data=new FormData(e.target);await api('/api/login',{username:data.get('username'),password:data.get('password')});e.target.reset();await signedIn();});};
+$('login').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{const data=new FormData(e.target);await api('/api/login',{username:data.get('username'),password:data.get('password')});e.target.reset();await signedIn();await restoreFlowLocation();});};
 $('new-project').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{const title=new FormData(e.target).get('title');const project=await api('/api/projects',{title});e.target.reset();await choose({id:project.id,title});});};
 $('upload').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{const file=new FormData(e.target).get('pdf');if(!selected)throw new Error('프로젝트를 선택해 주세요.');if(!file||!file.size||file.size>20*1024*1024)throw new Error('최대 20MB의 PDF를 선택해 주세요.');const project=selected.id;const bytes=new Uint8Array(await file.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=8192)text+=String.fromCharCode(...bytes.subarray(i,i+8192));await api(`/api/projects/${project}/documents`,{name:file.name,content:btoa(text)});e.target.reset();await documents();message('원본 등록 및 무결성 확인을 완료했습니다.');});};
 $('logout').onclick=()=>submit($('identity'),async()=>{await api('/api/logout',{});signedOut();message('로그아웃했습니다.');});
@@ -101,8 +146,8 @@ async function waitCurrentReview(stage,target){
  while(true){await new Promise(resolve=>setTimeout(resolve,1000));const state=await api(`/api/documents/${doc.id}/target-status?target=${target}`);if(!state.reviews[stage].running)break;}
  if(activeDoc?.id===doc.id)await refreshReview();
 }
-async function openReview(doc){$('workspace').hidden=true;reportCost=null;activeDoc=doc;const panel=$('review');panel.hidden=false;panel.inert=true;panel.setAttribute('aria-busy','true');panel.scrollIntoView({behavior:'auto'});try{await refreshReview();}catch(error){if(activeDoc?.id===doc.id){panel.hidden=true;$('workspace').hidden=false;$('report-preview').removeAttribute('src');}throw error;}finally{if(activeDoc?.id===doc.id){panel.inert=false;panel.setAttribute('aria-busy','false');}}if(activeDoc?.id!==doc.id)return;if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.current_review?.reviews[stage]?.running)await waitCurrentReview(stage,detail.current_review.id);}
-async function refreshReview(){const doc=activeDoc;if(!doc)return;const fresh=await api(`/api/documents/${doc.id}/detail`);if(activeDoc?.id!==doc.id)return;detail=fresh;renderReview();await documents();}
+async function openReview(doc,requestedStep=0,restoring=false){flowScreens.set(doc.id,0);if(!restoring){activeDoc=doc;writeFlowLocation(0,'push');}$('workspace').hidden=true;reportCost=null;activeDoc=doc;const panel=$('review');panel.hidden=false;panel.inert=true;panel.setAttribute('aria-busy','true');panel.scrollIntoView({behavior:'auto'});try{await refreshReview();if(requestedStep>0){try{const accepted=await api(`/api/documents/${doc.id}/workflow-step`,{step:requestedStep,revision:detail.flow.revision});detail.flow=accepted;flowScreens.set(doc.id,accepted.active);renderReview();}catch(error){message(error.message);writeFlowLocation(0,'replace');}}}catch(error){if(activeDoc?.id===doc.id){panel.hidden=true;$('workspace').hidden=false;$('report-preview').removeAttribute('src');}throw error;}finally{if(activeDoc?.id===doc.id){panel.inert=false;panel.setAttribute('aria-busy','false');}}if(activeDoc?.id!==doc.id)return;if(detail.report_task?.state==='running')await waitReport();for(const stage of ['verify','analyze'])if(detail.current_review?.reviews[stage]?.running)await waitCurrentReview(stage,detail.current_review.id);}
+async function refreshReview(){const doc=activeDoc;if(!doc)return;const fresh=await api(`/api/documents/${doc.id}/detail`);if(activeDoc?.id!==doc.id)return;if(!fresh.flow)throw new Error('현재 서버에 단계별 화면 API가 없습니다. 업데이트 후 서버를 재시작해 주세요.');detail=fresh;renderReview();if(selected)await documents();}
 function renderReview(){
  renderTargets();
  const state=detail.status;const current=detail.current_report;const currentReview=detail.current_review;const base=`/api/documents/${activeDoc.id}`;
@@ -116,6 +161,7 @@ function renderReview(){
  $('record-html').href=base+'/verification.html';$('record-json').href=base+'/verification.json';
  const displayPassed=s=>s.id==='report'?!!current&&detail.current_layout?.status==='PASS':s.id==='verify'||s.id==='analyze'?currentReview?.reviews[s.id]?.status==='PASS':s.passed;
  $('checklist-summary').textContent=`완료 ${state.stages.filter(displayPassed).length} / ${state.stages.length} · ${state.approved?'승인 완료':'승인 전'}`;
+ for(const group of flowOperations.values())group.remove();flowOperations.clear();
  $('checklist-steps').replaceChildren();$('process-buttons').replaceChildren();$('check-results').replaceChildren();
  for(const [index,stage] of state.stages.entries()){
   $('checklist-steps').append(element('li',`${stageNames[stage.id]} · ${stage.id==='report'?(current?(detail.current_layout?.status==='PASS'?'저장·A4 확인 완료':'저장됨 · A4 확인 필요'):'정상 저장 보고서 없음'):displayPassed(stage)?'완료':'확인 전'}`));
@@ -138,7 +184,7 @@ function renderReview(){
  if(state.qualification?.blocked)$('check-results').append(element('p','최종 승인 조건: '+state.qualification.blocked,'muted small'));
  const reports=detail.reports;const saved=reports?.selected;const ready=!!saved;
  $('html-result').hidden=true;$('approval-panel').hidden=!current||current.revision!==state.revision;
- $('reviewed-html').checked=false;$('approval-note').value='';
+ const draftContext=activeDoc.id+':'+(current?.revision||'none');if(approvalDraftContext!==draftContext){$('reviewed-html').checked=false;$('approval-note').value='';approvalDraftContext=draftContext;}
  $('view-html').disabled=!ready;
  const history=$('generation-history');history.replaceChildren();
  const attempts=[...(detail.report_diagnostics||[])].reverse();const older=element('details');older.append(element('summary','이전 생성 이력'));for(const [index,attempt] of attempts.entries())(index?older:history).append(element('p',`생성 이력 · 대상 버전 ${attempt.revision} · ${attempt.started_at?new Date(attempt.started_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' (한국시간)':'시각 미기록'} · ${attempt.task==='report_layout_refine'?'배치 다듬기':'새 보고서 생성'} · API ${attempt.response_status||attempt.outcome} · ${attempt.elapsed_seconds??'?'}초 · 출력 한도 ${attempt.max_output_tokens}`));
@@ -210,9 +256,9 @@ $('save-ai-settings').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{
  renderAISettings(config);message('AI 설정을 저장했습니다. 다음 호출부터 적용됩니다.');
 });};
 $('save-report-prompt').onsubmit=e=>{e.preventDefault();submit(e.target,async()=>{const settings=await api('/api/settings/report',{prompt:$('report-prompt').value});$('prompt-version').textContent=`저장 버전 ${settings.version}`;message('보고서 프롬프트 원문을 저장했습니다. 기존 보고서는 변경하지 않았습니다.');});};
-$('close-review').onclick=()=>{$('review').hidden=true;$('workspace').hidden=false;activeDoc=null;$('report-preview').removeAttribute('src');};
+$('close-review').onclick=()=>closeFlowScreen('push');
 $('approve-document').onclick=()=>busy($('approve-document'),async()=>{if(!$('reviewed-html').checked)throw new Error('최종 HTML 검토를 확인해 주세요.');await api(`/api/documents/${activeDoc.id}/approve`,{revision:detail.status.revision,note:$('approval-note').value,reviewed_outputs:['report.html']});await refreshReview();});
-(async()=>{try{await signedIn();}catch(e){signedOut();if(!e.message.includes('로그인'))message(e.message);}})();
+(async()=>{try{await signedIn();await restoreFlowLocation();}catch(e){signedOut();if(!e.message.includes('로그인'))message(e.message);}})();
 
 function renderReportTimeout(config){
  if(config.unlimited!==true||config.timeout_seconds!==null){$('timeout-summary').textContent='현재 연결된 서버에서 무제한 대기 적용이 확인되지 않았습니다.';$('timeout-description').textContent='서버를 최신 버전으로 다시 시작한 뒤 새로고침해 주세요.';return;}
