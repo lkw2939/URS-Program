@@ -43,3 +43,19 @@ class CustomerPolicyTests(unittest.TestCase):
   findings=decision(body)['customer_findings'];analysis={'status':'PASS','issues':[],'questions':[{'question_ko':'어떤 시험 기준을 적용하나요?'}]}
   self.assertEqual(len(analysis_body(analysis,findings)['questions']),1)
   analysis['questions']=[];self.assertEqual(len(analysis_body(analysis,findings)['questions']),1);self.assertEqual(analysis['questions'],[])
+
+
+class BroaderTextEditTests(unittest.TestCase):
+ def test_inline_formatting_is_preserved_and_only_selected_text_changes(self):
+  from urs.review_results import replay,TextRanges,decoded_map
+  source='<html><head><style>b{color:blue}</style></head><body><section data-urs-page="1"><p>고객은 <strong>반드시</strong> 시험합니다.</p><a href="mailto:a@example.com">메일</a><img src="data:image/png;base64,AAAA"></section></body></html>'
+  patch=plan_changes(source,[{'id':'0','page':1,'can_propose':True}],[{'issue_id':'0','before':'고객은 반드시 시험합니다.','after':'고객의 시험을 권장합니다.'}])
+  final=replay(source,patch);visible=''.join(decoded_map(final[a:b])[0] for a,b,_ in TextRanges(final).ranges)
+  self.assertIn('고객의 시험을 권장합니다.',visible);self.assertIn('<strong>',final);self.assertIn('</strong>',final);self.assertIn('href="mailto:a@example.com"',final);self.assertIn('<style>b{color:blue}</style>',final);self.assertIn('src="data:image/png;base64,AAAA"',final)
+ def test_repeated_phrase_requires_an_explicit_occurrence(self):
+  from urs.review_results import replay
+  source='<html><body><section data-urs-page="1"><p>반복</p><p>반복</p></section></body></html>';entries=[{'id':'0','page':1,'can_propose':True}]
+  patch=plan_changes(source,entries,[{'issue_id':'0','page':1,'before':'반복','after':'수정','occurrence':2}]);self.assertIn('<p>반복</p><p>수정</p>',replay(source,patch))
+ def test_email_character_issue_allows_confirmed_text_edit_but_css_does_not(self):
+  rows=issues({'issues':[{'page':3,'issue_type':'program','reason':'이메일 표시 문자열에 폭이 없는 문자가 있습니다.'},{'page':3,'issue_type':'program','reason':'그림이 숨김 CSS로 보이지 않습니다.'}]})
+  by={r['id']:r for r in rows};self.assertTrue(by['0']['can_manual']);self.assertFalse(by['1']['can_manual']);self.assertFalse(by['0']['can_propose'])

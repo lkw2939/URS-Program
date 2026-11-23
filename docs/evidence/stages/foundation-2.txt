@@ -9,6 +9,6 @@ test_revalidation_revokes_approval_before_validator_returns (test_workflow.Workf
 test_validator_exception_fails_closed (test_workflow.WorkflowTests.test_validator_exception_fails_closed) ... ok
 
 ----------------------------------------------------------------------
-Ran 9 tests in 0.673s
+Ran 9 tests in 0.683s
 
 OK

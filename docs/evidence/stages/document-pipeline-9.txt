@@ -1,3 +1,6 @@
+test_email_character_issue_allows_confirmed_text_edit_but_css_does_not (test_review_presentation.BroaderTextEditTests.test_email_character_issue_allows_confirmed_text_edit_but_css_does_not) ... ok
+test_inline_formatting_is_preserved_and_only_selected_text_changes (test_review_presentation.BroaderTextEditTests.test_inline_formatting_is_preserved_and_only_selected_text_changes) ... ok
+test_repeated_phrase_requires_an_explicit_occurrence (test_review_presentation.BroaderTextEditTests.test_repeated_phrase_requires_an_explicit_occurrence) ... ok
 test_customer_only_passes_but_translation_unknown_and_program_still_block (test_review_presentation.CustomerPolicyTests.test_customer_only_passes_but_translation_unknown_and_program_still_block) ... ok
 test_customer_question_is_not_lost_or_duplicated_in_analysis (test_review_presentation.CustomerPolicyTests.test_customer_question_is_not_lost_or_duplicated_in_analysis) ... ok
 test_actual_copy_hash_distinguishes_transport_labels (test_review_presentation.ReviewPresentationTests.test_actual_copy_hash_distinguishes_transport_labels) ... ok
@@ -10,6 +13,6 @@ test_out_of_range_pages_not_promoted (test_review_presentation.ReviewPresentatio
 test_translation_ambiguity_and_program_are_distinct (test_review_presentation.ReviewPresentationTests.test_translation_ambiguity_and_program_are_distinct) ... ok
 
 ----------------------------------------------------------------------
-Ran 10 tests in 0.030s
+Ran 13 tests in 0.034s
 
 OK

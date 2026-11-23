@@ -50,10 +50,10 @@ def main():
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
     result=opened.value;result.wait_for_load_state();result.on('pageerror',lambda e:errors.append(str(e)));result.locator('.summary').wait_for()
     assert '보고서 버전 1' in result.locator('header').inner_text();assert 'SHA' not in result.locator('header').inner_text();assert '오류 2건' in result.locator('.summary').inner_text() and '기술분석으로 이관 2건' in result.locator('.summary').inner_text()
-    assert not result.locator('.technical').evaluate('(e)=>e.open');assert result.locator('select,input[type=file]').count()==0
+    assert not result.locator('.technical').evaluate('(e)=>e.open');assert result.locator('input[type=file],select:not([data-page])').count()==0
     assert result.locator('[data-issue="1"] textarea').count()==0;assert result.locator('[data-issue="3"] textarea').count()==0
     assert result.locator('[data-issue="1"],[data-issue="4"]').count()==0;assert result.locator('[data-issue="3"] .source').count()==0
-    assert result.locator('[data-issue="5"] .proposal summary').inner_text()=='수정 문구 직접 입력';assert not result.locator('[data-issue="5"] .proposal').evaluate('(e)=>e.open')
+    assert result.locator('[data-issue="5"] .proposal summary').inner_text()=='수정 문구 입력·비교';assert not result.locator('[data-issue="5"] .proposal').evaluate('(e)=>e.open')
     assert '판단 근거가 기록에 없습니다' not in result.locator('body').inner_text()
     assert '그림 주소만 다르고 본문·CSS는 같습니다' in result.locator('[data-issue="3"]').inner_text()
     assert abs(result.locator('main').evaluate('(e)=>e.getBoundingClientRect().width')-210*96/25.4)<2

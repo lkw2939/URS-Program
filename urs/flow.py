@@ -20,16 +20,22 @@ def state(workspace,owner,document):
             if for_row(r)=='PASS':return True,'독립검증 통과'
             from urs.review_results import issues
             entries=issues(json.loads(r['payload']),original['pages'])
-            if entries and all(i['customer_confirmation'] or i['kind']=='program' for i in entries):return True,'번역 지적 없음 · 표시 문제는 CSS 단계와 최종 검증에서 확인합니다.'
-            return False,'독립검증 결과에서 남은 번역 오류를 수정하거나 미확인 번역의 근거를 확인하세요.'
+            if entries and all(i['customer_confirmation'] or i['kind']=='layout' or (i['kind']=='program' and not i.get('text_integrity')) for i in entries):return True,'번역 지적 없음 · 표시 문제는 CSS 단계와 최종 검증에서 확인합니다.'
+            return False,'독립검증 결과에서 남은 번역 오류·확인 항목과 본문의 숨은 문자 문제를 수정하고 저장하세요.'
         meta=artifact(rev,'report-metadata')
         if meta.get('generation_kind')=='employee_selected_correction':
-            receipt=artifact(rev,'correction-patch');parent=meta.get('parent_revision')
-            with workspace.workflow.connect() as db:source=db.execute("SELECT * FROM target_reviews WHERE id=? AND target=? AND stage='verify'",(receipt.get('source_attempt'),f'displayed:{document}:{parent}')).fetchone()
-            if source and source['state']=='finished' and source['payload'] and receipt.get('parent_revision')==parent and receipt.get('parent_sha256')==hashlib.sha256(workspace.report_html(owner,document,revision=parent)).hexdigest():
+            receipt=artifact(rev,'correction-patch');target=receipt.get('source_target','')
+            with workspace.workflow.connect() as db:source=db.execute("SELECT * FROM target_reviews WHERE id=? AND target=? AND stage='verify'",(receipt.get('source_attempt'),target)).fetchone()
+            if source and source['state']=='finished' and source['payload'] and target.startswith(f'displayed:{document}:'):
+                from urs.correction_context import continuation
                 from urs.review_results import issues
-                entries=issues(json.loads(source['payload']),original['pages']);applied={p['issue_id'] for p in receipt.get('patches',[])}
-                if entries and all(i['customer_confirmation'] or i['kind']=='program' or (i['kind']=='error' and i['id'] in applied) for i in entries):return True,'선택한 번역 오류 수정 저장 완료 · CSS 후 최종 재검증은 필수입니다.'
+                root=int(target.rsplit(':',1)[1]);valid,applied=continuation(workspace,owner,document,rev,root,target,source['id'])
+                body=json.loads(source['payload']);entries=issues(body,original['pages'])
+                def resolved(item):
+                    patch=applied.get(item['id'],{})
+                    return item['customer_confirmation'] or item['kind']=='layout' or (item['kind']=='program' and not item.get('text_integrity')) or (item['kind']=='error' and bool(patch)) or (item.get('can_manual') and patch.get('confirmed') and len(patch.get('basis',''))>=5)
+                if valid and (entries or body.get('status')=='PASS') and all(resolved(i) for i in entries):return True,'문구 수정 저장 완료 · CSS 후 최종 재검증은 필수입니다.'
+                if valid:return False,'기존 검증 결과에서 아직 적용하지 않은 번역·본문 수정 항목을 확인하고 저장하세요. 이 단계에서 유료 검증을 다시 실행할 필요는 없습니다.'
         return False,'이 보고서의 독립검증을 실행하고 결과를 확인하세요.'
     report=bool(selected);revision=selected['revision'] if selected else None
     meta=artifact(revision,'report-metadata') if report else {}

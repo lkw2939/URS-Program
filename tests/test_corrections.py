@@ -43,9 +43,9 @@ class CorrectionTests(unittest.TestCase):
  def test_confirmations_and_layout_items_cannot_be_applied(self):
   for ident,before,after in [('1','120 mm','125 mm'),('2',BEFORE,AFTER)]:
    with self.assertRaises(Blocked):self.proposed([{'issue_id':ident,'before':before,'after':after}])
- def test_stale_result_cannot_patch_corrected_report(self):
+ def test_applied_item_is_locked_but_remaining_items_can_continue(self):
   p=self.proposed();corrections.apply(self.w,'alice',self.doc,p['plan_id'])
-  self.assertFalse(load(self.w,'alice',self.doc,self.target,self.attempt)['can_edit'])
+  self.assertTrue(load(self.w,'alice',self.doc,self.target,self.attempt)['can_edit'])
   with self.assertRaises(Blocked):self.proposed()
   self.assertFalse(load(self.w,'alice',self.doc,self.target,self.attempt)['execution_report']['reviews']['analyze']['can_run'])
  def test_apply_is_idempotent_and_preserves_old_approval(self):
@@ -75,5 +75,30 @@ class CorrectionTests(unittest.TestCase):
  def test_partial_corrections_do_not_unlock_css_workflow(self):
   from urs.flow import state,enter
   p=self.proposed();new=corrections.apply(self.w,'alice',self.doc,p['plan_id'])
-  info=state(self.w,'alice',self.doc);self.assertEqual(info['revision'],new['revision']);self.assertFalse(info['steps'][1]['passed']);self.assertFalse(info['steps'][2]['can_enter'])
+  info=state(self.w,'alice',self.doc);self.assertEqual(info['revision'],new['revision']);self.assertFalse(info['steps'][1]['passed']);self.assertFalse(info['steps'][2]['can_enter']);self.assertIn('아직 적용하지 않은',info['steps'][1]['reason']);self.assertIn('다시 실행할 필요는 없습니다',info['steps'][1]['reason'])
   with self.assertRaises(Blocked):enter(self.w,'alice',self.doc,2,new['revision'])
+
+ def test_multiple_applies_keep_source_review_and_accumulate_remaining_corrections(self):
+  from urs.flow import state
+  first=corrections.apply(self.w,'alice',self.doc,self.proposed()['plan_id'])
+  p=self.proposed([{'issue_id':'3','before':'모델 제목 & 원문','after':'모델 제목 & 원문 수정'}]);self.assertEqual(p['revision'],first['revision'])
+  second=corrections.apply(self.w,'alice',self.doc,p['plan_id'])
+  self.assertEqual(set(load(self.w,'alice',self.doc,self.target,self.attempt)['applied_issue_ids']),{'0','3'})
+  self.assertFalse(state(self.w,'alice',self.doc)['steps'][2]['can_enter'])
+  change={'issue_id':'1','page':1,'before':'120 mm','after':'120 mm (원본 확인 필요)','confirmed':True,'basis':'원문 확인이 필요한 상태를 명확하게 표시합니다.'}
+  third=corrections.apply(self.w,'alice',self.doc,self.proposed([change])['plan_id'])
+  final=self.w.report_html('alice',self.doc,revision=third['revision']).decode();self.assertIn(AFTER,final);self.assertIn('모델 제목 &amp; 원문 수정',final);self.assertIn('120 mm (원본 확인 필요)',final)
+  self.assertTrue(state(self.w,'alice',self.doc)['steps'][2]['can_enter']);self.assertEqual(self.w.report_html('alice',self.doc,revision=1),self.old)
+  with self.w.workflow.connect() as db:self.assertEqual(json.loads(db.execute('SELECT payload FROM target_reviews WHERE id=?',(self.attempt,)).fetchone()[0])['status'],'FAIL')
+ def test_manual_text_edit_needs_basis_and_does_not_clear_unrelated_findings(self):
+  from urs.flow import state
+  change={'issue_id':'manual:0','page':1,'before':'모델 제목 & 원문','after':'직원이 수정한 제목','confirmed':True,'basis':'원문 제목과 대조하여 작성한 수정입니다.'}
+  without={**change,'basis':''}
+  with self.assertRaises(Blocked):self.proposed([without])
+  revision=corrections.apply(self.w,'alice',self.doc,self.proposed([change])['plan_id'])['revision']
+  self.assertIn('직원이 수정한 제목',self.w.report_html('alice',self.doc,revision=revision).decode());self.assertFalse(state(self.w,'alice',self.doc)['steps'][2]['can_enter'])
+  self.assertEqual(load(self.w,'alice',self.doc,self.target,self.attempt)['manual_index'],1)
+ def test_new_generation_breaks_continuation_with_old_review(self):
+  corrections.apply(self.w,'alice',self.doc,self.proposed()['plan_id']);self.w.run('alice',self.doc,'report')
+  self.assertFalse(load(self.w,'alice',self.doc,self.target,self.attempt)['can_edit'])
+  with self.assertRaises(Blocked):self.proposed([{'issue_id':'3','before':'모델 제목 & 원문','after':'수정'}])

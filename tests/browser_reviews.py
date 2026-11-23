@@ -42,7 +42,7 @@ def main():
     page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("() => document.querySelector('#process-buttons').textContent.includes('실행 중')")
     gate.set();page.get_by_role('button',name='독립검증 결과 보기',exact=True).wait_for();page.wait_for_function("() => !document.querySelector('#view-verification').disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
-    result=opened.value;result.wait_for_load_state();assert '보고서 버전 2' in result.locator('header').inner_text();assert '독립검증' in result.title();assert '독립검증 적용 판정: PASS' in result.locator('#verification-verdict').inner_text();assert result.locator('.finding').count()==0;assert '1건' in result.locator('#customer-handoff').inner_text();result.screenshot(path=str(ROOT/'docs/evidence/review-verification.png'),full_page=True)
+    result=opened.value;result.wait_for_load_state();assert '보고서 버전 2' in result.locator('header').inner_text();assert '독립검증' in result.title();assert '독립검증 적용 판정: PASS' in result.locator('#verification-verdict').inner_text();assert result.locator('.finding:not(.manual)').count()==0;assert '1건' in result.locator('#customer-handoff').inner_text();result.screenshot(path=str(ROOT/'docs/evidence/review-verification.png'),full_page=True)
     page.get_by_role('button',name='기술 분석 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
     page.get_by_role('button',name='기술 분석 실행',exact=True).click();page.wait_for_function("() => !document.querySelector('#view-analysis').disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='기술분석 결과 보기',exact=True).click()
