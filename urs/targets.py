@@ -3,6 +3,7 @@ import hashlib,json,uuid,io,zipfile,os,math
 from datetime import datetime,timezone
 from html import escape
 from urs.workflow import Blocked
+from urs.review_policy import decision,for_row,customer_context
 
 MAX_HTML=12*1024*1024
 
@@ -67,13 +68,13 @@ def overview(workspace,owner,document,target):
         running=bool(current and current['state']=='running' and json.loads(current['evidence']).get('server_instance')==INSTANCE)
         verification=next((r for r in attempts if r['stage']=='verify'),None)
         blocked='실행 중입니다. 자동 재실행하지 않습니다.' if running else ''
-        if stage=='analyze' and (not verification or verification['state']!='finished' or verification['status']!='PASS'):blocked='이 선택 대상의 독립검증이 PASS여야 합니다. 다른 보고서·다른 리비전 결과는 재사용하지 않습니다.'
+        if stage=='analyze' and (not verification or verification['state']!='finished' or for_row(verification)!='PASS'):blocked='이 선택 대상의 독립검증이 PASS여야 합니다. 다른 보고서·다른 리비전 결과는 재사용하지 않습니다.'
         if request_count>=120:blocked=(blocked+' · ' if blocked else '')+'문서 요청 횟수 안전 상한(120회)입니다. 비용과 별개입니다.'
         failure=json.loads(current['evidence']).get('reason') if current and current['state']=='failed' else None
         if current and current['state']=='running' and not running:failure='이전 서버 작업의 완료 여부가 미확인입니다. API 사용 내역 확인 후 필요할 때만 수동 실행하세요.'
         if not running and budget.get(stage,{}).get('blocked'):
             blocked=(blocked+' · ' if blocked else '')+'이번 1회 예상 비용이 실행 한도를 넘습니다. 누적 사용액 때문이 아닙니다.'
-        info['reviews'][stage]={'budget_preview':budget.get(stage),'status':current['status'] if current else 'UNVERIFIED','can_run':not blocked,'blocked_reason':blocked,'running':running,'failure':failure,'available':stored is not None,'attempt':stored['id'] if stored else None,'older_attempt':bool(current and stored and current['id']!=stored['id'])}
+        info['reviews'][stage]={'budget_preview':budget.get(stage),'status':for_row(current) if stage=='verify' else current['status'] if current else 'UNVERIFIED','can_run':not blocked,'blocked_reason':blocked,'running':running,'failure':failure,'available':stored is not None,'attempt':stored['id'] if stored else None,'older_attempt':bool(current and stored and current['id']!=stored['id'])}
     return info
 
 def run(workspace,owner,document,target,stage):
@@ -100,11 +101,15 @@ def run(workspace,owner,document,target,stage):
         try:
             if config is None:raise AIBlocked('모델·effort·출력 한도 설정을 확인하세요. 유료 호출하지 않았습니다.')
             provider=workspace.processing.provider_for(document,config)
-            result=provider.review_pdf('independent_verify' if stage=='verify' else 'technical_analysis',original['original'],original['name'],row['payload'].decode())
+            findings=customer_context(workspace,target) if stage=='analyze' else []
+            kwargs={'customer_findings':findings} if findings else {}
+            result=provider.review_pdf('independent_verify' if stage=='verify' else 'technical_analysis',original['original'],original['name'],row['payload'].decode(),**kwargs)
+            if stage=='analyze':evidence['customer_handoff']={'from_target':target,'findings':findings}
             if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):raise ValueError('검토 JSON의 status/issues 형식이 올바르지 않습니다.')
-            if result['status']=='PASS' and result['issues']:raise ValueError('PASS와 오류 목록이 모순됩니다.')
+            if result['status']=='PASS' and result['issues'] and (stage!='verify' or decision(result)['blocking_count']):raise ValueError('PASS와 오류 목록이 모순됩니다.')
             if stage=='analyze' and any(not isinstance(result.get(k),list) for k in ('sections','conflicts','questions')):raise ValueError('분석 JSON의 sections/conflicts/questions 목록이 필요합니다.')
-            status=result['status'];state='finished'
+            status=decision(result)['status'] if stage=='verify' else result['status'];state='finished'
+            if stage=='verify':evidence['acceptance_policy']={k:v for k,v in decision(result).items() if k!='customer_findings'}
         except Exception as exc:
             result=None;status='FAIL';state='failed'
             evidence['reason']=str(exc) if isinstance(exc,(AIError,AIBlocked,Blocked)) else '검토 결과 처리 실패: '+type(exc).__name__
@@ -155,7 +160,15 @@ def result_html(workspace,owner,document,target,stage,attempt):
     body=json.loads(row['payload']);ev=json.loads(row['evidence'])
     label='저장 리비전' if target_row['kind'] in ('stored_revision','stored_final') else 'A4'
     input_note=('화면에서 열람한 URS 최종 HTML(사진 포함)과 원본 PDF를 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.' if target_row['kind']=='stored_final' else '선택 리비전의 원본 PDF + 저장 Terra 원본 HTML을 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.') if target_row['kind'] in ('stored_revision','stored_final') else '원본 PDF + 등록 A4 HTML을 사용했습니다. 기존 Terra 원본 HTML의 검토 결과가 아닙니다.'
-    s='<h1>'+label+' '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(row['status'])+'</p>'
+    s='<h1>'+label+' '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(for_row(row) if stage=='verify' else row['status'])+'</p>'
+    if stage=='analyze':
+        transferred=ev.get('customer_handoff',{}).get('findings',[])
+        if 'customer_handoff' not in ev:
+            transferred=customer_context(workspace,target)
+            if transferred:s+='<p>아래 이관 항목은 저장된 독립검증에서 가져온 추가 확인 사항입니다. 이 과거 기술분석 호출에 전송됐다는 기록은 없습니다.</p>'
+        from urs.review_policy import analysis_body
+        body=analysis_body(body,transferred)
+        if transferred:s+='<p>독립검증에서 이관된 고객 확인 사항 '+str(len(transferred))+'건을 아래 고객 질문에서 함께 관리합니다. 고객 답변 대기는 독립검증 통과를 막지 않습니다.</p>'
     if latest['id']!=attempt:s+='<p>이전 실행 결과입니다. 최신 결과가 아닙니다.</p>'
     s+='<p>보고서를 수정하지 않았습니다. 수정 전후는 제안이며 실제 적용되지 않았습니다.</p>'
     for key,title in [('issues','발견 사항'),('sections','주요 사양'),('conflicts','조건 충돌'),('questions','고객 질문과 필요한 이유')]:

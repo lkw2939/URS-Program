@@ -76,3 +76,32 @@ class TargetTests(unittest.TestCase):
    with self.assertRaises(Blocked):targets.run(self.w,'alice',self.doc,ident,'verify')
   self.assertEqual(len(self.w.processing.provider.calls),calls)
   self.assertEqual(targets.get(self.w,'alice',self.doc,ident)[0]['payload'],self.html)
+
+ def test_customer_only_unlocks_analysis_preserves_old_rows_and_forwards_exact_context(self):
+  from urs.costing import review_parts
+  ident=self.register();finding={'page':1,'issue_type':'customer','severity':'확인 필요','question_ko':'어느 시험 시간을 적용하나요?','reason':'원문 기준이 서로 다릅니다.'}
+  result={'status':'NEEDS_REVIEW','issues':[finding]}
+  with patch.object(self.w.processing.provider,'review_pdf',return_value=result):targets.run(self.w,'alice',self.doc,ident,'verify')
+  with self.w.workflow.connect() as db:
+   old=tuple(db.execute("SELECT * FROM target_reviews WHERE target=? AND stage='verify'",(ident,)).fetchone())
+   self.assertEqual(json.loads(old[5]),result)
+  info=targets.overview(self.w,'alice',self.doc,ident);self.assertEqual(info['reviews']['verify']['status'],'PASS');self.assertTrue(info['reviews']['analyze']['can_run'])
+  # Cached quote and actual request must contain exactly the same carried questions.
+  from urs.review_policy import customer_context
+  context=customer_context(self.w,ident)
+  expected=review_parts('technical_analysis',self.html.decode(),context)
+  with patch.object(self.w.processing.provider,'review_pdf',return_value={'status':'PASS','issues':[],'sections':[],'conflicts':[],'questions':[]}) as call:
+   targets.run(self.w,'alice',self.doc,ident,'analyze')
+   self.assertEqual(review_parts('technical_analysis',self.html.decode(),call.call_args.kwargs['customer_findings']),expected)
+  info=targets.overview(self.w,'alice',self.doc,ident)
+  page=targets.result_html(self.w,'alice',self.doc,ident,'analyze',info['reviews']['analyze']['attempt']).decode();self.assertIn('어느 시험 시간을 적용하나요?',page)
+  with self.w.workflow.connect() as db:self.assertEqual(tuple(db.execute("SELECT * FROM target_reviews WHERE target=? AND stage='verify'",(ident,)).fetchone()),old)
+ def test_historical_customer_only_policy_is_read_only_and_latest_failure_blocks(self):
+  ident=self.register();body={'status':'NEEDS_REVIEW','issues':[{'page':1,'category':'source_ambiguity','reason':'원문 기준 모호'}]}
+  with self.w.workflow.connect() as db:db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(ident,'verify','finished','NEEDS_REVIEW',json.dumps(body),'{}','old'))
+  with self.w.workflow.connect() as db:before=[tuple(r) for r in db.execute('SELECT * FROM target_reviews')]
+  self.assertTrue(targets.overview(self.w,'alice',self.doc,ident)['reviews']['analyze']['can_run'])
+  with self.w.workflow.connect() as db:
+   self.assertEqual([tuple(r) for r in db.execute('SELECT * FROM target_reviews')],before)
+   db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(ident,'verify','failed','FAIL',None,'{}','new'))
+  self.assertFalse(targets.overview(self.w,'alice',self.doc,ident)['reviews']['analyze']['can_run'])

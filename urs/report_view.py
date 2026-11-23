@@ -39,11 +39,13 @@ def context(workspace,owner,document,selected,current_review):
     latest=rows[0] if rows else None;stored=next((r for r in rows if r['payload']),None)
     findings=issues(json.loads(stored['payload']),workspace.original(owner,document)['pages']) if stored else []
     evidence=json.loads(stored['evidence']) if stored else {}
-    verdict=stored['status'] if stored else None
+    from urs.review_policy import for_row
+    verdict=for_row(stored) if stored else None
     return {'revision':rev,'filename':'report.html','sha256':digest,'report_url':base+f'/report.html?revision={rev}','raw_url':base+f'/report.raw.html?revision={rev}' if selected.get('raw_available') else None,'picture_facts':picture_facts(payload.decode()),'verification':{
         'can_execute':current_review['reviews']['verify']['can_run'] if current_review else False,'execution_blocked_reason':current_review['reviews']['verify']['blocked_reason'] if current_review else '검증 대상이 없습니다.',
         'latest_attempt_state':latest['state'] if latest else None,'latest_attempt_status':latest['status'] if latest else None,'latest_attempt_reason':json.loads(latest['evidence']).get('reason') if latest else None,
         'saved_result_status':verdict,'saved_attempt':stored['id'] if stored else None,'previous_attempt_result':bool(stored and latest and stored['id']!=latest['id']),
-        'findings':[{'id':f['id'],'page':f['page'],'pages':f['pages'],'kind':f['kind'],'title':f['title'],'problem':f['problem'],'question':f['question']} for f in findings],
-        'customer_answer_recording_available':False,'pass_rule':'현재 보고서 버전의 검토가 정상 완료되고 모델 응답이 PASS이며 issues가 비어 있어야 합니다. 실행 가능 상태는 PASS와 다릅니다. 직원 최종 승인 조건은 별도입니다.',
+        'findings':[{'id':f['id'],'page':f['page'],'pages':f['pages'],'kind':f['kind'],'title':f['title'],'problem':f['problem'],'question':f['question']} for f in findings if not f['customer_confirmation']],
+        'customer_handoff_count':sum(f['customer_confirmation'] for f in findings),
+        'customer_answer_recording_available':False,'pass_rule':'현재 보고서 버전의 검토가 정상 완료되고 번역 오류·미확인 번역·프로그램 문제가 없어야 합니다. 원문 조건에 대한 고객 확인은 기술분석으로 이관하며 독립검증 PASS를 막지 않습니다. 실행 가능 상태는 PASS와 다릅니다. 직원 최종 승인 조건은 별도입니다.',
         'comparison':compare(payload.decode(),evidence.get('transport_manifest'))}}

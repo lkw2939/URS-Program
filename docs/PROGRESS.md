@@ -497,3 +497,21 @@ report_diagnostics는 시도별 추가 기록입니다. 기존 report HTML/프�
 | 실제 OpenAI/고객 품질/99%/직원 인수 | UNVERIFIED / 보류 | 이번 작업은 유료 API 호출 0회, 실제 고객 문서/운영 DB 접근 없음 |
 
 재현: `python scripts/validate.py`. 최신 근거: docs/evidence/validation-summary.json, final-tests.txt, final-browser.txt, final-html.txt, html-comparison.json.
+
+
+## 고객 확인을 기술분석으로 분리 — 2026-11-23
+
+고객 답변 대기는 번역 독립검증의 통과 조건에서 제외한다. 원문 자체의 모호성·상충 또는 명시적인 customer 항목만 이관하며, 확정 오역·누락·근거 불명 번역·프로그램 표시 문제는 계속 차단한다. 고객 확인만 남은 정상 완료 응답에는 번역 독립검증 PASS를 적용한다. 과거 모델 JSON·저장 판정은 변경하지 않고 원판정/현재 적용 정책을 구분한다. 최신 실패/진행 중 결과는 이전 결과로 우회하지 않는다.
+
+같은 저장 HTML 대상의 고객 질문을 기술분석의 추가 입력으로 전달한다. 무료 비용 계산과 실제 요청은 같은 전송 자료를 사용한다. 질문과 이유는 기술분석 결과에 통합하고 동일 문구는 중복 표시하지 않는다. 보고서·원본 PDF·번역/디자인/CSS 생성 방식 및 기존 직원 답변은 바꾸지 않는다.
+
+확인 범위: 임시 DB·합성 PDF·로그인된 Chromium 화면 및 모의 OpenAI 전송. 실제 유료 API 호출 0회, 운영 적용·실제 SG6 판정 변경은 미확인이다. 상세 시험 결과는 docs/evidence/validation-summary.json과 final-review-browser.txt를 따른다.
+
+| 완료 확인 | 결과 |
+|---|---|
+| 단위·서버 시험 | 258개 PASS |
+| 전체 회귀 실행기 | 13개 모두 종료 0 |
+| 고객 확인만 남은 로그인 화면 → 기술분석 → 질문 전송·결과 표시 | 모의 응답 PASS |
+| 기존 보고서·과거 검증 JSON 보존 | 임시 DB 시험 PASS |
+| 실제 유료 호출 | 0회 |
+| 운영 적용 | 미확인 — 외부 주소 HTTP 404, 연결 계정 Codespaces 목록 비어 있음 |

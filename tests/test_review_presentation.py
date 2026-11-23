@@ -27,3 +27,19 @@ class ReviewPresentationTests(unittest.TestCase):
   self.assertEqual(d['staff_hidden_declarations'],1);self.assertEqual(d['review_hidden_declarations'],1);self.assertIn('직원용 HTML에도', ' '.join(explanation({'problem':'숨김 CSS','title':'점검'},d)))
  def test_delete_with_replacement_is_rejected(self):
   with self.assertRaises(ValueError):plan_changes('<html><body><p>원래 문장</p></body></html>',[{'id':'0','page':1,'can_propose':True}],[{'issue_id':'0','before':'원래 문장','after':'수정문','delete':True}],single_page=True)
+
+class CustomerPolicyTests(unittest.TestCase):
+ def test_customer_only_passes_but_translation_unknown_and_program_still_block(self):
+  from urs.review_policy import decision
+  customer={'page':7,'issue_type':'customer','severity':'오류','reason':'원문에 4시간과 2시간이 함께 있어 적용 기준 확인 필요'}
+  for status in ('FAIL','NEEDS_REVIEW','PASS'):
+   body={'status':status,'issues':[customer]};self.assertEqual(decision(body)['status'],'PASS');self.assertEqual(body['status'],status)
+  for blocking in ({'severity':'오류','issue_type':'translation','reason':'수치 오역'}, {'severity':'확인 필요','reason':'번역 근거 부족'}, {'issue_type':'program','reason':'사진이 숨겨짐'}, {'category':'source_ambiguity','issue_type':'translation','reason':'원문은 모호하지만 번역은 단정'}):
+   self.assertNotEqual(decision({'status':'NEEDS_REVIEW','issues':[customer,blocking]})['status'],'PASS')
+  self.assertEqual(decision({'status':'FAIL','issues':[]})['status'],'FAIL')
+ def test_customer_question_is_not_lost_or_duplicated_in_analysis(self):
+  from urs.review_policy import decision,analysis_body
+  body={'status':'NEEDS_REVIEW','issues':[{'page':1,'category':'source_conflict','question_ko':'어떤 시험 기준을 적용하나요?','reason':'원문에 두 기준이 있습니다.'}]}
+  findings=decision(body)['customer_findings'];analysis={'status':'PASS','issues':[],'questions':[{'question_ko':'어떤 시험 기준을 적용하나요?'}]}
+  self.assertEqual(len(analysis_body(analysis,findings)['questions']),1)
+  analysis['questions']=[];self.assertEqual(len(analysis_body(analysis,findings)['questions']),1);self.assertEqual(analysis['questions'],[])

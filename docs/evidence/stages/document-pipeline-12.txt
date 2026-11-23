@@ -7,6 +7,6 @@ test_text_or_image_change_is_rejected_and_previous_report_is_kept (test_layout_r
 test_unknown_initial_usage_keeps_reservation_and_blocks_overall_execution_cap (test_layout_refinement.RefinementTests.test_unknown_initial_usage_keeps_reservation_and_blocks_overall_execution_cap) ... ok
 
 ----------------------------------------------------------------------
-Ran 7 tests in 26.732s
+Ran 7 tests in 25.980s
 
 OK

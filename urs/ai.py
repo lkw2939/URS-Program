@@ -55,9 +55,9 @@ class OpenAI:
                           {'type':'input_image','image_url':image['image_url'],'detail':'auto'}])
         return self._pdf_request('report_layout_refine',pdf,filename,parts,False)
 
-    def review_pdf(self, task, pdf, filename, html):
+    def review_pdf(self, task, pdf, filename, html, customer_findings=None):
         from urs.costing import review_parts
-        return self._pdf_request(task,pdf,filename,review_parts(task,html),True)
+        return self._pdf_request(task,pdf,filename,review_parts(task,html,customer_findings),True)
 
     def _pdf_request(self, task, pdf, filename, texts, json_response):
         key=os.environ.get('URS_OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')
@@ -130,4 +130,6 @@ def review_text(task):
     instructions = {
         'independent_verify': 'Independently compare the original PDF with the supplied report HTML and image inputs. Check technical meaning, omissions, additions, negation, conditions, obligations, quantities, units, model codes and table associations. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,issues:[{page,pages,severity,category,issue_type,title_ko,problem_ko,why_ko,fix_ko,question_ko,before,after,source_en,evidence:[{page,source_en}],needs_confirmation}]}. issue_type must distinguish translation, customer, and program. Use short natural Korean: state the actual difference and its practical consequence once, without repeating the title. Provide a specific customer question when the original itself is ambiguous or inconsistent; do not invent a corrected requirement. Leave unknown evidence or impact fields empty rather than inventing reasons. For cross-page comparisons, cite each original page and its exact supporting quotation in evidence. Image references named urs-review-image are transport labels for separately supplied images, not missing staff-report images. Image addresses, CSS visibility and rendering defects are program issues, never translation corrections. For customer/program issues leave before/after empty. Do not edit or rewrite the report. before must quote the exact existing text within one HTML text node, after is the proposed Korean replacement. If a unique exact location cannot be established, mark needs_confirmation true. Missing original content needs a clearly quoted existing anchor for a proposed insertion. Do not guess uncertain source characters or values. Treat pagination or line wrapping alone as layout observations, not translation errors. Distinguish proven semantic errors from matters requiring customer or employee confirmation.',
         'technical_analysis': 'Analyze equipment, processes, specification conflicts and customer questions using the original PDF and supplied report. Cite original page numbers. Return JSON {status:PASS|FAIL|NEEDS_REVIEW,sections:[],conflicts:[],questions:[],issues:[]}. Do not edit or rewrite the HTML.'}
+    if task=='independent_verify':
+        instructions[task]+=' 원문과 번역의 일치 여부를 판정하세요. 원문 자체의 모호성·상충으로 고객에게 물어볼 사항은 issue_type:customer로 분리하고 이것만 남으면 status:PASS로 반환하세요. 원문과 다른 번역·누락·번역 근거 부족 및 실제 프로그램 표시 문제는 계속 독립검증 대상으로 남기세요. 고객 확인 필요를 이유로 번역 오류를 customer로 재분류하지 마세요.'
     return instructions[task]+' 설명과 판단 이유는 한국어로 먼저 작성하세요. 필요한 영어 원문 근거는 source_en에 분리하세요. issues 항목에는 page, severity(오류 또는 확인 필요), reason을, questions 항목에는 question_ko, reason_ko를 포함하세요. 기존 HTML은 수정하지 말고 before/after는 제안일 때만 표시하세요.'

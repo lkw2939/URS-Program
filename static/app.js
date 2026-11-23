@@ -157,9 +157,9 @@ function renderVerificationGuide(info,available=false){
  $('verification-pass-rule').textContent=info?info.pass_rule:'PASS는 해당 보고서의 검토 완료 응답이 PASS이고 발견 항목이 없어야 합니다.';
  const box=$('verification-current-blockers');box.replaceChildren();if(!info)return;
  if(info.latest_attempt_state==='failed')box.append(element('p','최근 실행 실패: '+(info.latest_attempt_reason||'실패 이유 미기록')+' · 이전 결과가 있으면 별도로 보존합니다.'));
- box.append(element('p',info.saved_result_status?`${info.previous_attempt_result?'이전 저장 결과':'현재 저장 결과'}: ${info.saved_result_status} · 버전 ${detail.current_report.revision}`:'현재 보고서의 저장된 독립검증 결과가 없습니다. 실행 가능과 PASS는 별개입니다.'));
- for(const issue of info.findings){const kind={error:'번역 오류',review:'고객 확인',program:'프로그램 점검',layout:'표시 차이'}[issue.kind];const text=element('p',`${kind} · ${issue.pages.length?issue.pages.join('·')+'쪽':'쪽 미기록'} · ${issue.problem||issue.title}`);if(issue.question)text.append(element('span',' · 질문: '+issue.question));box.append(text);}
- if(info.findings.some(i=>i.kind==='review'))box.append(element('p','담당 직원이 고객/RFQ 책임자에게 질문을 확인해야 합니다. 현재 웹에는 고객 답변·근거를 저장하는 전용 입력칸이 없습니다. 확인했다고 체크하거나 번역 수정칸에 답을 적는 것으로 PASS 처리할 수 없습니다.','notice'));
+ box.append(element('p',info.saved_result_status?`${info.previous_attempt_result?'이전 저장 결과':'현재 적용 판정'}: ${info.saved_result_status} · 버전 ${detail.current_report.revision}`:'현재 보고서의 저장된 독립검증 결과가 없습니다. 실행 가능과 PASS는 별개입니다.'));
+ for(const issue of info.findings){const kind={error:'번역 오류',review:'번역 확인 필요',program:'프로그램 점검',layout:'표시 차이'}[issue.kind];const text=element('p',`${kind} · ${issue.pages.length?issue.pages.join('·')+'쪽':'쪽 미기록'} · ${issue.problem||issue.title}`);if(issue.question)text.append(element('span',' · 질문: '+issue.question));box.append(text);}
+ if(info.customer_handoff_count)box.append(element('p',`고객 확인 ${info.customer_handoff_count}건은 기술분석으로 이관했습니다. 고객 답변 대기는 독립검증 PASS를 막지 않습니다.`,'notice'));
  if(info.findings.some(i=>i.kind==='program'))box.append(element('p','프로그램 점검은 개발/운영 담당자가 직원용 report.html과 실제 전송 사본을 대조해야 합니다. 번역 문구 수정칸에서 고치지 않습니다.','notice'));
 }
 function renderAISettings(config){

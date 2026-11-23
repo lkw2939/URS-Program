@@ -34,7 +34,7 @@ def main():
     with page.expect_download() as download:page.locator('#raw-html').click()
     assert Path(download.value.path()).read_bytes()==raw;assert raw!=final;assert page.locator('#final-html').get_attribute('href')==src
     page.locator('#technical-details > summary').click()
-    guide=page.locator('#verification-guide').inner_text();assert '저장 보고서 확인됨' in guide and 'NEEDS_REVIEW' in guide and '실행 가능 상태는 PASS와 다릅니다' in guide;assert '고객 답변·근거를 저장하는 전용 입력칸이 없습니다' in guide;assert '번역 문구 수정칸에서 고치지 않습니다' in guide
+    guide=page.locator('#verification-guide').inner_text();assert '저장 보고서 확인됨' in guide and 'NEEDS_REVIEW' in guide and '실행 가능 상태는 PASS와 다릅니다' in guide;assert '고객 확인 1건은 기술분석으로 이관했습니다' in guide;assert '번역 문구 수정칸에서 고치지 않습니다' in guide
     page.locator('#verification-guide').screenshot(path=str(ROOT/'docs/evidence/staff-report-pass-guide.png'))
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
     result=opened.value;result.wait_for_load_state();assert result.locator('.finding.error textarea').count()==2;assert result.locator('.finding.review textarea,.finding.program textarea').count()==0;assert result.locator('#corrected-report').is_hidden();assert '버전 1' in result.locator('#verified-report').inner_text();assert not errors,errors
@@ -43,6 +43,6 @@ def main():
      response=route.fetch();data=response.json();data.pop('staff_report',None);route.fulfill(response=response,json=data)
     page.route('**/api/documents/*/detail',older_api);page.reload();page.locator('#workspace').wait_for(state='visible');page.get_by_role('button',name='Saved report fixture',exact=True).click();page.get_by_role('button',name='보고서 검토',exact=True).click();page.wait_for_function("() => document.querySelector('#report-photo-facts').textContent.includes('새 사진 진단 정보')");assert 'report.html' in page.locator('#report-file-identity').text_content();assert '저장 보고서는 있습니다' in page.locator('#report-photo-facts').text_content();assert page.get_by_role('button',name='최종 보고서 보기(사진 포함)',exact=True).is_enabled();b.close()
    with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}
-   network.assert_not_called();print('PASS: existing-history-only login -> one primary employee report button -> report.html revision1 exact bytes; page9 diagram and page23 photos are embedded but CSS-hidden in legacy fixture; final download matches preview, raw download differs and all secondary files are in closed details; can-run vs NEEDS_REVIEW separated, customer-recording gap disclosed, program issues excluded from translation fields; artifacts/results unchanged; generation/review/API calls=0.')
+   network.assert_not_called();print('PASS: existing-history-only login -> one primary employee report button -> report.html revision1 exact bytes; page9 diagram and page23 photos are embedded but CSS-hidden in legacy fixture; final download matches preview, raw download differs and all secondary files are in closed details; can-run vs NEEDS_REVIEW separated, customer questions handed to technical analysis without blocking verification, program issues excluded from translation fields; artifacts/results unchanged; generation/review/API calls=0.')
   finally:server.shutdown();server.server_close();thread.join()
 if __name__=='__main__':main()

@@ -24,7 +24,7 @@ def rates():
         return v
     return {'cap_usd':value('URS_AI_BUDGET_USD'),'input_rate':value('URS_AI_INPUT_USD_PER_MILLION'),'output_rate':value('URS_AI_OUTPUT_USD_PER_MILLION'),'cached_input_rate':value('URS_AI_CACHED_INPUT_USD_PER_MILLION',True)}
 
-def review_parts(task,html):
+def review_parts(task,html,customer_findings=None):
     """Transport copy only: replace embedded src bytes with IDs, attach same PNGs.
 
     Stored HTML remains immutable. No resizing, recompression, or model change.
@@ -45,6 +45,9 @@ def review_parts(task,html):
     # Never silently bill remaining embedded image base64 as report prose.
     if re.search(r'data:image/[^;,\s]+;base64,',text,re.I):raise CostError('분리하지 못한 내장 이미지가 있습니다. 전송 형식 확인 전 유료 호출하지 않습니다.')
     parts=[{'type':'input_text','text':review_text(task)},{'type':'input_text','text':text}]
+    if task=='technical_analysis' and customer_findings:
+        from urs.review_policy import context_part
+        parts.append(context_part(customer_findings))
     for key,url in images.items():
         parts.extend([{'type':'input_text','text':'HTML image reference: urs-review-image:'+key},{'type':'input_image','image_url':url,'detail':'auto'}])
     return parts
@@ -121,8 +124,9 @@ def review_quote(workspace,owner,document,target,stage,count=False):
     from urs.targets import get
     from urs.ai_settings import effective
     row,original=get(workspace,owner,document,target);config=effective(workspace.workflow,document=document)
-    from urs.ai import review_text
-    request=payload(config,original['original'],original['name'],review_parts('independent_verify' if stage=='verify' else 'technical_analysis',row['payload'].decode()),True)
+    from urs.review_policy import customer_context
+    findings=customer_context(workspace,target) if stage=='analyze' else None
+    request=payload(config,original['original'],original['name'],review_parts('independent_verify' if stage=='verify' else 'technical_analysis',row['payload'].decode(),findings),True)
     result=quote(workspace.workflow,request,count)
     return {**result,'target':target,'revision':row['parent_revision'],'stored_html_sha256':row['sha256']}
 

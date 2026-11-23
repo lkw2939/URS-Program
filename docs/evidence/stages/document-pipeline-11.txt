@@ -3,6 +3,6 @@ test_unsplittable_table_row_is_preserved_and_reported (test_a4_pages.A4Tests.tes
 test_wrong_screen_size_hidden_image_and_long_content_are_saved_automatically (test_a4_pages.A4Tests.test_wrong_screen_size_hidden_image_and_long_content_are_saved_automatically) ... ok
 
 ----------------------------------------------------------------------
-Ran 3 tests in 5.648s
+Ran 3 tests in 5.406s
 
 OK

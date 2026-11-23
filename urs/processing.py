@@ -128,16 +128,24 @@ class Processing:
         self.checked_html(document,revision)
         input_kind='report.html' if (self.get(document,'report-metadata',revision).get('generation_kind')=='employee_selected_correction' or self.get(document,'report-metadata',revision).get('image_presentation_version') or self.get(document,'report-metadata',revision).get('a4_pagination_changed') or self.get(document,'report-metadata',revision).get('layout_refinement_accepted')) else 'report.raw.html'
         raw=self.get(document,input_kind,revision).decode()
-        result=self.provider_for(document,config).review_pdf(task,pdf,name,raw)
+        from urs.review_policy import decision
+        customer_findings=[]
+        if kind=='analysis':
+            with self.workflow.connect() as db:
+                previous=db.execute("SELECT payload FROM review_attempts WHERE document=? AND revision=? AND stage='verify' AND state='finished' ORDER BY id DESC LIMIT 1",(document,revision)).fetchone()
+                if previous is None:previous=db.execute("SELECT payload FROM artifacts WHERE document=? AND revision=? AND kind='verification'",(document,revision)).fetchone()
+            if previous and previous['payload']:customer_findings=decision(json.loads(previous['payload']))['customer_findings']
+        kwargs={'customer_findings':customer_findings} if customer_findings else {}
+        result=self.provider_for(document,config).review_pdf(task,pdf,name,raw,**kwargs)
         if not isinstance(result,dict) or result.get('status') not in ('PASS','FAIL','NEEDS_REVIEW') or not isinstance(result.get('issues'),list):
             raise ValueError('검토 응답 형식이 올바르지 않습니다.')
-        if result['status']=='PASS' and result['issues']:raise ValueError('검토 상태와 오류 목록이 모순됩니다.')
+        if result['status']=='PASS' and result['issues'] and (kind!='verification' or decision(result)['blocking_count']):raise ValueError('검토 상태와 오류 목록이 모순됩니다.')
         if kind=='analysis' and any(not isinstance(result.get(k),list) for k in ('sections','conflicts','questions')):
             raise ValueError('기술 분석 형식이 올바르지 않습니다.')
         if persist:self.put(document,revision,kind,result)
         bindings=self.get(document,'image-bindings',revision)
-        status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(result['status'])
-        return status, {**({'review_result':result} if not persist else {}),'input_html_kind':input_kind,'input_html_sha256':hashlib.sha256(raw.encode()).hexdigest(),'input_pdf_sha256':hashlib.sha256(pdf).hexdigest(),'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
+        status=Status.NEEDS_REVIEW if bindings['unresolved'] else Status(decision(result)['status'] if kind=='verification' else result['status'])
+        return status, {**({'review_result':result} if not persist else {}),'customer_handoff':{'findings':customer_findings} if kind=='analysis' else None,'acceptance_policy':{k:v for k,v in decision(result).items() if k!='customer_findings'} if kind=='verification' else None,'input_html_kind':input_kind,'input_html_sha256':hashlib.sha256(raw.encode()).hexdigest(),'input_pdf_sha256':hashlib.sha256(pdf).hexdigest(),'issues':result['issues'],'unresolved':bindings['unresolved'],'artifact':kind,
             'model':config['model'],'reasoning_effort':config['effort'],'max_output_tokens':config['max_output_tokens'],'ai_settings_version':config['version'],'ai_settings_signature':signature(config),'pipeline_fingerprint':fingerprint(),
             'api_timeout_seconds':None,'api_wait_policy':'unlimited','accuracy_99_measured':False,'reason':'원본 PDF와 HTML의 별도 검토. HTML은 변경하지 않음.'}
 

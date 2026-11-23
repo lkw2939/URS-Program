@@ -91,6 +91,9 @@ def result_html(workspace,owner,document,stage,attempt=None,revision=None):
         if row is None:raise Blocked('저장된 '+NAMES[stage]+' 결과가 없습니다. 실행 조건과 실패 이유를 확인하세요.')
         body=json.loads(row['payload']);rev=row['revision'];evidence=json.loads(row['evidence'])
         attempts=rows
+    if stage=='analyze':
+        from urs.review_policy import analysis_body
+        body=analysis_body(body,evidence.get('customer_handoff',{}).get('findings',[]))
     input_label='직원 수정이 반영된 최종 HTML' if evidence.get('input_html_kind')=='report.html' else 'Terra 원본 HTML'
     parts=[f'<h1>{NAMES[stage]} 결과</h1>',f'<p><strong>보고서 리비전 {rev}</strong> · 현재 리비전 {current} · '+('이전 결과 — 최신 결과가 아닙니다' if rev!=current else '현재 리비전 결과')+'</p>',
         '<p>입력: 해당 리비전의 원본 PDF와 '+input_label+'. A4 별도 수정본·변환 PDF를 검토한 결과가 아닙니다.</p>',

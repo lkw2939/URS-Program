@@ -24,7 +24,7 @@ class ReportAI:
     def report_html(self,pdf,filename,prompt,image_guide):
         self.calls.append(('report',pdf,filename,prompt,image_guide))
         return self.raw
-    def review_pdf(self,task,pdf,filename,html):
+    def review_pdf(self,task,pdf,filename,html,customer_findings=None):
         self.calls.append((task,pdf,filename,html))
         return {'status':'PASS','issues':[],'sections':[{'page':1,'text':'fixture analysis'}],'conflicts':[],'questions':[]}
 

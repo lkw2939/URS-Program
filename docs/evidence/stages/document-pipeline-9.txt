@@ -1,3 +1,5 @@
+test_customer_only_passes_but_translation_unknown_and_program_still_block (test_review_presentation.CustomerPolicyTests.test_customer_only_passes_but_translation_unknown_and_program_still_block) ... ok
+test_customer_question_is_not_lost_or_duplicated_in_analysis (test_review_presentation.CustomerPolicyTests.test_customer_question_is_not_lost_or_duplicated_in_analysis) ... ok
 test_actual_copy_hash_distinguishes_transport_labels (test_review_presentation.ReviewPresentationTests.test_actual_copy_hash_distinguishes_transport_labels) ... ok
 test_both_pages_need_quotes (test_review_presentation.ReviewPresentationTests.test_both_pages_need_quotes) ... ok
 test_delete_with_replacement_is_rejected (test_review_presentation.ReviewPresentationTests.test_delete_with_replacement_is_rejected) ... ok
@@ -8,6 +10,6 @@ test_out_of_range_pages_not_promoted (test_review_presentation.ReviewPresentatio
 test_translation_ambiguity_and_program_are_distinct (test_review_presentation.ReviewPresentationTests.test_translation_ambiguity_and_program_are_distinct) ... ok
 
 ----------------------------------------------------------------------
-Ran 8 tests in 0.030s
+Ran 10 tests in 0.029s
 
 OK

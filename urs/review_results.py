@@ -35,6 +35,7 @@ def issues(body,page_count=None):
         if category in ('source_ambiguity','source_conflict','customer_confirmation','customer','ambiguous_source','원문 모호성','고객 확인') or (declared!='translation' and re.search(r'원문(?:\s*자체)?(?:의|에서|에|은|이|가)?[^.]{0,24}(?:모호|불명확|상충)',combined)):kind='review'
         if category in ('layout','pagination','line_break','page_number','서식','쪽수','줄바꿈') or item.get('layout_only') is True:kind='layout'
         if declared=='program' or category in ('image','image_reference','image_mapping','image_visibility','css','program','pipeline','rendering','html','placeholder','program_issue','프로그램 문제') or re.search(r'urs-(?:review-)?image:|display\s*:\s*none|숨김\s*CSS|(?:그림|이미지)\s*주소|PDF\.js',combined,re.I):kind='program'
+        customer_confirmation=kind=='review' and (declared=='customer' or (declared!='translation' and category in ('source_ambiguity','source_conflict','customer_confirmation','customer','ambiguous_source','원문 모호성','고객 확인')))
         page=page_number(item.get('page'))
         if page_count and page and page>page_count:page=None
         references=[]
@@ -52,12 +53,12 @@ def issues(body,page_count=None):
         why=ko(clean(item.get('why_ko')) or clean(item.get('why')) or clean(item.get('impact_ko')),'')
         how=ko(clean(item.get('fix_ko')) or clean(item.get('how_to_fix_ko')),'')
         question=ko(clean(item.get('question_ko')) or clean(item.get('customer_question_ko')),'')
-        if kind=='review' and not question:
+        if customer_confirmation and not question:
             times=list(dict.fromkeys(re.findall(r'\d+(?:\.\d+)?\s*(?:시간|hours?)(?![A-Za-z])',problem,re.I)))
             if len(times)>=2:question='원문에 나온 '+', '.join(times)+'은 각각 어떤 조건에 적용되며, 견적과 검수에는 어느 기준을 사용해야 하나요?'
             elif before:question='원문 '+str(page or '해당')+'쪽의 “'+before+'”는 어떤 기준으로 적용해야 하나요?'
             elif problem:question='원문 '+str(page or '해당')+'쪽에서 지적한 조건의 적용 기준을 확인해 주세요.'
-        if not title:title={'error':'번역 문구 수정','review':'고객에게 조건 확인','program':'프로그램 표시·전송 점검','layout':'쪽수·줄바꿈 등 표시 차이'}[kind]
+        if not title:title={'error':'번역 문구 수정','review':('고객에게 조건 확인' if customer_confirmation else '번역 내용과 근거 확인'),'program':'프로그램 표시·전송 점검','layout':'쪽수·줄바꿈 등 표시 차이'}[kind]
         # Keep a supplied title once; do not repeat it as the problem paragraph.
         if re.sub(r'[\s.。]+','',title)==re.sub(r'[\s.。]+','',problem):problem=''
         if why in (title,problem):why=''
@@ -66,7 +67,7 @@ def issues(body,page_count=None):
         if not english and not references:
             reason=clean(item.get('reason'))
             if reason and not re.search('[가-힣]',reason):english=reason
-        result.append({'id':str(index),'page':page,'pages':pages,'pending_pages':pending_pages,'references':references,'kind':kind,'category':category,'title':title,'problem':problem,'why':why,'how':how,'question':question,'before':before,'after':after,'source_en':english,'can_propose':kind=='error' and page is not None})
+        result.append({'id':str(index),'page':page,'pages':pages,'pending_pages':pending_pages,'references':references,'kind':kind,'customer_confirmation':customer_confirmation,'category':category,'title':title,'problem':problem,'why':why,'how':how,'question':question,'before':before,'after':after,'source_en':english,'can_propose':kind=='error' and page is not None})
     return sorted(result,key=lambda x:({'error':0,'review':1,'program':2,'layout':3}[x['kind']],x['page'] or 999999,int(x['id'])))
 
 
@@ -78,6 +79,8 @@ def load(workspace,owner,document,target,attempt):
         latest=db.execute("SELECT id FROM target_reviews WHERE target=? AND stage='verify' AND payload IS NOT NULL ORDER BY id DESC LIMIT 1",(target,)).fetchone()
     if row is None or not row['payload']:raise Blocked('저장된 독립검증 결과가 없습니다.')
     body=json.loads(row['payload']);evidence=json.loads(row['evidence']);entries=issues(body,original['pages'])
+    from urs.review_policy import decision
+    policy=decision(body)
     current=workspace.report_availability(owner,document)['selected']
     current_target=f"displayed:{document}:{current['revision']}" if current else None
     state=overview(workspace,owner,document,current_target) if current else None
@@ -87,7 +90,7 @@ def load(workspace,owner,document,target,attempt):
     transport=evidence.get('transport_manifest')
     from urs.review_evidence import compare
     presentation=compare(selected['payload'].decode(),transport)
-    return {'document':document,'target':target,'attempt':attempt,'report_name':original['name'],'revision':selected['parent_revision'],'verified_at':when,'status':row['status'],'issues':entries,'error_count':sum(x['kind']=='error' for x in entries),'review_count':sum(x['kind']=='review' for x in entries),'program_count':sum(x['kind']=='program' for x in entries),'layout_count':sum(x['kind']=='layout' for x in entries),'current_matches':same,'older_attempt':bool(latest and latest['id']!=attempt),'can_edit':same and bool(latest and latest['id']==attempt),'stored_html_sha256':selected['sha256'],'transport':transport,'presentation_comparison':presentation,'source_pdf_sha256':original['sha256'],'output_format':'브라우저에서 읽는 HTML 결과 화면 · 내려받기도 HTML','execution_report':{'revision':current['revision'],'sha256':state['sha256'],'target':current_target,'reviews':state['reviews']} if state else None}
+    return {'document':document,'target':target,'attempt':attempt,'report_name':original['name'],'revision':selected['parent_revision'],'verified_at':when,'status':policy['status'],'stored_status':row['status'],'model_status':body.get('status','UNVERIFIED'),'customer_count':len(policy['customer_findings']),'issues':entries,'error_count':sum(x['kind']=='error' for x in entries),'review_count':sum(x['kind']=='review' for x in entries),'program_count':sum(x['kind']=='program' for x in entries),'layout_count':sum(x['kind']=='layout' for x in entries),'current_matches':same,'older_attempt':bool(latest and latest['id']!=attempt),'can_edit':same and bool(latest and latest['id']==attempt),'stored_html_sha256':selected['sha256'],'transport':transport,'presentation_comparison':presentation,'source_pdf_sha256':original['sha256'],'output_format':'브라우저에서 읽는 HTML 결과 화면 · 내려받기도 HTML','execution_report':{'revision':current['revision'],'sha256':state['sha256'],'target':current_target,'reviews':state['reviews']} if state else None}
 
 
 class TextRanges(HTMLParser):
@@ -173,26 +176,28 @@ def replay(text,patches):
 def render(workspace,owner,document,target,attempt):
     data=load(workspace,owner,document,target,attempt);esc=html.escape;base=f'/api/documents/{document}'
     ready=data['execution_report'];editable=data['can_edit']
-    next_step='오류 항목의 수정안을 확인하고 필요한 항목만 선택해 적용하세요.' if data['error_count'] else '확인 필요 항목을 고객·직원에게 확인하세요.' if data['review_count'] else '프로그램 점검 항목의 발생 위치를 확인하세요. 번역문은 바꾸지 않습니다.' if data['program_count'] else '이 보고서의 독립검증이 통과했다면 기술분석으로 이어갈 수 있습니다.'
+    next_step='오류 항목의 수정안을 확인하고 필요한 항목만 선택해 적용하세요.' if data['error_count'] else '미확인 번역 항목의 근거를 확인하세요.' if data['review_count']>data['customer_count'] else '프로그램 점검 항목의 발생 위치를 확인하세요. 번역문은 바꾸지 않습니다.' if data['program_count'] else '이 보고서의 독립검증이 통과했다면 기술분석으로 이어갈 수 있습니다.'
     current_version='보고서 버전 '+str(ready['revision']) if ready else '열람 가능한 보고서 없음'
     s=f'<header><p class="eyebrow">독립검증 결과</p><h1>{esc(data["report_name"])}</h1><p id="report-version-context">검증 대상: 보고서 버전 {data["revision"]} · 현재 직원용: {esc(current_version)}</p><p>검증 일시 {esc(data["verified_at"])}</p></header>'
     if not data['current_matches']:s+='<p class="notice" id="historical-note">수정 전 또는 이전 보고서의 검증 결과입니다. 현재 보고서의 검증 결과로 사용하지 않습니다.</p>'
     elif data['older_attempt']:s+='<p class="notice">같은 보고서의 이전 실행 결과입니다. 최신 검증 결과를 확인하세요.</p>'
-    s+=f'<section class="summary"><strong>번역 오류 {data["error_count"]}건</strong><strong>고객 확인 필요 {data["review_count"]}건</strong><strong>프로그램 점검 {data["program_count"]}건</strong><p>다음에 할 일 · {esc(next_step)}</p></section>'
+    s+=f'<section class="summary"><strong>번역 오류 {data["error_count"]}건</strong><strong>번역 확인 필요 {data["review_count"]-data["customer_count"]}건</strong><strong>기술분석으로 이관 {data["customer_count"]}건</strong><strong>프로그램 점검 {data["program_count"]}건</strong><p>다음에 할 일 · {esc(next_step)}</p></section>'
     verdict={'PASS':'통과','NEEDS_REVIEW':'확인 필요','FAIL':'해결할 항목 있음'}.get(data['status'],'미확인')
-    s+='<p id="verification-verdict">저장된 검증 판정: '+esc(data['status'])+' · '+verdict+'. 번역 오류가 0건이어도 고객 확인·프로그램 항목이 남아 있으면 PASS가 아닙니다.</p>'
+    s+='<p id="verification-verdict">독립검증 적용 판정: '+esc(data['status'])+' · '+verdict+'. 원문 조건에 대한 고객 확인은 기술분석에서 다루며 이 판정을 막지 않습니다. 번역 오류·미확인 번역·프로그램 문제는 별도 해결이 필요합니다.</p>'
     s+=f'<nav class="screen-only"><a id="verified-report" href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증에 사용한 직원용 보고서 보기 · 버전 {data["revision"]}</a><a href="/">URS 보고서 검토로 돌아가기</a></nav>'
-    if data['review_count']:s+='<p class="notice">고객 확인은 담당 직원이 고객/RFQ 책임자에게 받아야 합니다. 현재 웹에는 고객 답변·근거를 기록하는 전용 칸이 없습니다. 확인했다고 표시하거나 번역 수정칸에 답을 적는 것으로 PASS 처리되지 않습니다.</p>'
+    if data['status']!=data['stored_status']:s+='<p class="notice">과거 저장 판정 '+esc(data['stored_status'])+'은 보존했습니다. 고객 확인 분리 정책을 적용한 현재 판정입니다. 새 AI 검증을 실행한 결과는 아닙니다.</p>'
+    if data['customer_count']:s+='<p class="notice" id="customer-handoff">고객 확인 '+str(data['customer_count'])+'건은 기술분석으로 이관했습니다. 답변 대기는 독립검증 통과를 막지 않습니다. 다음 단계의 기술분석 실행 후 결과에서 확인하세요.</p>'
     s+='<section id="findings"><h2>확인할 내용</h2>'
+    if data['customer_count'] and all(i['customer_confirmation'] for i in data['issues']):s+='<p>고객 확인 외에 남은 독립검증 지적은 없습니다. 기술분석으로 진행할 수 있습니다.</p>'
     if not data['issues']:s+='<p>저장된 발견 항목이 없습니다. 본문 전체의 정확성을 자동 보증한다는 뜻은 아닙니다.</p>'
     for item in data['issues']:
-        if item['kind']=='layout':continue
-        n=item['id'];kind={'error':'번역 오류','review':'고객 확인','program':'프로그램 문제'}[item['kind']];can=editable and item['can_propose']
+        if item['kind']=='layout' or item['customer_confirmation']:continue
+        n=item['id'];kind={'error':'번역 오류','review':'번역 확인 필요','program':'프로그램 문제'}[item['kind']];can=editable and item['can_propose']
         page_label=' · '.join(str(p)+'쪽' for p in item['pages']) or '쪽 미확인'
         s+=f'<article class="finding {item["kind"]}" data-issue="{n}"><div class="finding-top"><span>{kind} · 원문 {page_label}</span></div><h3>{esc(item["title"])}</h3>'
         if item['problem'] and not (item['kind']=='review' and item['question'].endswith(item['problem'].rstrip('. '))):s+='<p>'+esc(item['problem'])+'</p>'
         if item['why']:s+='<p class="impact"><strong>실무 영향</strong> · '+esc(item['why'])+'</p>'
-        if item['kind']=='review' and item['question']:s+='<aside class="customer-question"><strong>고객에게 물어볼 질문</strong><p>'+esc(item['question'])+'</p></aside>'
+        if item['kind']=='review' and item['question']:s+='<aside class="customer-question"><strong>확인할 질문</strong><p>'+esc(item['question'])+'</p></aside>'
         if item['kind']=='program':
             from urs.review_evidence import explanation
             s+='<section class="program-diagnosis"><strong>직원용 HTML · 실제 검증 사본 비교</strong>'+''.join('<p>'+esc(line)+'</p>' for line in explanation(item,data['presentation_comparison']))+'</section>'
@@ -218,6 +223,7 @@ def render(workspace,owner,document,target,attempt):
     current_link=base+'/report.html?revision='+str(ready['revision']) if ready else '#'
     s+='<section class="actions-panel screen-only" id="next-actions"><h2>'+('수정 후 확인·재검증' if data['error_count'] else '다음 단계')+'</h2><a id="corrected-report" '+('hidden' if ready and ready['revision']==data['revision'] else '')+' href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><p id="verification-state">'+('수정된 보고서는 독립 재검증 전입니다. 아래 실행은 현재 보고서에 연결됩니다.' if ready and ready['revision']!=data['revision'] else '현재 보고서에 대해 다시 검증할 수 있습니다.')+'</p><button id="reverify" disabled>독립 재검증 실행</button><button id="analyze-current" disabled>기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></section>'
     s+='<details class="technical"><summary>검증 요청 자료·실제 전송·결과 형식 상세</summary><h3>1. 검증을 요청한 보고서</h3><p>'+esc(data['report_name'])+' · 저장 버전 '+str(data['revision'])+'</p><p>저장 최종 HTML SHA-256: <code>'+esc(data['stored_html_sha256'])+'</code></p><h3>2. AI에 실제 보낸 자료</h3>'
+    s+='<p>모델 원판정: '+esc(data['model_status'])+' · 저장 판정: '+esc(data['stored_status'])+' · 고객 확인 분리 후 적용 판정: '+esc(data['status'])+'</p>'
     m=data['transport']
     if m and m.get('recording')=='inference_request_boundary':
         s+='<p>실제 추론 요청 경계에서 기록 · 송신 시도 '+('있음' if m.get('request_attempted') else '미확인')+' · HTTP 상태 '+esc(str(m.get('http_status') or '미확인'))+'</p><ul>'
