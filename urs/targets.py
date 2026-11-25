@@ -151,7 +151,7 @@ class Tasks:
         return info
 
 def result_html(workspace,owner,document,target,stage,attempt):
-    from urs.reviews import readable,NAMES
+    from urs.reviews import readable,NAMES,READABLE_CSS
     if stage=='verify' and target.startswith('displayed:'):
         from urs.review_results import render
         return render(workspace,owner,document,target,attempt)
@@ -163,7 +163,7 @@ def result_html(workspace,owner,document,target,stage,attempt):
     body=json.loads(row['payload']);ev=json.loads(row['evidence'])
     label='저장 리비전' if target_row['kind'] in ('stored_revision','stored_final') else 'A4'
     input_note=('화면에서 열람한 URS 최종 HTML(사진 포함)과 원본 PDF를 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.' if target_row['kind']=='stored_final' else '선택 리비전의 원본 PDF + 저장 Terra 원본 HTML을 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.') if target_row['kind'] in ('stored_revision','stored_final') else '원본 PDF + 등록 A4 HTML을 사용했습니다. 기존 Terra 원본 HTML의 검토 결과가 아닙니다.'
-    s='<h1>'+label+' '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(for_row(row) if stage=='verify' else row['status'])+'</p>'
+    s='<h1>'+label+' '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p></details><p>판정: '+escape(for_row(row) if stage=='verify' else row['status'])+'</p>'
     if stage=='analyze':
         transferred=ev.get('customer_handoff',{}).get('findings',[])
         if 'customer_handoff' not in ev:
@@ -176,4 +176,4 @@ def result_html(workspace,owner,document,target,stage,attempt):
     s+='<p>보고서를 수정하지 않았습니다. 수정 전후는 제안이며 실제 적용되지 않았습니다.</p>'
     for key,title in [('issues','발견 사항'),('sections','주요 사양'),('conflicts','조건 충돌'),('questions','고객 질문과 필요한 이유')]:
         if key in body:s+='<h2>'+title+'</h2>'+readable(body[key])
-    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><title>'+label+' '+NAMES[stage]+'</title><style>body{font:16px/1.7 sans-serif;max-width:1000px;margin:32px auto;padding:24px;color:#21405a}dt{font-weight:bold}dd{margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere}</style>'+s+'</html>').encode()
+    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+label+' '+NAMES[stage]+'</title><style>body{font:16px/1.7 sans-serif;max-width:1000px;margin:32px auto;padding:24px;color:#21405a}dt{font-weight:bold}dd{margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere}'+READABLE_CSS+'</style><main class="readable-document">'+s+'</main></html>').encode()

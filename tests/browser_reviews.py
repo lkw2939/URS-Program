@@ -42,9 +42,10 @@ def main():
     page.get_by_role('button',name='독립 검증 실행',exact=True).click();page.wait_for_function("() => document.querySelector('#process-buttons').textContent.includes('실행 중')")
     gate.set();page.get_by_role('button',name='독립검증 결과 보기',exact=True).wait_for();page.wait_for_function("() => !document.querySelector('#view-verification').disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
-    result=opened.value;result.wait_for_load_state();assert '보고서 버전 2' in result.locator('header').inner_text();assert '독립검증' in result.title();assert '독립검증 적용 판정: PASS' in result.locator('#verification-verdict').inner_text();assert result.locator('.finding:not(.manual)').count()==0;assert '1건' in result.locator('#customer-handoff').inner_text();result.screenshot(path=str(ROOT/'docs/evidence/review-verification.png'),full_page=True)
+    result=opened.value;result.wait_for_load_state();assert '보고서 버전 2' in result.locator('header').inner_text();assert '독립검증' in result.title();assert '독립검증 적용 판정: PASS' in result.locator('#verification-verdict').text_content();assert result.locator('.finding:not(.manual)').count()==0;assert '1건' in result.locator('#customer-handoff').inner_text();result.screenshot(path=str(ROOT/'docs/evidence/review-verification.png'),full_page=True)
     page.get_by_role('button',name='기술 분석 비용 확인 (무료)',exact=True).click();page.wait_for_timeout(200)
     page.get_by_role('button',name='기술 분석 실행',exact=True).click();page.wait_for_function("() => !document.querySelector('#view-analysis').disabled")
+    page.bring_to_front()
     with page.context.expect_page() as opened:page.get_by_role('button',name='기술분석 결과 보기',exact=True).click()
     analysis=opened.value;analysis.wait_for_load_state();assert '시험 시간을 확정해 주세요.' in analysis.locator('body').inner_text();assert '검수 기준을 확정하기 위해 필요합니다' in analysis.locator('body').inner_text();assert '주요 사양' in analysis.locator('body').inner_text();assert '120 mm' in analysis.locator('body').inner_text();assert analysis.locator('pre').count()==0;assert analysis.locator('body').evaluate('(e)=>getComputedStyle(e).maxWidth')=='1000px'
     analysis.screenshot(path=str(ROOT/'docs/evidence/review-analysis.png'),full_page=True)

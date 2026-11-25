@@ -73,12 +73,31 @@ def run(workspace,owner,document,stage):
     finally:lock.release()
 
 LABELS={'page':'원문 쪽','reason':'판단 이유','severity':'항목 구분','type':'구분','text':'설명','title':'제목','description':'설명','question':'고객 질문','why':'질문이 필요한 이유','rationale':'판단 근거','evidence':'근거','source':'원문 근거','source_en':'영어 원문 근거','english':'영어 원문 근거','original':'원문 근거','before':'수정 전(모델 제안)','after':'수정 후(모델 제안)','requirement':'요구사항','specification':'사양','value':'값','unit':'단위','ko':'한국어 설명','en':'영어 원문 근거','question_ko':'고객 질문','reason_ko':'판단 이유','question_en':'질문 영어 근거'}
+READABLE_CSS="""
+.readable-document{width:210mm;max-width:100%;box-sizing:border-box;margin:0 auto;background:#fff;padding:28px}
+.readable-document h2{margin:32px 0 18px;font-size:21px}.readable-items{list-style:none;padding:0;margin:16px 0 28px}
+.readable-entry{border:1px solid #d6e2e9;border-radius:8px;padding:22px 24px;margin:0 0 24px;background:#fff}
+.readable-fields{margin:0}.readable-field{margin:0 0 18px}.readable-field+.readable-field{padding-top:16px;border-top:1px solid #e7edf1}
+.readable-fields dt{font-weight:650;color:#36596f;font-size:14px;margin:0 0 9px}.readable-fields dd{margin:0}
+.readable-text{font-size:16px;line-height:1.9;margin:0 0 14px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
+.readable-text:last-child{margin-bottom:0}.readable-bullets{padding-left:24px}.readable-bullets>li{margin:12px 0 18px}
+@media(max-width:680px){body{margin:0!important;padding:0!important}.readable-document{padding:16px}.readable-entry{padding:18px 16px;margin-bottom:20px}}
+@page{size:A4 portrait;margin:14mm}@media print{body{margin:0!important;padding:0!important}.readable-document{width:auto;max-width:none;padding:0;margin:0}.readable-entry{break-inside:auto;margin:0 0 14pt;padding:12pt}.readable-text{font-size:11pt;line-height:1.75;orphans:3;widows:3}.readable-field{break-inside:auto}.readable-document h2,dt{break-after:avoid}}
+"""
+
+LABELS.update({'title_ko':'제목','problem_ko':'확인할 내용','why_ko':'중요한 이유','fix_ko':'권장 조치','current_ko':'현재 번역','suggested_ko':'추천 수정문'})
+
 def readable(value):
     if isinstance(value,dict):
         keys=sorted(value,key=lambda k:(k in ('en','english','source_en','question_en'),list(value).index(k)))
-        return '<dl>'+''.join('<dt>'+escape(LABELS.get(k,'추가 항목 · '+k))+'</dt><dd>'+readable(value[k])+'</dd>' for k in keys)+'</dl>'
-    if isinstance(value,list):return '<ul>'+''.join('<li>'+readable(v)+'</li>' for v in value)+'</ul>'
-    return escape(str(value)) if value is not None else '미기록'
+        return '<dl class="readable-fields">'+''.join('<div class="readable-field"><dt>'+escape(LABELS.get(k,'추가 항목 · '+k))+'</dt><dd>'+readable(value[k])+'</dd></div>' for k in keys if value[k] is not None and value[k] not in ('',[],{}) and (not isinstance(value[k],str) or value[k].strip()))+'</dl>'
+    if isinstance(value,list):
+        objects=all(isinstance(v,dict) for v in value)
+        return '<ul class="'+('readable-items' if objects else 'readable-bullets')+'">'+''.join('<li'+(' class="readable-entry"' if objects else '')+'>'+readable(v)+'</li>' for v in value)+'</ul>'
+    import re
+    text=str(value) if value is not None else '미기록'
+    return ''.join('<p class="readable-text">'+escape(paragraph)+'</p>' for paragraph in re.split(r'\n[ \t]*\n',text) if paragraph.strip())
+
 
 def result_html(workspace,owner,document,stage,attempt=None,revision=None):
     workspace.original(owner,document)
@@ -117,4 +136,4 @@ def result_html(workspace,owner,document,stage,attempt=None,revision=None):
             url=f'/api/documents/{document}/{"review-verification.html" if stage=="verify" else "review-analysis.html"}?attempt={old["id"]}'
             parts.append('<li>'+ (f'<a href="{escape(url)}">실행 {old["id"]}</a>' if old['payload'] else f'실행 {old["id"]}')+f' · 리비전 {old["revision"]} · '+escape(old['state'])+' · '+escape(json.loads(old['evidence']).get('reason',''))+'</li>')
         parts.append('</ul>')
-    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><title>'+NAMES[stage]+' 결과</title><style>body{font:16px/1.75 sans-serif;max-width:1000px;margin:32px auto;padding:0 24px;color:#233747}h1,h2,h3{color:#17496f}article{border:1px solid #ccd7df;padding:16px;margin:14px 0}dt{font-weight:bold}dd{margin:0 0 12px;white-space:pre-wrap;overflow-wrap:anywhere}.note{color:#8a4b00}a{color:#175a93}</style>'+''.join(parts)+'</html>').encode()
+    return ('<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+NAMES[stage]+' 결과</title><style>body{font:16px/1.75 sans-serif;max-width:1000px;margin:32px auto;padding:0 24px;color:#233747}h1,h2,h3{color:#17496f}article{border:1px solid #ccd7df;padding:16px;margin:14px 0}dt{font-weight:bold}dd{margin:0 0 12px;white-space:pre-wrap;overflow-wrap:anywhere}.note{color:#8a4b00}a{color:#175a93}'+READABLE_CSS+'</style><main class="readable-document">'+''.join(parts)+'</main>'+'</html>').encode()

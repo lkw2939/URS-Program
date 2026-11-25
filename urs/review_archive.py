@@ -153,7 +153,9 @@ def result_html(workspace,owner,document,key,allow_edit=True):
     if allow_edit and row['source']=='target_reviews':s+='<p class="actions"><a href="'+base+'/saved-review-open.html?key='+quote(key,safe='')+'">URS에서 이 검증 결과 열기 · 문구 수정</a></p>'
     if not allow_edit:s+='<p class="note">원래 보고서의 수정 화면을 열 수 없어 읽기 전용 보관본을 보여줍니다. 검증 결과는 삭제되지 않았습니다.</p>'
     s+='<details><summary>저장·입력 자료 상세</summary><p>검증 결과 JSON SHA-256: '+escape(row['payload_sha256'])+'</p><p>기록 출처: '+escape(row['source'])+' · 실행 '+escape(str(row['attempt'] or '과거 파일'))+'</p>'+readable(details)+'</details>'
-    return _page(NAMES[row['stage']]+' 저장 결과',s)
+    page=_page(NAMES[row['stage']]+' 저장 결과',s)
+    from urs.reviews import READABLE_CSS
+    return page.replace(b'</style>',READABLE_CSS.encode()+b'</style>',1)
 
 
 def open_html(workspace,owner,document,key):

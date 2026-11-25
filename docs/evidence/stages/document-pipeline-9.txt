@@ -11,8 +11,10 @@ test_missing_fields_are_empty_not_invented (test_review_presentation.ReviewPrese
 test_old_or_different_request_not_falsely_verified (test_review_presentation.ReviewPresentationTests.test_old_or_different_request_not_falsely_verified) ... ok
 test_out_of_range_pages_not_promoted (test_review_presentation.ReviewPresentationTests.test_out_of_range_pages_not_promoted) ... ok
 test_translation_ambiguity_and_program_are_distinct (test_review_presentation.ReviewPresentationTests.test_translation_ambiguity_and_program_are_distinct) ... ok
+test_only_complete_definite_proposals_have_one_click_action (test_review_presentation.SimpleRecommendationTests.test_only_complete_definite_proposals_have_one_click_action) ... ok
+test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes (test_review_presentation.SimpleRecommendationTests.test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 0.038s
+Ran 15 tests in 0.037s
 
 OK

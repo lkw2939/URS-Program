@@ -37,7 +37,7 @@ def main():
     guide=page.locator('#verification-guide').inner_text();assert '저장 보고서 확인됨' in guide and 'NEEDS_REVIEW' in guide and '실행 가능 상태는 PASS와 다릅니다' in guide;assert '고객 확인 1건은 기술분석으로 이관했습니다' in guide;assert '번역 문구 수정칸에서 고치지 않습니다' in guide
     page.locator('#verification-guide').screenshot(path=str(ROOT/'docs/evidence/staff-report-pass-guide.png'))
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
-    result=opened.value;result.wait_for_load_state();assert result.locator('.finding.error textarea').count()==2;assert result.locator('.finding.review textarea,.finding.program textarea').count()==0;assert result.locator('#corrected-report').is_hidden();assert '버전 1' in result.locator('#verified-report').inner_text();assert not errors,errors
+    result=opened.value;result.wait_for_load_state();assert result.locator('.finding.error textarea').count()==2;assert result.locator('.finding.review textarea,.finding.program textarea').count()==0;assert result.locator('#corrected-report').is_hidden();assert '버전 1' in result.locator('#verified-report').text_content();assert not errors,errors
     # New static UI with an older server response must not claim the saved report is absent.
     def older_api(route):
      response=route.fetch();data=response.json();data.pop('staff_report',None);route.fulfill(response=response,json=data)

@@ -75,6 +75,7 @@ def main():
     for i in (4,3,2,1,0):page.locator('#flow-back').click();screen(i)
     assert len(paid)==4;assert page.locator('#flow-back').is_disabled();assert original==w.report_html('fixture',doc,revision=1)
     final=w.report_html('fixture',doc,revision=3);assert AFTER.encode() in final and BEFORE.encode() not in final and b'margin: 25px' in final
+    page.bring_to_front()
     with page.expect_download() as download:page.locator('#final-html').click()
     assert Path(download.value.path()).read_bytes()==final
     # Offline HTML opens with visible photos and measured A4 geometry.

@@ -59,3 +59,16 @@ class BroaderTextEditTests(unittest.TestCase):
  def test_email_character_issue_allows_confirmed_text_edit_but_css_does_not(self):
   rows=issues({'issues':[{'page':3,'issue_type':'program','reason':'이메일 표시 문자열에 폭이 없는 문자가 있습니다.'},{'page':3,'issue_type':'program','reason':'그림이 숨김 CSS로 보이지 않습니다.'}]})
   by={r['id']:r for r in rows};self.assertTrue(by['0']['can_manual']);self.assertFalse(by['1']['can_manual']);self.assertFalse(by['0']['can_propose'])
+
+class SimpleRecommendationTests(unittest.TestCase):
+ def test_only_complete_definite_proposals_have_one_click_action(self):
+  from urs.review_results import editor_html
+  base={'id':'0','page':1,'pages':[1],'can_propose':True,'before':'현재 문장','after':'수정 문장'}
+  self.assertIn('data-use-recommendation',editor_html(base,{'page_count':1}))
+  for change in [{'after':''},{'can_manual':True},{'can_propose':False},{'after':'현재 문장'}]:
+   self.assertNotIn('data-use-recommendation',editor_html({**base,**change},{'page_count':1}))
+ def test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes(self):
+  from urs.reviews import readable
+  from html.parser import HTMLParser
+  body={'text':'첫 문단 120 mm <A>.\n\n두 번째 문단 SKU-5.','why':'현장 안전 확인이 필요합니다.','source_en':'  ','value':0}
+  result=readable(body);self.assertEqual(result.count('class="readable-field"'),3);self.assertEqual(result.count('class="readable-text"'),4);self.assertNotIn('<A>',result);self.assertIn('&lt;A&gt;',result);self.assertIn('SKU-5.',result);self.assertIn('120 mm',result);self.assertIn('>0</p>',result)

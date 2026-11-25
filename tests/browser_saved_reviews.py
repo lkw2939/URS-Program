@@ -33,7 +33,7 @@ def main():
     page.wait_for_function("()=>document.querySelector('#saved-reviews-link').textContent.includes('1건')")
     receipt=targets.overview(w,'fixture',doc,f'displayed:{doc}:1')['reviews']['verify'];assert receipt['saved'] and receipt['saved_sha256']
     with page.context.expect_page() as opened:page.get_by_role('button',name='독립검증 결과 보기',exact=True).click()
-    result=opened.value;result.wait_for_load_state();result.set_viewport_size({'width':1280,'height':1600});assert '수정은 이렇게' in result.locator('.edit-guide').inner_text();finding=result.locator('[data-issue="0"]')
+    result=opened.value;result.wait_for_load_state();result.set_viewport_size({'width':1280,'height':1600});assert '남은 필수 수정 1개'==result.locator('#work-title').inner_text();finding=result.locator('[data-issue="0"]')
     finding.locator('[data-edit-item]').click();finding.locator('[data-after]').fill(TYPED);finding.locator('[data-preview-item]').click();finding.locator('[data-apply-item]').wait_for(state='visible');assert TYPED in finding.locator('[data-item-preview]').inner_text();assert w.status('fixture',doc)['revision']==1
     finding.screenshot(path=str(ROOT/'docs/evidence/saved-review-easy-edit.png'));finding.locator('[data-apply-item]').click();result.wait_for_function("()=>document.querySelector('#correction-status').textContent.includes('버전 2')");assert finding.locator('[data-edit-item]').is_disabled();assert not finding.locator('[data-select]').is_checked(),'Single-item path must not require a selection checkbox'
     with result.context.expect_page() as opened:result.locator('#corrected-report').click()
@@ -54,7 +54,7 @@ def main():
     with history.expect_download() as downloaded:history.get_by_role('link',name='HTML 내려받기',exact=True).click()
     assert Path(downloaded.value.path()).read_bytes()==saved_bytes
     with history.context.expect_page() as opened:history.get_by_role('link',name='독립검증 결과 보기',exact=True).click()
-    restored_result=opened.value;restored_result.wait_for_load_state();assert '수정은 이렇게' in restored_result.locator('.edit-guide').inner_text();assert '버전 1' in restored_result.locator('#report-version-context').inner_text();restored_result.close()
+    restored_result=opened.value;restored_result.wait_for_load_state();assert restored_result.locator('#work-title').is_visible();assert '버전 1' in restored_result.locator('#report-version-context').inner_text();restored_result.close()
     with w.workflow.connect() as db:
      assert dict(db.execute('SELECT * FROM review_archive WHERE key=?',(key,)).fetchone())==record
      assert tuple(db.execute('SELECT * FROM target_reviews WHERE id=?',(receipt['attempt'],)).fetchone())==source

@@ -39,7 +39,8 @@
    for(const input of finding.querySelectorAll('input,select,button'))input.disabled=readOnly;
    for(const input of finding.querySelectorAll('textarea'))input.readOnly=readOnly;
    if(done&&finding.querySelector('.proposal'))finding.querySelector('.proposal').open=false;
-   if(done&&!finding.querySelector('.applied-note')){const note=el('p','이미 현재 보고서에 적용한 항목입니다. 나머지 항목은 계속 수정할 수 있습니다.');note.className='applied-note';finding.querySelector('h3').after(note);}
+   if(done&&finding.querySelector('.finding-top'))finding.querySelector('.finding-top').textContent=finding.querySelector('.finding-top').textContent.replace(/번역 오류|번역 확인 필요|프로그램 문제/,'처리 완료');
+   if(done&&!finding.querySelector('.applied-note')){const note=el('p','저장 완료 · 현재 보고서에 반영했습니다.');note.className='applied-note';finding.querySelector('h3').after(note);}
   }
   if($('add-manual-correction'))$('add-manual-correction').disabled=!data.can_edit;
   updateButtons();
@@ -53,19 +54,24 @@
   if(current){$('corrected-report').hidden=current.revision===data.revision;$('corrected-report').href=base+'/report.html?revision='+current.revision;$('corrected-report').textContent=current.revision!==data.revision?'수정된 보고서 보기':'현재 보고서 보기';}
   if(!data.current_matches&&!$('historical-note')){const note=el('p','이전 검증 결과는 보존했습니다. 현재 수정본의 최종 재검증은 아직 진행하지 않았습니다.');note.id='historical-note';note.className='notice';document.querySelector('header').after(note);}
   if(!data.current_matches){if($('verified-report'))$('verified-report').textContent='수정 전 검증대상 보고서 보기 · 버전 '+data.revision;$('verification-state').textContent='현재 보고서는 버전 '+(current?.revision||'미확인')+'입니다. 이 결과는 수정 전 버전 '+data.revision+'의 결과입니다. '+(data.can_edit?'적용한 항목만 잠그며, 남은 항목은 현재 보고서에 이어서 반영합니다.':'현재 보고서의 결과를 확인하세요.');}
-  const steps=data.flow?.steps||[];const next=steps[2]?.passed?(steps[3]?.passed?4:3):2;const titles={2:'CSS 단계로 이동 →',3:'최종 독립검증으로 이동 →',4:'기술분석으로 이동 →'};
-  const eligible=!!steps[next]?.can_enter;const reason=eligible?'현재 보고서를 다음 단계에서 사용합니다.':steps.find((s,i)=>i<next&&!s.passed)?.reason||'남은 수정 항목과 실행 상태를 확인하세요.';
-  for(const id of ['next-stage','next-stage-bottom'])if($(id)){const button=$(id);button.textContent=titles[next];button.disabled=!eligible;button.onclick=()=>{location.href='/?document='+encodeURIComponent(data.document)+'&step='+(next+1);};}
-  for(const id of ['next-stage-reason','next-stage-reason-bottom'])if($(id))$(id).textContent=reason;
+  const steps=data.flow?.steps||[];let next=steps[2]?.passed?(steps[3]?.passed?4:3):2;const titles={2:'수정 단계 완료 · CSS로 이동 →',3:'최종 독립검증으로 이동 →',4:'기술분석으로 이동 →'};
+  const pending=data.issues.filter(i=>!i.applied&&!applied.has(i.id)&&!i.customer_confirmation&&(i.kind==='error'||i.kind==='review'||i.text_integrity));
+  const visuals=data.issues.filter(i=>!i.applied&&i.kind==='program'&&!i.text_integrity);if(visuals.length&&steps[2]?.passed&&!steps[3]?.passed)next=2;
+  const historical=!data.can_edit;
+  const eligible=historical||!!steps[next]?.can_enter&&!pending.length;const reason=pending.length?'남은 필수 항목 '+pending.length+'개를 고쳐 저장하세요.':eligible?'이 단계의 문구 수정이 끝났습니다. 다음 단계로 이동하세요.':steps.find((s,i)=>i<next&&!s.passed)?.reason||'남은 수정 항목과 실행 상태를 확인하세요.';
+  if($('work-title'))$('work-title').textContent=historical?'이전 보고서 또는 이전 실행의 결과입니다':pending.length?'남은 필수 수정 '+pending.length+'개':eligible?'모두 고쳤습니다':'다음 단계로 넘어갈 조건을 확인하세요';
+  if($('work-instruction'))$('work-instruction').textContent=historical?'현재 보고서의 작업은 아래 복귀 버튼에서 계속하세요. 이 결과는 수정하지 않습니다.':pending.length?'추천문이 맞으면 「이대로 고치기」를 누르세요.':eligible?'아래 이동 버튼으로 다음 작업을 진행하세요.':reason;
+  for(const id of ['next-stage','next-stage-bottom'])if($(id)){const button=$(id);button.textContent=historical?'현재 보고서 작업으로 돌아가기 →':eligible?titles[next]:pending.length?'남은 '+pending.length+'개 처리 후 다음 →':'먼저 실행 상태를 확인하세요';button.disabled=!eligible;button.onclick=()=>{location.href='/?document='+encodeURIComponent(data.document)+'&step='+(historical?((data.flow?.frontier??0)+1):next+1);};}
+  for(const id of ['next-stage-reason','next-stage-reason-bottom'])if($(id))$(id).textContent=historical||eligible||pending.length?'':reason;
   if($('next-action-summary'))$('next-action-summary').textContent='다음에 할 일 · '+(eligible?titles[next].replace(' →','')+' 버튼을 누르세요.':reason);
   if(!data.current_matches&&$('verification-verdict'))$('verification-verdict').textContent='수정 전 보고서 버전 '+data.revision+'의 판정: '+data.status+'. 현재 수정본의 새 판정이 아닙니다. CSS 후 최종 독립검증이 필요합니다.';
  }
  async function refresh(){clearItemPlans();data=await api(base+'/review-result-data?target='+encodeURIComponent(data.target)+'&attempt='+data.attempt);update();}
  if(location.protocol==='file:'){for(const b of document.querySelectorAll('button'))b.disabled=true;message('내려받은 HTML은 읽기 전용입니다. 수정·재검증은 로그인한 URS 웹 화면에서 진행하세요.');return;}
  function fitFields(){for(const field of document.querySelectorAll('textarea')){field.style.height='auto';field.style.height=Math.max(field.hasAttribute('data-basis')?70:128,field.scrollHeight+2)+'px';const copy=field.parentElement.querySelector('.print-value');if(copy)copy.textContent=field.value;}for(const d of document.querySelectorAll('.proposal'))d.dataset.printValues=[...d.querySelectorAll('textarea')].some(f=>f.value.trim())?'yes':'no';}
- $('findings').addEventListener('input',event=>{clearItemPlans();plan=null;$('apply-corrections').hidden=true;$('correction-preview').hidden=true;if(event.target.matches('[data-select]')&&event.target.checked){const details=event.target.closest('.finding').querySelector('.proposal');if(details)details.open=true;}fitFields();updateButtons();});
+ $('findings').addEventListener('input',event=>{if(event.target.matches('[data-select]')&&event.target.checked&&$('bulk-corrections'))$('bulk-corrections').open=true;clearItemPlans();plan=null;$('apply-corrections').hidden=true;$('correction-preview').hidden=true;if(event.target.matches('[data-select]')&&event.target.checked){const details=event.target.closest('.finding').querySelector('.proposal');if(details)details.open=true;}fitFields();updateButtons();});
  for(const details of document.querySelectorAll('.proposal'))details.addEventListener('toggle',fitFields);fitFields();
- window.addEventListener('beforeprint',()=>{for(const d of document.querySelectorAll('.source,.proposal'))if(!d.open&&(!d.classList.contains('proposal')||d.dataset.printValues==='yes')){d.dataset.printOpen='yes';d.open=true;}});
+ window.addEventListener('beforeprint',()=>{for(const d of document.querySelectorAll('.source,.proposal,.finding-explanation'))if(!d.open&&(!d.classList.contains('proposal')||d.dataset.printValues==='yes')){d.dataset.printOpen='yes';d.open=true;}});
  window.addEventListener('afterprint',()=>{for(const d of document.querySelectorAll('[data-print-open]')){d.open=false;delete d.dataset.printOpen;}});
  $('preview-corrections').onclick=async()=>{
   try{const changes=[...document.querySelectorAll('.finding')].filter(n=>{const box=n.querySelector('[data-select]');return box?.checked&&!box.disabled;}).map(n=>({issue_id:n.dataset.issue,before:n.querySelector('[data-before]').value,after:n.querySelector('[data-after]').value,delete:n.querySelector('[data-delete]').checked,page:Number(n.querySelector('[data-page]')?.value)||undefined,confirmed:n.querySelector('[data-confirm]')?.checked===true,basis:n.querySelector('[data-basis]')?.value||'',occurrence:n.querySelector('[data-occurrence]')?.value?Number(n.querySelector('[data-occurrence]').value):undefined}));
@@ -81,15 +87,21 @@
  if($('add-manual-correction'))$('add-manual-correction').onclick=()=>{
   if(!manualTemplate||!data.can_edit)return;const node=manualTemplate.cloneNode(true);node.dataset.issue='manual:'+manualIndex++;
   for(const field of node.querySelectorAll('textarea,input,button')){if(field.type==='checkbox')field.checked=false;else field.value='';field.disabled=false;field.readOnly=false;}
-  node.querySelector('.proposal').open=true;node.querySelector('[data-select]').checked=true;$('findings').insertBefore(node,$('add-manual-correction'));fitFields();updateButtons();node.scrollIntoView({block:'center'});
+  node.classList.add('advanced-mode');node.querySelector('.proposal').open=true;node.querySelector('[data-select]').checked=true;$('add-manual-correction').before(node);fitFields();updateButtons();node.scrollIntoView({block:'center'});
  };
  $('findings').addEventListener('click',async event=>{
-  const button=event.target.closest('[data-edit-item],[data-preview-item],[data-apply-item]');if(!button||button.disabled)return;
-  const finding=button.closest('.finding'),status=finding.querySelector('[data-item-status]');
-  if(button.hasAttribute('data-edit-item')){finding.querySelector('.proposal').open=true;fitFields();finding.querySelector('[data-after]').focus();status.textContent='「바꿀 문구」를 입력한 뒤 「변경 내용 확인」을 누르세요. 아직 저장하지 않았습니다.';return;}
+  const button=event.target.closest('[data-edit-item],[data-preview-item],[data-apply-item],[data-use-recommendation]');if(!button||button.disabled)return;
+  const finding=button.closest('.finding'),quick=button.hasAttribute('data-use-recommendation'),status=finding.querySelector(quick?'[data-recommendation-status]':'[data-item-status]');
+  if(button.hasAttribute('data-edit-item')){finding.classList.add('advanced-mode');finding.querySelector('.proposal').open=true;fitFields();finding.querySelector('[data-after]').focus();status.textContent='「바꿀 문구」를 입력한 뒤 「변경 내용 확인」을 누르세요. 아직 저장하지 않았습니다.';return;}
   button.disabled=true;
   try{
-   if(button.hasAttribute('data-preview-item')){
+   if(quick){
+    const issue=data.issues.find(x=>x.id===finding.dataset.issue);if(!issue?.can_propose||issue.can_manual)throw new Error('이 항목은 직접 확인이 필요합니다.');
+    status.textContent='추천 수정문을 저장하고 있습니다…';
+    const preview=await api(base+'/correction-preview',{target:data.target,attempt:data.attempt,changes:[{issue_id:issue.id,page:issue.page,before:finding.querySelector('[data-recommendation-before]').textContent,after:finding.querySelector('[data-recommendation-after]').textContent}]});
+    const saved=await api(base+'/correction-apply',{plan_id:preview.plan_id});await refresh();status.textContent='고쳤습니다 · 보고서 버전 '+saved.revision;message('추천 수정문을 새 보고서 버전 '+saved.revision+'에 저장했습니다. 이전 보고서와 검증 결과는 보존했습니다.');
+    if('BroadcastChannel' in window){const c=new BroadcastChannel('urs-report-updates');c.postMessage({document:data.document});c.close();}
+   }else if(button.hasAttribute('data-preview-item')){
     const change=itemChange(finding),signature=JSON.stringify(change);clearItemPlans();plan=null;$('apply-corrections').hidden=true;
     const preview=await api(base+'/correction-preview',{target:data.target,attempt:data.attempt,changes:[change]});
     if(JSON.stringify(itemChange(finding))!==signature)throw new Error('입력이 바뀌었습니다. 변경 내용을 다시 확인해 주세요.');
