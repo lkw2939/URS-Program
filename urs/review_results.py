@@ -222,13 +222,14 @@ def editor_html(item,data):
     esc=html.escape;manual=item.get('can_manual',False) or item['id'].startswith('manual:');page=item.get('page')
     if not page and len(item.get('pages',[]))==1:page=item['pages'][0]
     options='<option value="">쪽 선택</option>'+''.join(f'<option value="{n}"'+(' selected' if n==page else '')+f'>{n}쪽</option>' for n in range(1,data['page_count']+1))
-    controls=f'<label class="check select-correction"><input type="checkbox" data-select>이 항목 수정 선택</label>'
-    controls+='<details class="proposal" '+('open' if item.get('before') else '')+'><summary>수정 문구 입력·비교</summary>'
-    controls+='<label>바꿀 문구가 있는 원문 쪽<select data-page>'+options+'</select></label>'
-    if manual:controls+='<p class="notice">AI가 확정한 오역으로 처리하지 않습니다. 원문을 직접 확인한 근거를 적고, 수량·조건을 임의로 단정하지 마세요. 수정본은 최종 재검증이 필요합니다.</p><label class="check"><input type="checkbox" data-confirm>원문을 확인하고 이 문구의 수정을 요청합니다</label><label>수정 판단 근거<textarea data-basis rows="2" placeholder="예: 원문에 대상이 명시되지 않아 수량의 대상을 단정한 표현을 제거합니다."></textarea></label>'
+    controls=f'<label class="check select-correction"><input type="checkbox" data-select>여러 항목을 함께 저장할 때 선택 (선택사항)</label>'
+    controls+='<button type="button" data-edit-item>수정하기</button><details class="proposal"><summary>수정 문구 입력·비교</summary>'
+    controls+=('<details class="edit-location"><summary>수정 위치 확인 · 원문 '+str(page)+'쪽</summary>' if page else '<div>')+'<label>바꿀 문구가 있는 원문 쪽<select data-page>'+options+'</select></label>'+('</details>' if page else '</div>')
+    if manual:controls+='<p class="notice">AI가 확정한 오역으로 처리하지 않습니다. 원문을 직접 확인한 근거를 적고, 수량·조건을 임의로 단정하지 마세요. 수정본은 최종 재검증이 필요합니다.</p><label class="check"><input type="checkbox" data-confirm>원문을 확인하고 이 문구의 수정을 요청합니다</label><label>원문을 보고 확인한 내용<textarea data-basis rows="2" placeholder="예: 원문에 대상이 명시되지 않아 수량의 대상을 단정한 표현을 제거합니다."></textarea></label>'
     controls+='<div class="compare"><label>현재 보고서에서 바꿀 문구<textarea data-before rows="4" placeholder="현재 보고서에서 문구를 복사해 입력하세요.">'+esc(item.get('before',''))+'</textarea><p class="print-value" data-print-before>'+esc(item.get('before',''))+'</p></label><label>바꿀 문구<textarea data-after rows="4" placeholder="수정문을 입력하세요. 빈칸은 삭제가 아닙니다.">'+esc(item.get('after',''))+'</textarea><p class="print-value" data-print-after>'+esc(item.get('after',''))+'</p></label></div>'
     if item.get('text_integrity') or item['id'].startswith('manual:'):controls+='<button type="button" data-clean-invisible>숨은 문자 제거안 만들기</button><p class="muted">선택 문구의 보이지 않는 문자만 제거한 수정안을 만듭니다. 링크 주소·CSS·그림은 바꾸지 않습니다.</p>'
-    controls+='<label>같은 쪽에 문구가 반복된다면 몇 번째인지 (선택)<input type="number" min="1" max="10000" data-occurrence placeholder="예: 2"></label><label class="check"><input type="checkbox" data-delete>이 문구만 삭제 — 대체 문구 없이 지웁니다</label><p class="muted">선택한 본문만 수정합니다. 여러 문단·표 셀은 항목을 나누세요. 서식 태그·사진·CSS·링크는 보존합니다.</p></details>'
+    controls+='<div class="item-actions screen-only"><button type="button" data-preview-item>변경 내용 확인</button><p data-item-status role="status"></p><div data-item-preview hidden></div><button type="button" data-apply-item hidden>이 수정 저장</button></div>'
+    controls+='<details class="edit-advanced"><summary>반복 문구 지정·삭제 등 추가 옵션</summary><label>같은 쪽에 문구가 반복된다면 몇 번째인지 (선택)<input type="number" min="1" max="10000" data-occurrence placeholder="예: 2"></label><label class="check"><input type="checkbox" data-delete>이 문구만 삭제 — 대체 문구 없이 지웁니다</label><p class="muted">선택한 본문만 수정합니다. 여러 문단·표 셀은 항목을 나누세요. 서식 태그·사진·CSS·링크는 보존합니다.</p></details></details>'
     return controls
 
 
@@ -247,6 +248,7 @@ def render(workspace,owner,document,target,attempt):
     s+=f'<nav class="screen-only"><a id="verified-report" href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증에 사용한 직원용 보고서 보기 · 버전 {data["revision"]}</a><a href="/?document={document}&amp;step=2">URS 보고서 검토로 돌아가기</a></nav>'
     if data['status']!=data['stored_status']:s+='<p class="notice">과거 저장 판정 '+esc(data['stored_status'])+'은 보존했습니다. 고객 확인 분리 정책을 적용한 현재 판정입니다. 새 AI 검증을 실행한 결과는 아닙니다.</p>'
     if data['customer_count']:s+='<p class="notice" id="customer-handoff">고객 확인 '+str(data['customer_count'])+'건은 기술분석으로 이관했습니다. 답변 대기는 독립검증 통과를 막지 않습니다. CSS와 최종 독립검증을 마친 뒤 기술분석 결과에서 확인하세요.</p>'
+    s+='<section class="edit-guide screen-only"><h2>수정은 이렇게 하세요</h2><p>① 항목의 <strong>수정하기</strong> → ② <strong>바꿀 문구</strong> 입력 → ③ <strong>변경 내용 확인</strong> → ④ <strong>이 수정 저장</strong></p><p>저장하면 새 보고서 버전이 생깁니다. 이전 보고서와 검증 결과는 남으며, 검증 결과는 자동 저장됩니다.</p><a href="'+base+'/saved-reviews.html" target="_blank" rel="noopener">저장된 검증 결과 보기</a></section>'
     s+='<section id="findings"><h2>확인할 내용</h2>'
     if data['customer_count'] and all(i['customer_confirmation'] for i in data['issues']):s+='<p>고객 확인 외에 남은 독립검증 지적은 없습니다. CSS 단계로 진행할 수 있습니다.</p>'
     if not data['issues']:s+='<p>저장된 발견 항목이 없습니다. 본문 전체의 정확성을 자동 보증한다는 뜻은 아닙니다.</p>'
@@ -299,4 +301,4 @@ def render(workspace,owner,document,target,attempt):
     from pathlib import Path
     css=(Path(__file__).resolve().parents[1]/'static/review.css').read_text()
     encoded=json.dumps(data,ensure_ascii=False).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
-    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js?v=selective-edit-2"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()
+    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js?v=saved-review-edit-3"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()

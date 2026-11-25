@@ -1,3 +1,4 @@
+test_finished_legacy_attempt_and_artifact_copies_are_durable (test_reviews.ReviewTests.test_finished_legacy_attempt_and_artifact_copies_are_durable) ... ok
 test_missing_preconditions_explained_and_no_provider_call (test_reviews.ReviewTests.test_missing_preconditions_explained_and_no_provider_call) ... ok
 test_needs_review_is_viewable_and_blocks_analysis_with_reason (test_reviews.ReviewTests.test_needs_review_is_viewable_and_blocks_analysis_with_reason) ... ok
 test_new_fenced_output_is_not_completed_or_reviewable (test_reviews.ReviewTests.test_new_fenced_output_is_not_completed_or_reviewable) ... ok
@@ -9,6 +10,6 @@ test_run_both_preserves_legacy_rows_and_uses_exact_current_raw_pdf (test_reviews
 test_runtime_failure_has_saved_reason_and_previous_result_is_labeled (test_reviews.ReviewTests.test_runtime_failure_has_saved_reason_and_previous_result_is_labeled) ... ok
 
 ----------------------------------------------------------------------
-Ran 9 tests in 16.345s
+Ran 10 tests in 16.841s
 
 OK

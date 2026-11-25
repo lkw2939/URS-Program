@@ -4,6 +4,6 @@ test_current_revision_without_html_is_not_switched_automatically (test_ai_limits
 test_instruction_matches_actual_adapter_literals (test_ai_limits_inspector.LimitInspectorTests.test_instruction_matches_actual_adapter_literals) ... ok
 
 ----------------------------------------------------------------------
-Ran 4 tests in 0.094s
+Ran 4 tests in 0.071s
 
 OK

@@ -75,6 +75,8 @@ def overview(workspace,owner,document,target):
         if not running and budget.get(stage,{}).get('blocked'):
             blocked=(blocked+' · ' if blocked else '')+'이번 1회 예상 비용이 실행 한도를 넘습니다. 누적 사용액 때문이 아닙니다.'
         info['reviews'][stage]={'budget_preview':budget.get(stage),'status':for_row(current) if stage=='verify' else current['status'] if current else 'UNVERIFIED','can_run':not blocked,'blocked_reason':blocked,'running':running,'failure':failure,'available':stored is not None,'attempt':stored['id'] if stored else None,'older_attempt':bool(current and stored and current['id']!=stored['id'])}
+        with workspace.workflow.connect() as db:receipt=db.execute('SELECT payload_sha256,completed FROM review_archive WHERE key=?',('target_reviews:'+str(stored['id']),)).fetchone() if stored else None
+        info['reviews'][stage].update(saved=receipt is not None,saved_sha256=receipt['payload_sha256'] if receipt else None,saved_at=receipt['completed'] if receipt else None)
     return info
 
 def run(workspace,owner,document,target,stage):
@@ -117,7 +119,8 @@ def run(workspace,owner,document,target,stage):
         if getattr(provider,'request_manifest',None):evidence['transport_manifest']=provider.request_manifest
         evidence['finished_at']=datetime.now(timezone.utc).isoformat()
         evidence['elapsed_seconds']=round(time.monotonic()-start,3)
-        with workspace.workflow.connect() as db:db.execute('UPDATE target_reviews SET state=?,status=?,payload=?,evidence=? WHERE id=?',(state,status,json.dumps(result,ensure_ascii=False) if result is not None else None,json.dumps(evidence,ensure_ascii=False),attempt))
+        from urs.review_archive import finish_attempt
+        finish_attempt(workspace,'target_reviews',attempt,state,status,result,evidence)
     finally:lock.release()
     return overview(workspace,owner,document,target)
 
@@ -143,7 +146,7 @@ class Tasks:
         info=overview(self.workspace,owner,document,target)
         with self.lock:
             for stage in ('verify','analyze'):
-                if (document,target,stage) in self.errors:info['reviews'][stage]['failure']=self.errors[(document,target,stage)]
+                if (document,target,stage) in self.errors:info['reviews'][stage].update(failure=self.errors[(document,target,stage)],running=False,can_run=False,blocked_reason=self.errors[(document,target,stage)])
                 if (document,target,stage) in self.active:info['reviews'][stage].update(running=True,can_run=False,blocked_reason='실행 중입니다.')
         return info
 

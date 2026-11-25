@@ -72,3 +72,16 @@ class ReviewTests(unittest.TestCase):
   self.assertFalse(info['running']);self.assertTrue(info['can_run']);self.assertIn('완료 여부',info['failure'])
   run(self.w,'alice',self.doc,'verify')
   with self.w.workflow.connect() as db:self.assertEqual(db.execute('SELECT COUNT(*) FROM review_attempts').fetchone()[0],2)
+
+ def test_finished_legacy_attempt_and_artifact_copies_are_durable(self):
+  import sqlite3
+  from urs.review_archive import listing,saved
+  self.generate();run(self.w,'alice',self.doc,'verify');initial=listing(self.w,'alice',self.doc);self.assertEqual(len(initial),1)
+  for statement in ['DELETE FROM review_attempts',"UPDATE review_attempts SET payload='{}'",'INSERT OR REPLACE INTO review_attempts SELECT * FROM review_attempts']:
+   with self.assertRaises(sqlite3.IntegrityError):
+    with self.w.workflow.connect() as db:db.execute(statement)
+  a={'status':'PASS','issues':[]};b={'status':'NEEDS_REVIEW','issues':[{'reason':'별도 모의 결과'}]}
+  self.w.processing.put(self.doc,1,'verification',a);self.w.processing.put(self.doc,1,'verification',b)
+  reopened=Workspace(self.w.workflow.path);rows=listing(reopened,'alice',self.doc);self.assertEqual(len(rows),3)
+  self.assertEqual(saved(reopened,'alice',self.doc,initial[0]['key'])[0]['payload_sha256'],initial[0]['payload_sha256'])
+  self.assertEqual({json.loads(saved(reopened,'alice',self.doc,r['key'])[0]['payload'])['status'] for r in rows},{'PASS','NEEDS_REVIEW'})

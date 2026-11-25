@@ -20,6 +20,10 @@
  const encoded=document.getElementById('review-data');if(!encoded)return;
  let data=JSON.parse(encoded.textContent),plan=null;const base='/api/documents/'+data.document;const $=id=>document.getElementById(id);
  const message=text=>{$('correction-status').textContent=text;};
+ const itemPlans=new Map();
+ function itemChange(n){return {issue_id:n.dataset.issue,before:n.querySelector('[data-before]').value,after:n.querySelector('[data-after]').value,delete:n.querySelector('[data-delete]').checked,page:Number(n.querySelector('[data-page]')?.value)||undefined,confirmed:n.querySelector('[data-confirm]')?.checked===true,basis:n.querySelector('[data-basis]')?.value||'',occurrence:n.querySelector('[data-occurrence]')?.value?Number(n.querySelector('[data-occurrence]').value):undefined};}
+ function clearItemPlans(){itemPlans.clear();for(const box of document.querySelectorAll('[data-item-preview],[data-apply-item]'))box.hidden=true;}
+
  function updateButtons(){
   const selected=[...document.querySelectorAll('[data-select]')].filter(n=>n.checked&&!n.disabled);
   $('preview-corrections').disabled=!data.can_edit||!selected.length;
@@ -47,6 +51,7 @@
   $('reverify').disabled=!verify?.can_run;$('analyze-current').disabled=!analyze?.can_run||!data.flow?.steps[4].can_enter;
   $('analysis-wait').textContent=!data.flow?.steps[4].can_enter?'단계별 작업 화면에서 CSS 배치와 최종 독립검증을 먼저 완료하세요.':analyze?.can_run?'현재 보고서의 독립검증이 통과했습니다. 기술분석을 실행할 수 있습니다.':analyze?.blocked_reason||'현재 보고서의 독립검증 PASS 후 기술분석을 실행할 수 있습니다.';
   if(current){$('corrected-report').hidden=current.revision===data.revision;$('corrected-report').href=base+'/report.html?revision='+current.revision;$('corrected-report').textContent=current.revision!==data.revision?'수정된 보고서 보기':'현재 보고서 보기';}
+  if(!data.current_matches&&!$('historical-note')){const note=el('p','이전 검증 결과는 보존했습니다. 현재 수정본의 최종 재검증은 아직 진행하지 않았습니다.');note.id='historical-note';note.className='notice';document.querySelector('header').after(note);}
   if(!data.current_matches){if($('verified-report'))$('verified-report').textContent='수정 전 검증대상 보고서 보기 · 버전 '+data.revision;$('verification-state').textContent='현재 보고서는 버전 '+(current?.revision||'미확인')+'입니다. 이 결과는 수정 전 버전 '+data.revision+'의 결과입니다. '+(data.can_edit?'적용한 항목만 잠그며, 남은 항목은 현재 보고서에 이어서 반영합니다.':'현재 보고서의 결과를 확인하세요.');}
   const steps=data.flow?.steps||[];const next=steps[2]?.passed?(steps[3]?.passed?4:3):2;const titles={2:'CSS 단계로 이동 →',3:'최종 독립검증으로 이동 →',4:'기술분석으로 이동 →'};
   const eligible=!!steps[next]?.can_enter;const reason=eligible?'현재 보고서를 다음 단계에서 사용합니다.':steps.find((s,i)=>i<next&&!s.passed)?.reason||'남은 수정 항목과 실행 상태를 확인하세요.';
@@ -55,10 +60,10 @@
   if($('next-action-summary'))$('next-action-summary').textContent='다음에 할 일 · '+(eligible?titles[next].replace(' →','')+' 버튼을 누르세요.':reason);
   if(!data.current_matches&&$('verification-verdict'))$('verification-verdict').textContent='수정 전 보고서 버전 '+data.revision+'의 판정: '+data.status+'. 현재 수정본의 새 판정이 아닙니다. CSS 후 최종 독립검증이 필요합니다.';
  }
- async function refresh(){data=await api(base+'/review-result-data?target='+encodeURIComponent(data.target)+'&attempt='+data.attempt);update();}
+ async function refresh(){clearItemPlans();data=await api(base+'/review-result-data?target='+encodeURIComponent(data.target)+'&attempt='+data.attempt);update();}
  if(location.protocol==='file:'){for(const b of document.querySelectorAll('button'))b.disabled=true;message('내려받은 HTML은 읽기 전용입니다. 수정·재검증은 로그인한 URS 웹 화면에서 진행하세요.');return;}
  function fitFields(){for(const field of document.querySelectorAll('textarea')){field.style.height='auto';field.style.height=Math.max(field.hasAttribute('data-basis')?70:128,field.scrollHeight+2)+'px';const copy=field.parentElement.querySelector('.print-value');if(copy)copy.textContent=field.value;}for(const d of document.querySelectorAll('.proposal'))d.dataset.printValues=[...d.querySelectorAll('textarea')].some(f=>f.value.trim())?'yes':'no';}
- $('findings').addEventListener('input',event=>{plan=null;$('apply-corrections').hidden=true;$('correction-preview').hidden=true;if(event.target.matches('[data-select]')&&event.target.checked){const details=event.target.closest('.finding').querySelector('.proposal');if(details)details.open=true;}fitFields();updateButtons();});
+ $('findings').addEventListener('input',event=>{clearItemPlans();plan=null;$('apply-corrections').hidden=true;$('correction-preview').hidden=true;if(event.target.matches('[data-select]')&&event.target.checked){const details=event.target.closest('.finding').querySelector('.proposal');if(details)details.open=true;}fitFields();updateButtons();});
  for(const details of document.querySelectorAll('.proposal'))details.addEventListener('toggle',fitFields);fitFields();
  window.addEventListener('beforeprint',()=>{for(const d of document.querySelectorAll('.source,.proposal'))if(!d.open&&(!d.classList.contains('proposal')||d.dataset.printValues==='yes')){d.dataset.printOpen='yes';d.open=true;}});
  window.addEventListener('afterprint',()=>{for(const d of document.querySelectorAll('[data-print-open]')){d.open=false;delete d.dataset.printOpen;}});
@@ -78,6 +83,28 @@
   for(const field of node.querySelectorAll('textarea,input,button')){if(field.type==='checkbox')field.checked=false;else field.value='';field.disabled=false;field.readOnly=false;}
   node.querySelector('.proposal').open=true;node.querySelector('[data-select]').checked=true;$('findings').insertBefore(node,$('add-manual-correction'));fitFields();updateButtons();node.scrollIntoView({block:'center'});
  };
+ $('findings').addEventListener('click',async event=>{
+  const button=event.target.closest('[data-edit-item],[data-preview-item],[data-apply-item]');if(!button||button.disabled)return;
+  const finding=button.closest('.finding'),status=finding.querySelector('[data-item-status]');
+  if(button.hasAttribute('data-edit-item')){finding.querySelector('.proposal').open=true;fitFields();finding.querySelector('[data-after]').focus();status.textContent='「바꿀 문구」를 입력한 뒤 「변경 내용 확인」을 누르세요. 아직 저장하지 않았습니다.';return;}
+  button.disabled=true;
+  try{
+   if(button.hasAttribute('data-preview-item')){
+    const change=itemChange(finding),signature=JSON.stringify(change);clearItemPlans();plan=null;$('apply-corrections').hidden=true;
+    const preview=await api(base+'/correction-preview',{target:data.target,attempt:data.attempt,changes:[change]});
+    if(JSON.stringify(itemChange(finding))!==signature)throw new Error('입력이 바뀌었습니다. 변경 내용을 다시 확인해 주세요.');
+    itemPlans.set(finding.dataset.issue,{id:preview.plan_id,signature});const area=finding.querySelector('[data-item-preview]');area.replaceChildren(el('h4','저장 전 비교'));
+    for(const p of preview.changes)area.append(el('p','현재 문구: '+p.before),el('p','저장할 문구: '+(p.after||'(이 문구만 삭제)')));
+    area.hidden=false;finding.querySelector('[data-apply-item]').hidden=false;status.textContent='아직 저장 전입니다. 비교한 내용이 맞으면 「이 수정 저장」을 누르세요.';
+   }else{
+    const selected=itemPlans.get(finding.dataset.issue);if(!selected||selected.signature!==JSON.stringify(itemChange(finding)))throw new Error('변경 내용 확인을 먼저 눌러 주세요.');
+    const saved=await api(base+'/correction-apply',{plan_id:selected.id});await refresh();
+    message('이 항목을 보고서 버전 '+saved.revision+'에 저장했습니다. 남은 항목을 이어서 수정하세요. 이전 보고서와 검증 결과는 보존했습니다.');
+    status.textContent='저장 완료 · 보고서 버전 '+saved.revision;finding.querySelector('.applied-note')?.scrollIntoView({block:'center'});
+    if('BroadcastChannel' in window){const channel=new BroadcastChannel('urs-report-updates');channel.postMessage({document:data.document});channel.close();}
+   }
+  }catch(error){status.textContent=error.message;}finally{button.disabled=!data.can_edit||(data.applied_issue_ids||[]).includes(finding.dataset.issue);}
+ });
  $('findings').addEventListener('click',event=>{if(!event.target.matches('[data-clean-invisible]'))return;const node=event.target.closest('.finding');const before=node.querySelector('[data-before]');const after=node.querySelector('[data-after]');after.value=before.value.replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g,'');after.dispatchEvent(new Event('input',{bubbles:true}));});
  for(const [id,stage] of [['reverify','verify'],['analyze-current','analyze']])$(id).onclick=async()=>{
   const button=$(id),current=data.execution_report;if(!current)return;button.disabled=true;

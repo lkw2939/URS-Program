@@ -105,3 +105,51 @@ class TargetTests(unittest.TestCase):
    self.assertEqual([tuple(r) for r in db.execute('SELECT * FROM target_reviews')],before)
    db.execute('INSERT INTO target_reviews(target,stage,state,status,payload,evidence,created) VALUES(?,?,?,?,?,?,?)',(ident,'verify','failed','FAIL',None,'{}','new'))
   self.assertFalse(targets.overview(self.w,'alice',self.doc,ident)['reviews']['analyze']['can_run'])
+
+ def test_saved_archive_survives_failed_retry_new_report_restart_and_broken_report(self):
+  from urs import review_archive
+  from urs.ai import AIError
+  target=f'displayed:{self.doc}:1';targets.run(self.w,'alice',self.doc,target,'verify')
+  items=review_archive.listing(self.w,'alice',self.doc);self.assertEqual(len(items),1);key=items[0]['key'];old,_=review_archive.saved(self.w,'alice',self.doc,key)
+  self.assertTrue(targets.overview(self.w,'alice',self.doc,target)['reviews']['verify']['saved'])
+  with patch.object(self.w.processing.provider,'review_pdf',side_effect=AIError('모의 응답 실패')):targets.run(self.w,'alice',self.doc,target,'verify')
+  self.w.run('alice',self.doc,'source');self.w.run('alice',self.doc,'report');self.assertEqual(review_archive.saved(self.w,'alice',self.doc,key)[0],old)
+  reopened=Workspace(self.w.workflow.path);self.assertEqual(review_archive.saved(reopened,'alice',self.doc,key)[0],old)
+  with reopened.workflow.connect() as db:db.execute("UPDATE artifacts SET payload=? WHERE document=? AND revision=1 AND kind='report.html'",(b'broken fixture',self.doc))
+  self.assertIn('검증한 보고서 버전 1',review_archive.result_html(reopened,'alice',self.doc,key).decode());self.assertIn('저장 결과 1건',review_archive.history_html(reopened,'alice',self.doc).decode())
+  self.assertIn('읽기 전용 보관본',review_archive.open_html(reopened,'alice',self.doc,key).decode())
+  with self.assertRaises(AccessDenied):review_archive.saved(reopened,'bob',self.doc,key)
+ def test_saved_results_reject_delete_replace_and_update(self):
+  from urs.review_archive import listing
+  ident=self.register();targets.run(self.w,'alice',self.doc,ident,'verify');key=listing(self.w,'alice',self.doc)[0]['key']
+  for sql,args in [('DELETE FROM target_reviews',()),("UPDATE target_reviews SET payload='{}'",()),("INSERT OR REPLACE INTO target_reviews SELECT * FROM target_reviews",()),('DELETE FROM review_archive WHERE key=?',(key,)),("UPDATE review_archive SET status='PASS' WHERE key=?",(key,)),('INSERT OR REPLACE INTO review_archive SELECT * FROM review_archive',())]:
+   with self.assertRaises(sqlite3.IntegrityError):
+    with self.w.workflow.connect() as db:db.execute(sql,args)
+ def test_old_completed_reviews_are_copied_without_rewriting_source(self):
+  from urs.review_archive import listing,saved
+  ident=self.register();targets.run(self.w,'alice',self.doc,ident,'verify')
+  with self.w.workflow.connect() as db:
+   before=[tuple(r) for r in db.execute('SELECT * FROM target_reviews')];db.execute('DROP TABLE review_archive')
+  reopened=Workspace(self.w.workflow.path);rows=listing(reopened,'alice',self.doc);self.assertEqual(len(rows),1)
+  with reopened.workflow.connect() as db:self.assertEqual([tuple(r) for r in db.execute('SELECT * FROM target_reviews')],before)
+  self.assertEqual(json.loads(saved(reopened,'alice',self.doc,rows[0]['key'])[0]['payload'])['status'],'PASS')
+ def test_archive_write_failure_never_reports_finished_or_loses_prior_saved_result(self):
+  from urs.review_archive import listing
+  ident=self.register();targets.run(self.w,'alice',self.doc,ident,'verify');old=listing(self.w,'alice',self.doc)
+  with patch('urs.review_archive.capture_attempt',side_effect=sqlite3.OperationalError('fixture storage failure')):
+   with self.assertRaisesRegex(Blocked,'DB 저장'):targets.run(self.w,'alice',self.doc,ident,'verify')
+  self.assertEqual(listing(self.w,'alice',self.doc),old)
+  with self.w.workflow.connect() as db:self.assertEqual(db.execute('SELECT state FROM target_reviews ORDER BY id DESC LIMIT 1').fetchone()[0],'failed')
+
+ def test_background_save_failure_stops_polling_and_preserves_downloadable_result(self):
+  import time
+  from urs.review_archive import listing
+  ident=self.register();targets.run(self.w,'alice',self.doc,ident,'verify');old=listing(self.w,'alice',self.doc);tasks=targets.Tasks(self.w);before=len(self.w.processing.provider.calls)
+  with patch('urs.review_archive.capture_attempt',side_effect=sqlite3.OperationalError('fixture save failure')):
+   tasks.start('alice',self.doc,ident,'verify');deadline=time.monotonic()+5
+   while True:
+    state=tasks.status('alice',self.doc,ident)['reviews']['verify']
+    if state['failure'] and not state['running']:break
+    if time.monotonic()>deadline:self.fail('Save failure remained running instead of reporting an error')
+    time.sleep(.02)
+  self.assertIn('DB 저장',state['failure']);self.assertTrue(state['available']);self.assertEqual(listing(self.w,'alice',self.doc),old);self.assertEqual(len(self.w.processing.provider.calls),before+1)

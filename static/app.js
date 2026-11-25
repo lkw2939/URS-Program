@@ -14,6 +14,7 @@ function mountFlow(){
   let previous=header;for(let i=0;i<6;i++){const panel=element('section','','flow-panel');panel.id='flow-panel-'+i;panel.dataset.workflowPanel=i;panel.setAttribute('aria-labelledby','flow-title');flowBank.append(panel);previous=panel;}
   const nav=element('nav','','flow-nav');nav.id='flow-nav';nav.setAttribute('aria-label','단계 이동');const back=element('button','← 이전 단계');back.id='flow-back';back.type='button';const note=element('p','','flow-state');note.id='flow-state';note.setAttribute('role','status');const next=element('button','다음 단계 →','primary');next.id='flow-next';next.type='button';nav.append(back,note,next);root.append(nav);
   const historyLink=element('a','실행 기록 보기');historyLink.id='flow-history-link';historyLink.target='_blank';historyLink.rel='noopener';root.querySelector('.intro').append(historyLink);
+  const archive=element('a');archive.id='saved-reviews-link';archive.target='_blank';archive.rel='noopener';root.querySelector('.intro').append(archive);
   const link=element('a');link.id='flow-report-link';link.target='_blank';link.rel='noopener';root.querySelector('.intro').append(link);
  }
  const info=detail.flow;let index=flowScreens.get(activeDoc.id)??0;
@@ -22,6 +23,7 @@ function mountFlow(){
  if($('flow-panel-'+index).parentNode!==root)root.insertBefore($('flow-panel-'+index),$('flow-nav').nextSibling);root.dataset.currentStep=String(index+1);
  document.title=`${index+1}단계 · ${info.steps[index].title} | URS`;
  writeFlowLocation(index,'replace');
+ $('saved-reviews-link').href=`/api/documents/${activeDoc.id}/saved-reviews.html`;$('saved-reviews-link').textContent=`저장된 검증 결과 · ${(detail.saved_reviews||[]).length}건`;
  $('flow-history-link').href=`/api/documents/${activeDoc.id}/verification.html`;
  $('flow-count').textContent=`${index+1} / ${info.steps.length} 단계`;$('flow-title').textContent=info.steps[index].title;
  $('flow-dots').replaceChildren();for(const step of info.steps){const dot=element('span','','flow-dot'+(step.passed?' done':'')+(step.index===index?' active':''));dot.setAttribute('aria-label',`${step.index+1}단계 ${step.passed?'완료':'미완료'}`);if(step.index===index)dot.setAttribute('aria-current','step');$('flow-dots').append(dot);}
@@ -229,7 +231,7 @@ function renderReview(){
  }
  for(const [stage,buttonId,noteId,endpoint] of [['verify','view-verification','verification-result-note','review-verification.html'],['analyze','view-analysis','analysis-result-note','review-analysis.html']]){
   const info=currentReview?.reviews[stage];const button=$(buttonId);button.disabled=!info?.available;button.onclick=null;
-  $(noteId).textContent=info?.available?`${info.previous?'이전 결과 · 최신 결과가 아닙니다':info.older_attempt?'같은 리비전의 이전 실행 결과 · 최근 실행 실패/진행 중':info.superseded?'보존된 기술분석 결과 · 최신 실행 조건은 충족하지 않음':'현재 결과'} · 보고서 리비전 ${current?.revision} · 화면의 최종 HTML 검토 결과 · 새 탭에서 읽기`:'저장된 결과가 없습니다. 실행 조건과 실패 이유를 확인하세요.';
+  $(noteId).textContent=info?.available?`${info.previous?'이전 결과 · 최신 결과가 아닙니다':info.older_attempt?'같은 리비전의 이전 실행 결과 · 최근 실행 실패/진행 중':info.superseded?'보존된 기술분석 결과 · 최신 실행 조건은 충족하지 않음':'저장 완료'} · 보고서 리비전 ${current?.revision} · 화면의 최종 HTML 검토 결과 · 새 탭에서 읽기`:'저장된 결과가 없습니다. 실행 조건과 실패 이유를 확인하세요.';
   if(info?.available){button.onclick=()=>window.open(base+`/target-result.html?target=${currentReview.id}&stage=${stage}&attempt=${info.attempt}`,'_blank','noopener');}
  }
  mountFlow();

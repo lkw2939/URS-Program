@@ -27,6 +27,8 @@ class Processing:
             CREATE TABLE IF NOT EXISTS page_assets(document TEXT,page INTEGER,payload BLOB,PRIMARY KEY(document,page));
             CREATE TABLE IF NOT EXISTS ai_usage(id INTEGER PRIMARY KEY,document TEXT,task TEXT,model TEXT,reserved REAL,state TEXT,usage TEXT);
             ''')
+            from urs.review_archive import schema as archive_schema
+            archive_schema(db)
             from urs.costing import schema
             schema(db)
             from urs.corrections import schema as correction_schema
@@ -46,6 +48,11 @@ class Processing:
         payload=value if isinstance(value,bytes) else json.dumps(value,ensure_ascii=False).encode()
         with self.workflow.connect() as db:
             if self.workflow._job(db,document)['revision']!=revision:raise Blocked('문서가 변경되었습니다.')
+            if kind in ('verification','analysis'):
+                from urs.review_archive import capture_artifact
+                previous=db.execute('SELECT payload FROM artifacts WHERE document=? AND revision=? AND kind=?',(document,revision,kind)).fetchone()
+                if previous:capture_artifact(db,document,revision,kind,previous['payload'])
+                capture_artifact(db,document,revision,kind,payload)
             db.execute('INSERT OR REPLACE INTO artifacts VALUES(?,?,?,?)',(document,revision,kind,payload))
 
     def _input(self, content):

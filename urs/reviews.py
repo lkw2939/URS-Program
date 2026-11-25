@@ -62,12 +62,13 @@ def run(workspace,owner,document,stage):
             if getattr(exc,'diagnostics',None):evidence['api_diagnostics']=exc.diagnostics
         evidence['elapsed_seconds']=round(time.monotonic()-start,3)
         evidence['input_revision']=revision
+        evidence['finished_at']=datetime.now(timezone.utc).isoformat()
         if payload is None:evidence['next_action']='기존 파일을 재생성하지 말고 실행 실패 기록과 입력 무결성·모델 접근·API 설정을 확인하세요.'
         with workspace.workflow.connect() as db:
             if workspace.workflow._job(db,document)['revision']!=revision:
                 phase='failed';status=Status.FAIL;evidence['reason']='작업 중 리비전이 변경됐습니다. 결과는 이전 리비전 기록으로 보존합니다.'
-            encoded=json.dumps(evidence,ensure_ascii=False)
-            db.execute('UPDATE review_attempts SET state=?,status=?,payload=?,evidence=?,digest=? WHERE id=?',(phase,status.value,json.dumps(payload,ensure_ascii=False) if payload is not None else None,encoded,hashlib.sha256(encoded.encode()).hexdigest(),attempt))
+        from urs.review_archive import finish_attempt
+        finish_attempt(workspace,'review_attempts',attempt,phase,status.value,payload,evidence)
         return workspace.status(owner,document)
     finally:lock.release()
 

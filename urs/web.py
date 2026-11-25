@@ -143,6 +143,8 @@ def make_app(workspace, port=8795, secure_cookie=False):
                                     data[kind] = workspace.artifact(owner, document, kind)
                                 except Blocked:
                                     pass
+                            from urs.review_archive import listing as saved_reviews
+                            data['saved_reviews']=saved_reviews(workspace,owner,document)
                             selected=data['reports']['selected']
                             data['current_report']=selected
                             data['current_review']=target_tasks.status(owner,document,f"displayed:{document}:{selected['revision']}") if selected else None
@@ -165,6 +167,17 @@ def make_app(workspace, port=8795, secure_cookie=False):
                         elif post and action=='workflow-step':
                             from urs.flow import enter
                             self.reply(200,enter(workspace,owner,document,body['step'],body.get('revision')))
+                        elif not post and action=='saved-reviews.html':
+                            from urs.review_archive import history_html
+                            self.reply(200,history_html(workspace,owner,document),'text/html; charset=utf-8',review=True)
+                        elif not post and action in ('saved-review.html','saved-review.json','saved-review-open.html'):
+                            from urs.review_archive import saved,result_html,open_html
+                            from urllib.parse import parse_qs
+                            key=parse_qs(urlparse(self.path).query)['key'][0]
+                            if action=='saved-review.json':
+                                record,_=saved(workspace,owner,document,key)
+                                self.reply(200,record,'application/json; charset=utf-8',attachment='saved-review.json')
+                            else:self.reply(200,(open_html if action=='saved-review-open.html' else result_html)(workspace,owner,document,key),'text/html; charset=utf-8',review=True)
                         elif not post and action=='review-result-data':
                             from urllib.parse import parse_qs
                             from urs.review_results import load

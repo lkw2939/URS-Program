@@ -13,6 +13,6 @@ test_out_of_range_pages_not_promoted (test_review_presentation.ReviewPresentatio
 test_translation_ambiguity_and_program_are_distinct (test_review_presentation.ReviewPresentationTests.test_translation_ambiguity_and_program_are_distinct) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 0.034s
+Ran 13 tests in 0.038s
 
 OK

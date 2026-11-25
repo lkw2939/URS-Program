@@ -36,6 +36,7 @@ class Workflow:
     def connect(self):
         db = sqlite3.connect(self.path, timeout=10)
         db.row_factory = sqlite3.Row
+        db.execute('PRAGMA recursive_triggers=ON')
         try:
             db.execute('BEGIN IMMEDIATE')
             yield db
