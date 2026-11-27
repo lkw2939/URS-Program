@@ -155,7 +155,7 @@ def result_html(workspace,owner,document,target,stage,attempt):
     if stage=='verify' and target.startswith('displayed:'):
         from urs.review_results import render
         return render(workspace,owner,document,target,attempt)
-    target_row,_=get(workspace,owner,document,target)
+    target_row,original=get(workspace,owner,document,target)
     with workspace.workflow.connect() as db:
         row=db.execute('SELECT * FROM target_reviews WHERE id=? AND target=? AND stage=?',(attempt,target,stage)).fetchone()
         latest=db.execute('SELECT id FROM target_reviews WHERE target=? AND stage=? ORDER BY id DESC LIMIT 1',(target,stage)).fetchone()
@@ -163,17 +163,19 @@ def result_html(workspace,owner,document,target,stage,attempt):
     body=json.loads(row['payload']);ev=json.loads(row['evidence'])
     label='저장 리비전' if target_row['kind'] in ('stored_revision','stored_final') else 'A4'
     input_note=('화면에서 열람한 URS 최종 HTML(사진 포함)과 원본 PDF를 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.' if target_row['kind']=='stored_final' else '선택 리비전의 원본 PDF + 저장 Terra 원본 HTML을 사용했습니다. 별도 A4 파일은 사용하지 않았습니다.') if target_row['kind'] in ('stored_revision','stored_final') else '원본 PDF + 등록 A4 HTML을 사용했습니다. 기존 Terra 원본 HTML의 검토 결과가 아닙니다.'
-    s='<h1>'+label+' '+NAMES[stage]+' 결과</h1><p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p></details><p>판정: '+escape(for_row(row) if stage=='verify' else row['status'])+'</p>'
+    verdict=for_row(row) if stage=='verify' else row['status']
+    s='<header><h1>'+NAMES[stage]+' 결과</h1><p>'+escape(original['name'])+' · 보고서 버전 '+str(target_row['parent_revision'])+'</p><p class="result-verdict">'+escape({'PASS':'완료','FAIL':'오류 발견','NEEDS_REVIEW':'확인 필요'}.get(verdict,verdict))+'</p></header>'
+    meta='<p>대상: '+escape(target_row['name'])+' · 부모 리비전 '+str(target_row['parent_revision'])+'</p><p>'+input_note+'</p><p>입력 HTML SHA-256: '+escape(ev.get('input_html_sha256','미기록'))+'</p><p>판정: '+escape(verdict)+'</p>'
     if stage=='analyze':
         transferred=ev.get('customer_handoff',{}).get('findings',[])
         if 'customer_handoff' not in ev:
             transferred=customer_context(workspace,target)
-            if transferred:s+='<p>아래 이관 항목은 저장된 독립검증에서 가져온 추가 확인 사항입니다. 이 과거 기술분석 호출에 전송됐다는 기록은 없습니다.</p>'
+            if transferred:meta+='<p>이 과거 호출에 고객 확인 자료가 전송됐다는 기록은 없습니다.</p>'
         from urs.review_policy import analysis_body
         body=analysis_body(body,transferred)
-        if transferred:s+='<p>독립검증에서 이관된 고객 확인 사항 '+str(len(transferred))+'건을 아래 고객 질문에서 함께 관리합니다. 고객 답변 대기는 독립검증 통과를 막지 않습니다.</p>'
-    if latest['id']!=attempt:s+='<p>이전 실행 결과입니다. 최신 결과가 아닙니다.</p>'
-    s+='<p>보고서를 수정하지 않았습니다. 수정 전후는 제안이며 실제 적용되지 않았습니다.</p>'
+    if latest['id']!=attempt:s+='<p class="note">이전 실행 결과</p>'
+    meta+='<p>보고서 본문은 수정하지 않았습니다. 수정 전후는 제안이며 실제 적용되지 않았습니다.</p>'
     for key,title in [('issues','발견 사항'),('sections','주요 사양'),('conflicts','조건 충돌'),('questions','고객 질문과 필요한 이유')]:
-        if key in body:s+='<h2>'+title+'</h2>'+readable(body[key])
+        if body.get(key):s+='<h2>'+title+'</h2>'+readable(body[key])
+    s+='<details class="technical"><summary>상세 정보</summary>'+meta+'</details>'
     return ('<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+label+' '+NAMES[stage]+'</title><style>body{font:16px/1.7 sans-serif;max-width:1000px;margin:32px auto;padding:24px;color:#21405a}dt{font-weight:bold}dd{margin-bottom:16px;white-space:pre-wrap;overflow-wrap:anywhere}'+READABLE_CSS+'</style><main class="readable-document">'+s+'</main></html>').encode()

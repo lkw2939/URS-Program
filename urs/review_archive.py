@@ -119,7 +119,7 @@ def _date(value):
     except (ValueError,TypeError):return '과거 기록 · 시각 확인 필요'
 
 
-CSS='''body{font:15px/1.75 system-ui,sans-serif;background:#edf2f5;color:#183449;margin:0}main{max-width:210mm;margin:24px auto;padding:32px;background:white;box-sizing:border-box}h1{font-size:24px;overflow-wrap:anywhere}h2{font-size:20px}article{border:1px solid #ccdae4;padding:16px;margin:14px 0;border-radius:6px}p,dd,code{overflow-wrap:anywhere}dd{margin:0 0 12px;white-space:pre-wrap}dt{font-weight:600}.note{padding:12px;background:#edf5f8}a{color:#075b7b;margin-right:18px}details{margin:12px 0}table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid #d9e3ea;padding:12px 8px}small{display:block;color:#526b7c}@media(max-width:600px){main{margin:0;padding:18px}td,th{padding:8px 4px}a{display:inline-block}}@page{size:A4 portrait;margin:14mm}@media print{body{background:white}main{margin:0;padding:0}.actions{display:none}h2,h3{break-after:avoid}article{break-inside:auto}}'''
+CSS='''body{font:16px/1.95 system-ui,sans-serif;background:#edf2f5;color:#183449;margin:0}main{max-width:210mm;margin:24px auto;padding:32px;background:white;box-sizing:border-box}h1{font-size:24px;overflow-wrap:anywhere}h2{font-size:20px}article{border:1px solid #ccdae4;padding:16px;margin:14px 0;border-radius:6px}p,dd,code{overflow-wrap:anywhere}p{margin:18px 0}article{margin:26px 0!important;padding:24px!important}dd{margin:0 0 12px;white-space:pre-wrap}dt{font-weight:600}.note{padding:12px;background:#edf5f8}a{color:#075b7b;margin-right:18px}details{margin:12px 0}table{border-collapse:collapse;width:100%}td,th{text-align:left;border-bottom:1px solid #d9e3ea;padding:12px 8px}small{display:block;color:#526b7c}@media(max-width:600px){main{margin:0;padding:18px}td,th{padding:8px 4px}a{display:inline-block}}@page{size:A4 portrait;margin:14mm}@media print{body{background:white}main{margin:0;padding:0}.actions{display:none}h2,h3{break-after:avoid}article{break-inside:auto}}'''
 
 def _page(title,content):return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escape(title)+'</title><style>'+CSS+'</style></head><body><main>'+content+'</main></body></html>').encode()
 
@@ -127,14 +127,14 @@ def _page(title,content):return ('<!doctype html><html lang="ko"><head><meta cha
 def history_html(workspace,owner,document):
     rows=listing(workspace,owner,document);original=workspace.original(owner,document)
     selected=workspace.report_availability(owner,document)['selected'];current=selected['revision'] if selected else None
-    s='<h1>저장된 검증 결과</h1><p>'+escape(original['name'])+'</p><p class="note">완료한 검증 결과는 자동 저장됩니다. 보고서 수정·새 생성·재검증 실패·서버 재시작 후에도 보존합니다. 이전 판정은 현재 보고서의 통과 조건으로 재사용하지 않습니다. 문구 수정은 ‘결과 보기’에서 진행하고, 내려받은 HTML은 읽기 전용으로 보관하세요.</p>'
+    s='<h1>저장된 검증 결과</h1><p>'+escape(original['name'])+'</p>'
     s+='<p>현재 직원용 보고서: '+('버전 '+str(current) if current else '열람 가능한 보고서 없음')+' · 저장 결과 '+str(len(rows))+'건</p>'
-    if not rows:s+='<p>아직 저장된 검증 결과가 없습니다. 실행 중이거나 실패한 작업의 상태와 구분해 확인하세요.</p>'
+    if not rows:s+='<p>저장된 결과가 없습니다.</p>'
     for r in rows:
         from urllib.parse import quote
         open_url=f'/api/documents/{document}/saved-review-open.html?key='+quote(r['key'],safe='')
         name='독립검증' if r['stage']=='verify' else '기술분석'
-        scope='현재 보고서 버전' if r['revision']==current else '이전 보고서 버전 · 현재 결과 아님'
+        scope='현재 보고서 버전' if r['revision']==current else '이전 보고서 버전'
         s+='<article data-saved-key="'+escape(r['key'],quote=True)+'"><h2>'+name+' · 보고서 버전 '+str(r['revision'])+'</h2><p>입력 대상: '+escape(r['input_label'])+'</p><p>'+scope+' · 저장 판정 '+escape(r['status'])+'</p><p>'+_date(r['completed'])+'</p><p class="actions"><a href="'+escape(open_url,quote=True)+'" target="_blank" rel="noopener">'+name+' 결과 보기</a><a download="'+r['stage']+'-result-v'+str(r['revision'])+'.html" href="'+escape(r['url'],quote=True)+'">HTML 내려받기</a></p></article>'
     return _page('저장된 검증 결과',s)
 
@@ -144,15 +144,15 @@ def result_html(workspace,owner,document,key,allow_edit=True):
     from urs.reviews import readable,NAMES
     from urllib.parse import quote
     base=f'/api/documents/{document}'
-    s='<h1>'+NAMES[row['stage']]+' 저장 결과</h1><h2>'+escape(original['name'])+'</h2><p>검증한 보고서 버전 '+str(row['revision'])+' · 저장 판정 '+escape(row['status'])+'</p><p>검증 완료 '+_date(row['completed'])+'</p><p class="note">저장 당시 결과의 읽기 전용 사본입니다. 현재 보고서의 새 검증 판정으로 사용하지 않습니다.</p>'
+    s='<h1>'+NAMES[row['stage']]+' 저장 결과</h1><h2>'+escape(original['name'])+'</h2><p>검증한 보고서 버전 '+str(row['revision'])+' · 저장 판정 '+escape(row['status'])+'</p><p>검증 완료 '+_date(row['completed'])+'</p><p class="note">보기 전용</p>'
     s+='<p class="actions"><a href="/?document='+escape(document,quote=True)+'&amp;step=2">URS 보고서 검토로 돌아가기</a><a href="'+base+'/saved-reviews.html">저장된 검증 결과 목록</a><a download="'+row['stage']+'-result-v'+str(row['revision'])+'.html" href="'+base+'/saved-review.html?key='+quote(key,safe='')+'">HTML 내려받기</a></p>'
     for field,title in [('issues','발견 사항'),('sections','주요 사양'),('conflicts','조건 충돌'),('questions','고객 질문')]:
         if field in body:s+='<h2>'+title+'</h2>'+(readable(body[field]) if body[field] else '<p>기록된 항목이 없습니다.</p>')
     try:details=json.loads(row['evidence'])
     except (ValueError,TypeError):details={'note':'과거 전송 상세를 읽을 수 없습니다. 저장 결과 본문과 구분해 확인하세요.'}
     if allow_edit and row['source']=='target_reviews':s+='<p class="actions"><a href="'+base+'/saved-review-open.html?key='+quote(key,safe='')+'">URS에서 이 검증 결과 열기 · 문구 수정</a></p>'
-    if not allow_edit:s+='<p class="note">원래 보고서의 수정 화면을 열 수 없어 읽기 전용 보관본을 보여줍니다. 검증 결과는 삭제되지 않았습니다.</p>'
-    s+='<details><summary>저장·입력 자료 상세</summary><p>검증 결과 JSON SHA-256: '+escape(row['payload_sha256'])+'</p><p>기록 출처: '+escape(row['source'])+' · 실행 '+escape(str(row['attempt'] or '과거 파일'))+'</p>'+readable(details)+'</details>'
+    if not allow_edit:s+='<p class="note">원래 보고서를 열 수 없어 읽기 전용 보관본을 표시합니다.</p>'
+    s+='<details><summary>상세 정보</summary><p>저장 당시 결과의 읽기 전용 사본입니다. 현재 보고서의 새 검증 판정으로 사용하지 않습니다.</p><p>검증 결과 JSON SHA-256: '+escape(row['payload_sha256'])+'</p><p>기록 출처: '+escape(row['source'])+' · 실행 '+escape(str(row['attempt'] or '과거 파일'))+'</p>'+readable(details)+'</details>'
     page=_page(NAMES[row['stage']]+' 저장 결과',s)
     from urs.reviews import READABLE_CSS
     return page.replace(b'</style>',READABLE_CSS.encode()+b'</style>',1)

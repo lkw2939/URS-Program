@@ -16,6 +16,6 @@ test_saved_results_reject_delete_replace_and_update (test_targets.TargetTests.te
 test_settlement_preview_never_refunds_unknown_usage_or_rewrites_ledger (test_targets.TargetTests.test_settlement_preview_never_refunds_unknown_usage_or_rewrites_ledger) ... ok
 
 ----------------------------------------------------------------------
-Ran 16 tests in 29.674s
+Ran 16 tests in 29.601s
 
 OK

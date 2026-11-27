@@ -14,6 +14,6 @@ test_result_distinguishes_errors_confirmation_layout_and_unknown_transport (test
 test_wrong_owner_cannot_read_preview_or_apply (test_corrections.CorrectionTests.test_wrong_owner_cannot_read_preview_or_apply) ... ok
 
 ----------------------------------------------------------------------
-Ran 14 tests in 46.803s
+Ran 14 tests in 45.053s
 
 OK

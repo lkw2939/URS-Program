@@ -9,6 +9,6 @@ test_validation_rejects_unknown_fields_invalid_limits_and_effort (test_ai_settin
 test_web_values_reach_report_and_review_payload_and_metadata (test_ai_settings.AISettingsTests.test_web_values_reach_report_and_review_payload_and_metadata) ... ok
 
 ----------------------------------------------------------------------
-Ran 9 tests in 8.324s
+Ran 9 tests in 8.100s
 
 OK

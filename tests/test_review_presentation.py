@@ -64,7 +64,7 @@ class SimpleRecommendationTests(unittest.TestCase):
  def test_only_complete_definite_proposals_have_one_click_action(self):
   from urs.review_results import editor_html
   base={'id':'0','page':1,'pages':[1],'can_propose':True,'before':'현재 문장','after':'수정 문장'}
-  self.assertIn('data-use-recommendation',editor_html(base,{'page_count':1}))
+  rendered=editor_html(base,{'page_count':1});self.assertIn('data-use-recommendation',rendered);self.assertNotIn('data-select',rendered);self.assertNotIn('여러 항목을 함께 저장',rendered);self.assertIn('data-preview-item',rendered);self.assertIn('data-apply-item',rendered)
   for change in [{'after':''},{'can_manual':True},{'can_propose':False},{'after':'현재 문장'}]:
    self.assertNotIn('data-use-recommendation',editor_html({**base,**change},{'page_count':1}))
  def test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes(self):

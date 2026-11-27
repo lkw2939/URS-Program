@@ -44,7 +44,7 @@ def main(a4_payload=None,pdf_payload=None,raw_payload=None):
     page.get_by_role('button',name='A4 기술분석 비용 확인 (무료)',exact=True).focus();page.get_by_role('button',name='A4 기술분석 비용 확인 (무료)',exact=True).press('Enter');page.wait_for_timeout(200)
     page.get_by_role('button',name='A4 기술분석 실행',exact=True).focus();page.get_by_role('button',name='A4 기술분석 실행',exact=True).press('Enter');page.wait_for_function("() => ![...document.querySelectorAll('#a4-target-results button')][1].disabled")
     with page.context.expect_page() as opened:page.get_by_role('button',name='A4 기술분석 결과 보기',exact=True).click()
-    result=opened.value;result.wait_for_load_state();assert '등록 A4 HTML' in result.locator('body').inner_text();assert '부모 리비전 1' in result.locator('body').inner_text()
+    result=opened.value;result.wait_for_load_state();assert not result.locator('.technical').evaluate('(e)=>e.open');result.locator('.technical > summary').click();assert '등록 A4 HTML' in result.locator('body').inner_text();assert '부모 리비전 1' in result.locator('body').inner_text()
     assert len(provider.calls)==3
     for c in provider.calls[1:]:assert c[3]==a4.decode()
     with w.workflow.connect() as db:assert before=={t:[tuple(r) for r in db.execute('SELECT * FROM '+t)] for t in before}

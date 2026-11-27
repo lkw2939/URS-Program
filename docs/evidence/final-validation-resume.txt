@@ -1,18 +1,11 @@
-{
-  "previous_resume": {
-    "reason": "A metadata link was intentionally moved into a collapsed disclosure. The regression now reads its stored text instead of expecting it to be visible. No production source changed after the preceding checks.",
-    "reused_successful_runners": 9,
-    "rerun_start": "staff-report-browser",
-    "changed_test_only": [
-      "tests/browser_staff_report_view.py"
+[
+  {
+    "reason": "Presentation tests now open optional metadata instead of requiring system details on the default screen. Production source unchanged after full validation began.",
+    "reused_successful_runners": 2,
+    "rerun_start": "a4-target-browser",
+    "changed_tests_only": [
+      "tests/browser_targets.py"
     ],
     "all_current_production_source_hashes_unchanged": true
-  },
-  "reason": "The old instruction block is intentionally collapsed; persistence tests now check the visible action summary instead. No production source changed after the preceding checks.",
-  "reused_successful_runners": 13,
-  "rerun_start": "saved-review-browser",
-  "changed_test_only": [
-    "tests/browser_saved_reviews.py"
-  ],
-  "all_current_production_source_hashes_unchanged": true
-}
+  }
+]

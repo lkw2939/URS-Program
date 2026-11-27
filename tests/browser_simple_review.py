@@ -31,11 +31,15 @@ def main():
     def open_result(d,t,a):page.goto(base+f'/api/documents/{d}/target-result.html?target={t}&stage=verify&attempt={a}');page.locator('#work-title').wait_for()
     open_result(doc,target,attempt);assert '남은 필수 수정 1개'==page.locator('#work-title').inner_text();assert page.locator('#next-stage').is_disabled()
     card=page.locator('[data-issue="0"]');assert card.locator('[data-recommendation-before]').inner_text()==BEFORE and card.locator('[data-recommendation-after]').inner_text()==AFTER
-    assert page.locator('textarea:visible,input[type=checkbox]:visible').count()==0;assert not card.locator('.finding-explanation').evaluate('(e)=>e.open');assert not page.locator('.review-records').evaluate('(e)=>e.open');assert not page.locator('#bulk-corrections').evaluate('(e)=>e.open')
+    assert page.locator('textarea:visible,input[type=checkbox]:visible').count()==0;assert not card.locator('.finding-explanation').evaluate('(e)=>e.open');assert not page.locator('.review-records').evaluate('(e)=>e.open');assert page.locator('#bulk-corrections,[data-select]').count()==0;assert '여러 항목을 함께 저장할 때 선택' not in page.locator('body').text_content()
+    assert page.locator('#new-result').is_hidden()
+    assert '실제 전송' not in page.locator('body').inner_text() and 'SHA-256' not in page.locator('body').inner_text()
+    paragraph=card.locator('[data-recommendation-before]');assert paragraph.evaluate('(e)=>parseFloat(getComputedStyle(e).lineHeight)')>=32;assert paragraph.evaluate('(e)=>parseFloat(getComputedStyle(e).fontSize)')>=16
+    card.locator('[data-edit-item]').click();assert card.locator('textarea').first.is_visible();assert page.locator('[data-select],#bulk-corrections').count()==0;card.locator('.proposal').evaluate('(e)=>e.open=false');card.evaluate('(e)=>e.classList.remove("advanced-mode")')
     page.screenshot(path=str(ROOT/'docs/evidence/simple-review-before.png'),full_page=True)
     with w.workflow.connect() as db:old=tuple(db.execute('SELECT * FROM target_reviews WHERE id=?',(attempt,)).fetchone())
     card.locator('[data-use-recommendation]').click();page.wait_for_function("()=>document.querySelector('#work-title').textContent.includes('모두 고쳤습니다')")
-    assert page.locator('#next-stage').is_enabled();assert '수정 단계 완료' in page.locator('#next-stage').inner_text();assert '최종 PASS는 CSS 후' in page.locator('.finish-rule').inner_text()
+    assert page.locator('#next-stage').is_enabled();assert 'CSS로 이동' in page.locator('#next-stage').inner_text();assert page.locator('.finish-rule').count()==0
     assert AFTER.encode() in w.report_html('fixture',doc,revision=2) and BEFORE.encode() not in w.report_html('fixture',doc,revision=2);assert w.report_html('fixture',doc,revision=1)==original
     with w.workflow.connect() as db:assert tuple(db.execute('SELECT * FROM target_reviews WHERE id=?',(attempt,)).fetchone())==old
     page.screenshot(path=str(ROOT/'docs/evidence/simple-review-done.png'),full_page=True);page.locator('#next-stage').click();page.wait_for_function("()=>document.querySelector('#review')?.dataset.currentStep==='3'&&document.querySelector('#review').getAttribute('aria-busy')==='false'");assert '버전 2' in page.locator('#layout-edit-state').inner_text()
@@ -51,7 +55,7 @@ def main():
     text=page.locator('body').inner_text();assert all(v in text for v in ['120 mm','SKU-5','4시간','2시간','견적과 인수 조건']);page.screenshot(path=str(ROOT/'docs/evidence/technical-readable.png'),full_page=True)
     pdf=PdfReader(io.BytesIO(page.pdf(prefer_css_page_size=True,print_background=True)));assert all(abs(float(p.mediabox.width)-595.276)<2 and abs(float(p.mediabox.height)-841.89)<2 for p in pdf.pages);printed=''.join(''.join(p.extract_text() for p in pdf.pages).split());assert all(''.join(v.split()) in printed for v in ['120 mm','SKU-5','4시간','2시간','견적과 인수 조건'])
     with w.workflow.connect() as db:assert json.loads(db.execute('SELECT payload FROM target_reviews WHERE id=?',(a,)).fetchone()[0])==analysis
-    w.processing.provider=ReportAI(base_raw.replace('</section>','<p>'+AFTER+'</p></section>'));w.run('fixture',doc,'report');open_result(doc,target,attempt);assert '이전 보고서' in page.locator('#work-title').inner_text();assert page.locator('[data-use-recommendation]').count()==0;assert '현재 보고서 작업으로' in page.locator('#next-stage').inner_text()
+    w.processing.provider=ReportAI(base_raw.replace('</section>','<p>'+AFTER+'</p></section>'));w.run('fixture',doc,'report');open_result(doc,target,attempt);assert '이전 검증 결과' in page.locator('#work-title').inner_text();assert page.locator('[data-use-recommendation]').count()==0;assert '현재 보고서 작업으로' in page.locator('#next-stage').inner_text()
     assert w.report_html('fixture',doc,revision=2).decode()==report and not errors,errors;b.close();print('PASS: short action queue shows only one required edit; no textarea/checkbox required; one click saves the stored proposal to version2, preserves version1 and original FAIL, and unlocks CSS for that exact version. Duplicate locations and missing proposals stay blocked. Customer questions do not block correction completion. Technical analysis has separate paragraphs/cards, readable line/section gaps, preserved numbers/model codes and complete A4 print text. No real API calls.')
   finally:stop(server,thread)
 if __name__=='__main__':main()

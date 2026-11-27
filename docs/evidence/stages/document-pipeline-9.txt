@@ -15,6 +15,6 @@ test_only_complete_definite_proposals_have_one_click_action (test_review_present
 test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes (test_review_presentation.SimpleRecommendationTests.test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes) ... ok
 
 ----------------------------------------------------------------------
-Ran 15 tests in 0.037s
+Ran 15 tests in 0.031s
 
 OK

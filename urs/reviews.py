@@ -76,21 +76,21 @@ LABELS={'page':'원문 쪽','reason':'판단 이유','severity':'항목 구분',
 READABLE_CSS="""
 .readable-document{width:210mm;max-width:100%;box-sizing:border-box;margin:0 auto;background:#fff;padding:28px}
 .readable-document h2{margin:32px 0 18px;font-size:21px}.readable-items{list-style:none;padding:0;margin:16px 0 28px}
-.readable-entry{border:1px solid #d6e2e9;border-radius:8px;padding:22px 24px;margin:0 0 24px;background:#fff}
-.readable-fields{margin:0}.readable-field{margin:0 0 18px}.readable-field+.readable-field{padding-top:16px;border-top:1px solid #e7edf1}
-.readable-fields dt{font-weight:650;color:#36596f;font-size:14px;margin:0 0 9px}.readable-fields dd{margin:0}
-.readable-text{font-size:16px;line-height:1.9;margin:0 0 14px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
+.readable-entry{border:1px solid #d6e2e9;border-radius:8px;padding:26px 28px;margin:0 0 30px;background:#fff}
+.readable-fields{margin:0}.readable-field{margin:0 0 24px}.readable-field+.readable-field{padding-top:20px;border-top:1px solid #e7edf1}
+.readable-fields dt{font-weight:650;color:#36596f;font-size:14px;margin:0 0 13px}.readable-fields dd{margin:0}
+.readable-text{font-size:17px;line-height:2;margin:0 0 20px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal}
 .readable-text:last-child{margin-bottom:0}.readable-bullets{padding-left:24px}.readable-bullets>li{margin:12px 0 18px}
 @media(max-width:680px){body{margin:0!important;padding:0!important}.readable-document{padding:16px}.readable-entry{padding:18px 16px;margin-bottom:20px}}
 @page{size:A4 portrait;margin:14mm}@media print{body{margin:0!important;padding:0!important}.readable-document{width:auto;max-width:none;padding:0;margin:0}.readable-entry{break-inside:auto;margin:0 0 14pt;padding:12pt}.readable-text{font-size:11pt;line-height:1.75;orphans:3;widows:3}.readable-field{break-inside:auto}.readable-document h2,dt{break-after:avoid}}
 """
 
-LABELS.update({'title_ko':'제목','problem_ko':'확인할 내용','why_ko':'중요한 이유','fix_ko':'권장 조치','current_ko':'현재 번역','suggested_ko':'추천 수정문'})
+LABELS.update({'origin':'확인 상태','title_ko':'제목','problem_ko':'확인할 내용','why_ko':'중요한 이유','fix_ko':'권장 조치','current_ko':'현재 번역','suggested_ko':'추천 수정문'})
 
 def readable(value):
     if isinstance(value,dict):
         keys=sorted(value,key=lambda k:(k in ('en','english','source_en','question_en'),list(value).index(k)))
-        return '<dl class="readable-fields">'+''.join('<div class="readable-field"><dt>'+escape(LABELS.get(k,'추가 항목 · '+k))+'</dt><dd>'+readable(value[k])+'</dd></div>' for k in keys if value[k] is not None and value[k] not in ('',[],{}) and (not isinstance(value[k],str) or value[k].strip()))+'</dl>'
+        return '<dl class="readable-fields">'+''.join('<div class="readable-field"><dt>'+escape(LABELS.get(k,k))+'</dt><dd>'+readable(value[k])+'</dd></div>' for k in keys if value[k] is not None and value[k] not in ('',[],{}) and (not isinstance(value[k],str) or value[k].strip()))+'</dl>'
     if isinstance(value,list):
         objects=all(isinstance(v,dict) for v in value)
         return '<ul class="'+('readable-items' if objects else 'readable-bullets')+'">'+''.join('<li'+(' class="readable-entry"' if objects else '')+'>'+readable(v)+'</li>' for v in value)+'</ul>'
@@ -116,24 +116,20 @@ def result_html(workspace,owner,document,stage,attempt=None,revision=None):
         body=analysis_body(body,evidence.get('customer_handoff',{}).get('findings',[]))
     input_label='직원 수정이 반영된 최종 HTML' if evidence.get('input_html_kind')=='report.html' else 'Terra 원본 HTML'
     parts=[f'<h1>{NAMES[stage]} 결과</h1>',f'<p><strong>보고서 리비전 {rev}</strong> · 현재 리비전 {current} · '+('이전 결과 — 최신 결과가 아닙니다' if rev!=current else '현재 리비전 결과')+'</p>',
-        '<p>입력: 해당 리비전의 원본 PDF와 '+input_label+'. A4 별도 수정본·변환 PDF를 검토한 결과가 아닙니다.</p>',
-        '<p>보고서 본문은 수정하지 않았습니다. 수정 전후가 있으면 모델 제안이며 실제 적용된 수정이 아닙니다.</p>',
         '<p>판정: '+escape({'PASS':'통과','FAIL':'오류 발견','NEEDS_REVIEW':'확인 필요'}.get(row['status'],row['status']))+'</p>']
     if attempts and row['id']!=attempts[0]['id'] and attempts[0]['revision']==rev:parts.append('<p class="note">같은 리비전의 이전 실행 결과입니다. 최근 실행 상태: '+escape(attempts[0]['state'])+'</p>')
-    parts.append('<details><summary>검토 입력 파일 식별</summary><p>검토 HTML SHA-256: '+escape(evidence.get('input_html_sha256','미기록'))+'</p><p>원본 PDF SHA-256: '+escape(evidence.get('input_pdf_sha256','미기록'))+'</p></details>')
+    parts.append('<details><summary>상세 정보</summary><p>입력: 해당 리비전의 원본 PDF와 '+input_label+'. A4 별도 수정본·변환 PDF를 검토한 결과가 아닙니다.</p><p>수정 전후는 제안이며 실제 적용된 수정이 아닙니다.</p><p>검토 HTML SHA-256: '+escape(evidence.get('input_html_sha256','미기록'))+'</p><p>원본 PDF SHA-256: '+escape(evidence.get('input_pdf_sha256','미기록'))+'</p></details>')
     for key,title in [('issues','발견 사항 · 오류 및 확인 필요'),('sections','주요 사양 · 설비와 공정'),('conflicts','충돌하는 조건'),('questions','고객에게 확인할 질문')]:
         if key not in body:continue
         parts.append('<h2>'+title+'</h2>')
-        if not body[key]:parts.append('<p>기록된 항목이 없습니다. 전체 내용의 정확성을 보증한다는 뜻은 아닙니다.</p>')
+        if not body[key]:parts.append('<p>기록된 항목이 없습니다.</p>')
         for n,item in enumerate(body[key],1):
             parts.append(f'<article><h3>항목 {n}</h3>'+readable(item))
-            if not isinstance(item,dict) or not any(k in item for k in ('reason','why','rationale','reason_ko')):parts.append('<p class="note">판단/질문 이유가 응답에 기록되지 않았습니다.</p>')
-            if key=='issues' and isinstance(item,dict) and not any(k in item for k in ('severity','type')):parts.append('<p class="note">개별 오류/확인 필요 구분은 미기록입니다. 위 판정과 구분해 검토하세요.</p>')
             parts.append('</article>')
     if attempts:
-        parts.append('<h2>보존된 실행 이력</h2><ul>')
+        parts.append('<details><summary>이전 결과</summary><ul>')
         for old in attempts:
             url=f'/api/documents/{document}/{"review-verification.html" if stage=="verify" else "review-analysis.html"}?attempt={old["id"]}'
             parts.append('<li>'+ (f'<a href="{escape(url)}">실행 {old["id"]}</a>' if old['payload'] else f'실행 {old["id"]}')+f' · 리비전 {old["revision"]} · '+escape(old['state'])+' · '+escape(json.loads(old['evidence']).get('reason',''))+'</li>')
-        parts.append('</ul>')
+        parts.append('</ul></details>')
     return ('<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+NAMES[stage]+' 결과</title><style>body{font:16px/1.75 sans-serif;max-width:1000px;margin:32px auto;padding:0 24px;color:#233747}h1,h2,h3{color:#17496f}article{border:1px solid #ccd7df;padding:16px;margin:14px 0}dt{font-weight:bold}dd{margin:0 0 12px;white-space:pre-wrap;overflow-wrap:anywhere}.note{color:#8a4b00}a{color:#175a93}'+READABLE_CSS+'</style><main class="readable-document">'+''.join(parts)+'</main>'+'</html>').encode()

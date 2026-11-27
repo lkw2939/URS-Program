@@ -37,11 +37,11 @@ function mountFlow(){
   if(!group.querySelector('.flow-cost')){const folded=element('details','','flow-cost');folded.append(element('summary','예상 비용·설정 상세'));for(const n of [...group.querySelectorAll('p.small')])if(n.textContent.startsWith('이번 1회')||n.textContent.startsWith('예상 비용'))folded.append(n);const estimate=[...group.querySelectorAll('button')].find(b=>b.textContent.includes('비용 확인'));if(estimate)folded.append(estimate);group.append(folded);}
  }
  // The second verification screen always operates on the final CSS version, not its parent.
- if(index===1&&info.initial_review){const r=info.initial_review;$('view-verification').disabled=false;$('view-verification').onclick=()=>window.open(`/api/documents/${activeDoc.id}/target-result.html?target=${encodeURIComponent(r.target)}&stage=verify&attempt=${r.attempt}`,'_blank','noopener');$('verification-result-note').textContent=`문구 검토에 사용한 보고서 버전 ${r.revision} · 수정은 결과 화면에서 전후 비교 후 적용하세요.`;}
- if(index===3)$('verification-result-note').textContent=detail.current_review?.reviews.verify.available?`현재 CSS 보고서 버전 ${info.revision}의 최종 검증 결과`:'CSS가 반영된 현재 보고서로 독립검증을 실행하세요. 이전 버전의 PASS는 재사용하지 않습니다.';
+ if(index===1&&info.initial_review){const r=info.initial_review;$('view-verification').disabled=false;$('view-verification').onclick=()=>window.open(`/api/documents/${activeDoc.id}/target-result.html?target=${encodeURIComponent(r.target)}&stage=verify&attempt=${r.attempt}`,'_blank','noopener');$('verification-result-note').textContent=`보고서 버전 ${r.revision}`;}
+ if(index===3)$('verification-result-note').textContent=detail.current_review?.reviews.verify.available?`보고서 버전 ${info.revision}`:'결과 없음';
  $('edit-layout').disabled=$('edit-layout').disabled||!info.steps[2].can_enter;
  $('flow-back').disabled=index===0;$('flow-next').disabled=index===5||!info.steps[index].passed||!info.steps[index+1].can_enter;
- $('flow-state').textContent=info.steps[index].passed?(index===1?info.text_note+' 다음 CSS 단계로 이동하세요.':'이 단계가 완료됐습니다. 다음 단계로 이동하세요.'):info.steps[index].reason;$('flow-state').classList.toggle('passed',info.steps[index].passed);
+ $('flow-state').textContent=info.steps[index].passed?'완료':info.steps[index].reason;$('flow-state').classList.toggle('passed',info.steps[index].passed);
  $('flow-report-link').hidden=!info.revision;if(info.revision){$('flow-report-link').href=`/api/documents/${activeDoc.id}/report.html?revision=${info.revision}`;$('flow-report-link').textContent=`사진 포함 보고서 열기 · 버전 ${info.revision}`;}
  const move=async step=>{const accepted=await api(`/api/documents/${activeDoc.id}/workflow-step`,{step,revision:info.revision});detail.flow=accepted;flowScreens.set(activeDoc.id,accepted.active);writeFlowLocation(accepted.active,'push');renderReview();$('flow-header').scrollIntoView({block:'start'});};
  const navigate=async target=>{root.inert=true;root.setAttribute('aria-busy','true');$('flow-back').disabled=true;$('flow-next').disabled=true;try{await move(target);}catch(error){message(error.message);}finally{mountFlow();root.inert=false;root.setAttribute('aria-busy','false');}};
@@ -178,7 +178,7 @@ function renderReview(){
   estimate.onclick=()=>busy(estimate,async()=>{const result=await api(base+'/cost-preview',{stage:stage.id});if(stage.id==='report')reportCost=result;await refreshReview();});controls.append(estimate);
   button.onclick=()=>busy(button,async()=>{if(stage.id==='report'){await api(base+'/run',{stage:'report',background:true});await waitReport();}else{await window.URSReview.run({base,stage:stage.id,revision:current.revision,sha256:currentReview.sha256,knownQuote:q,onProgress:text=>{message(text);runState.textContent=text;},onComplete:()=>{}});await refreshReview();}});controls.append(button);
   group.append(element('p',costText(q),'muted small'));
-  if(reviewInfo){group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason?'실행 불가 · '+reviewInfo.blocked_reason:q?.status==='READY'?'화면에서 열람하는 URS 최종 HTML과 원본 PDF를 사용합니다.':'실행을 누르면 예상 비용을 확인한 뒤 시작합니다.','muted small'));if(reviewInfo.failure)group.append(element('p',failureText(reviewInfo.failure),'result'));}
+  if(reviewInfo){if(reviewInfo.running||reviewInfo.blocked_reason)group.append(element('p',reviewInfo.running?'실행 중입니다.':reviewInfo.blocked_reason,'muted small'));if(reviewInfo.failure)group.append(element('p',failureText(reviewInfo.failure),'result'));}
 
  }
  for(const result of state.results){const evidence=JSON.parse(result.evidence);const box=element('div',`${result.stage==='report'&&current&&state.revision!==current.revision?'최근 생성 시도 (현재 보고서 유지)':stageNames[result.stage]} · ${result.stage==='report'&&result.status==='PASS'&&detail.reports?.state!=='current'?'저장 성공 · A4 배치/문서 끝 확인 필요':result.status} · ${evidence.reason||''}`,'result');if(evidence.api_diagnostics)box.append(element('pre',JSON.stringify(evidence.api_diagnostics,null,2)));for(const issue of evidence.issues||[])box.append(element('p',typeof issue==='string'?issue:JSON.stringify(issue)));$('check-results').append(box);}
@@ -231,7 +231,7 @@ function renderReview(){
  }
  for(const [stage,buttonId,noteId,endpoint] of [['verify','view-verification','verification-result-note','review-verification.html'],['analyze','view-analysis','analysis-result-note','review-analysis.html']]){
   const info=currentReview?.reviews[stage];const button=$(buttonId);button.disabled=!info?.available;button.onclick=null;
-  $(noteId).textContent=info?.available?`${info.previous?'이전 결과 · 최신 결과가 아닙니다':info.older_attempt?'같은 리비전의 이전 실행 결과 · 최근 실행 실패/진행 중':info.superseded?'보존된 기술분석 결과 · 최신 실행 조건은 충족하지 않음':'저장 완료'} · 보고서 리비전 ${current?.revision} · 화면의 최종 HTML 검토 결과 · 새 탭에서 읽기`:'저장된 결과가 없습니다. 실행 조건과 실패 이유를 확인하세요.';
+  $(noteId).textContent=info?.available?`${info.previous||info.older_attempt||info.superseded?'이전 결과 · ':''}보고서 버전 ${current?.revision}`:'저장된 결과가 없습니다.';
   if(info?.available){button.onclick=()=>window.open(base+`/target-result.html?target=${currentReview.id}&stage=${stage}&attempt=${info.attempt}`,'_blank','noopener');}
  }
  mountFlow();

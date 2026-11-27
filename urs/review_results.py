@@ -166,12 +166,12 @@ def plan_changes(text,entries,changes,single_page=False,page_count=None):
         needs_confirmation=manual or issue.get('can_manual',False)
         if needs_confirmation and (not confirmed or len(basis)<5):raise Blocked('원문 확인 체크와 수정 판단 근거(5자 이상)를 입력하세요. 확인이 필요한 수량·조건을 임의로 확정하지 않습니다.')
         page=change.get('page',issue.get('page') if issue else None)
-        if type(page) is not int or page<1 or (page_count and page>page_count):raise CorrectionInputError('바꿀 문구가 있는 원문 쪽을 선택하세요.')
+        if type(page) is not int or page<1 or (page_count and page>page_count):raise CorrectionInputError('원문 쪽을 선택하세요.')
         if issue and issue.get('pages') and page not in issue['pages']:raise Blocked('이 항목의 원문 쪽과 수정 위치가 다릅니다. 다른 쪽의 문구는 직접 수정 항목으로 추가하세요.')
         if issue and issue.get('page') and page!=issue['page'] and not needs_confirmation:raise Blocked('이 오류의 원문 쪽과 수정 위치가 다릅니다.')
         seen.add(ident);before=change.get('before');after=change.get('after')
         if not isinstance(before,str) or not before.strip() or len(before)>50000 or not isinstance(after,str) or len(after)>50000 or (not after.strip() and change.get('delete') is not True):raise CorrectionInputError('현재 문장과 수정문을 입력하세요. 삭제는 별도로 선택해야 합니다.')
-        if change.get('delete') is True and after.strip():raise CorrectionInputError('이 문구만 삭제하려면 바꿀 문구를 비워 주세요. 대체 문구와 삭제를 동시에 선택할 수 없습니다.')
+        if change.get('delete') is True and after.strip():raise CorrectionInputError('이 문구만 삭제하려면 고칠 문장을 비워 주세요. 대체 문구와 삭제를 동시에 선택할 수 없습니다.')
         if before==after:raise CorrectionInputError('수정 전후가 같습니다.')
         matches=[]
         for nodes in _text_groups(text,ranges,page,single_page):
@@ -225,40 +225,39 @@ def editor_html(item,data):
     quick=bool(item.get('can_propose') and not manual and item.get('before') and item.get('after') and item['before']!=item['after'])
     controls=''
     if quick:controls+='<div class="recommendation"><div><strong>현재 문장</strong><p data-recommendation-before>'+esc(item['before'])+'</p></div><div><strong>추천 수정문</strong><p data-recommendation-after>'+esc(item['after'])+'</p></div></div><button type="button" data-use-recommendation>이대로 고치기</button><p data-recommendation-status role="status"></p>'
-    elif not item['id'].startswith('manual:'):controls+='<p class="manual-needed">확인된 추천 수정문이 없습니다. 문구를 직접 확인해야 합니다.</p>'
-    controls+=f'<label class="check select-correction"><input type="checkbox" data-select>여러 항목을 함께 저장할 때 선택 (선택사항)</label>'
-    controls+='<button type="button" data-edit-item>직접 고치기</button><details class="proposal"><summary>수정 문구 입력·비교</summary>'
-    controls+=('<details class="edit-location"><summary>수정 위치 확인 · 원문 '+str(page)+'쪽</summary>' if page else '<div>')+'<label>바꿀 문구가 있는 원문 쪽<select data-page>'+options+'</select></label>'+('</details>' if page else '</div>')
-    if manual:controls+='<p class="notice">AI가 확정한 오역으로 처리하지 않습니다. 원문을 직접 확인한 근거를 적고, 수량·조건을 임의로 단정하지 마세요. 수정본은 최종 재검증이 필요합니다.</p><label class="check"><input type="checkbox" data-confirm>원문을 확인하고 이 문구의 수정을 요청합니다</label><label>원문을 보고 확인한 내용<textarea data-basis rows="2" placeholder="예: 원문에 대상이 명시되지 않아 수량의 대상을 단정한 표현을 제거합니다."></textarea></label>'
-    controls+='<div class="compare"><label>현재 보고서에서 바꿀 문구<textarea data-before rows="4" placeholder="현재 보고서에서 문구를 복사해 입력하세요.">'+esc(item.get('before',''))+'</textarea><p class="print-value" data-print-before>'+esc(item.get('before',''))+'</p></label><label>바꿀 문구<textarea data-after rows="4" placeholder="수정문을 입력하세요. 빈칸은 삭제가 아닙니다.">'+esc(item.get('after',''))+'</textarea><p class="print-value" data-print-after>'+esc(item.get('after',''))+'</p></label></div>'
-    if item.get('text_integrity') or item['id'].startswith('manual:'):controls+='<button type="button" data-clean-invisible>숨은 문자 제거안 만들기</button><p class="muted">선택 문구의 보이지 않는 문자만 제거한 수정안을 만듭니다. 링크 주소·CSS·그림은 바꾸지 않습니다.</p>'
+    elif not item['id'].startswith('manual:'):controls+='<p class="manual-needed">추천문이 없습니다. 직접 확인해 주세요.</p>'
+    controls+='<button type="button" data-edit-item>직접 고치기</button><details class="proposal"><summary>수정 내용</summary>'
+    controls+=('<details class="edit-location"><summary>수정 위치 확인 · 원문 '+str(page)+'쪽</summary>' if page else '<div>')+'<label>원문 쪽<select data-page>'+options+'</select></label>'+('</details>' if page else '</div>')
+    if manual:controls+='<p class="notice">원문을 확인한 뒤 수정하세요.</p><label class="check"><input type="checkbox" data-confirm>원문 확인</label><label>확인한 내용<textarea data-basis rows="2" placeholder="예: 원문에 대상이 명시되지 않아 수량의 대상을 단정한 표현을 제거합니다."></textarea></label>'
+    controls+='<div class="compare"><label>현재 문장<textarea data-before rows="4" placeholder="보고서에서 복사하세요.">'+esc(item.get('before',''))+'</textarea><p class="print-value" data-print-before>'+esc(item.get('before',''))+'</p></label><label>고칠 문장<textarea data-after rows="4" placeholder="고칠 내용을 입력하세요.">'+esc(item.get('after',''))+'</textarea><p class="print-value" data-print-after>'+esc(item.get('after',''))+'</p></label></div>'
+    if item.get('text_integrity') or item['id'].startswith('manual:'):controls+='<button type="button" data-clean-invisible>보이지 않는 문자 지우기</button>'
     controls+='<div class="item-actions screen-only"><button type="button" data-preview-item>변경 내용 확인</button><p data-item-status role="status"></p><div data-item-preview hidden></div><button type="button" data-apply-item hidden>이 수정 저장</button></div>'
-    controls+='<details class="edit-advanced"><summary>반복 문구 지정·삭제 등 추가 옵션</summary><label>같은 쪽에 문구가 반복된다면 몇 번째인지 (선택)<input type="number" min="1" max="10000" data-occurrence placeholder="예: 2"></label><label class="check"><input type="checkbox" data-delete>이 문구만 삭제 — 대체 문구 없이 지웁니다</label><p class="muted">선택한 본문만 수정합니다. 여러 문단·표 셀은 항목을 나누세요. 서식 태그·사진·CSS·링크는 보존합니다.</p></details></details>'
+    controls+='<details class="edit-advanced"><summary>추가 옵션</summary><label>반복 문구의 순서<input type="number" min="1" max="10000" data-occurrence placeholder="예: 2"></label><label class="check"><input type="checkbox" data-delete>이 문구만 삭제 — 대체 문구 없이 지웁니다</label></details></details>'
     return controls
 
 
 def render(workspace,owner,document,target,attempt):
     data=load(workspace,owner,document,target,attempt);esc=html.escape;base=f'/api/documents/{document}'
     ready=data['execution_report'];editable=data['can_edit']
-    next_step='오류 항목의 수정안을 확인하고 필요한 항목만 선택해 적용하세요.' if data['error_count'] else '미확인 번역 항목의 근거를 확인하세요.' if data['review_count']>data['customer_count'] else '프로그램 점검 항목의 발생 위치를 확인하세요. 번역문은 바꾸지 않습니다.' if data['program_count'] else '이 보고서의 독립검증이 통과했다면 CSS 단계를 진행할 수 있습니다.'
+    next_step='항목별 수정안을 확인하세요.' if data['error_count'] else '미확인 번역 항목의 근거를 확인하세요.' if data['review_count']>data['customer_count'] else '프로그램 점검 항목의 발생 위치를 확인하세요. 번역문은 바꾸지 않습니다.' if data['program_count'] else '이 보고서의 독립검증이 통과했다면 CSS 단계를 진행할 수 있습니다.'
     current_version='보고서 버전 '+str(ready['revision']) if ready else '열람 가능한 보고서 없음'
-    s=f'<header><p class="eyebrow">독립검증 결과</p><h1>{esc(data["report_name"])}</h1><p id="report-version-context">검증 대상: 보고서 버전 {data["revision"]} · 현재 직원용: {esc(current_version)}</p><p>검증 일시 {esc(data["verified_at"])}</p></header>'
-    if not data['current_matches']:s+='<p class="notice" id="historical-note">수정 전 또는 이전 보고서의 검증 결과입니다. 현재 보고서의 검증 결과로 사용하지 않습니다.</p>'
-    elif data['older_attempt']:s+='<p class="notice">같은 보고서의 이전 실행 결과입니다. 최신 검증 결과를 확인하세요.</p>'
-    s+='<section class="action-progress" role="status"><h2 id="work-title">수정 항목을 확인하고 있습니다</h2><p id="work-instruction">필수 항목을 고쳐 저장하면 CSS 단계로 넘어갈 수 있습니다.</p><p class="finish-rule">이 단계는 필수 수정 항목이 모두 저장되면 끝납니다. 최종 PASS는 CSS 후 최종 독립검증에서 판정합니다.</p></section>'
-    s+='<details class="review-records"><summary>판정·저장 이력 상세</summary>'
+    s=f'<header><p class="eyebrow">독립검증 결과</p><h1>{esc(data["report_name"])}</h1><p id="report-version-context">보고서 버전 {data["revision"]}{(' · 현재 버전 '+str(ready['revision'])) if ready and ready['revision']!=data['revision'] else ''}</p></header>'
+    if not data['current_matches']:s+='<p class="notice" id="historical-note">이전 검증 결과입니다.</p>'
+    elif data['older_attempt']:s+='<p class="notice">이전 실행 결과입니다.</p>'
+    s+='<section class="action-progress" role="status"><h2 id="work-title">수정 항목을 확인하고 있습니다</h2><p id="work-instruction">필수 항목을 고쳐 저장하면 CSS 단계로 넘어갈 수 있습니다.</p></section>'
+    s+='<details class="review-records"><summary>상세 정보</summary><p>검증 일시 '+esc(data['verified_at'])+'</p><p>문구 수정을 마친 뒤 CSS와 최종 검증을 진행합니다.</p>'
     s+=f'<section class="summary"><strong id="remaining-errors">번역 오류 {data["error_count"]}건</strong><strong id="applied-count">적용 {data["applied_count"]}건</strong><strong id="remaining-reviews">번역 확인 필요 {data["review_count"]-data["customer_count"]}건</strong><strong>기술분석으로 이관 {data["customer_count"]}건</strong><strong id="remaining-programs">프로그램 점검 {data["program_count"]}건</strong><p id="next-action-summary">다음에 할 일 · {esc(next_step)}</p></section>'
     verdict={'PASS':'통과','NEEDS_REVIEW':'확인 필요','FAIL':'해결할 항목 있음'}.get(data['status'],'미확인')
     s+='<p id="verification-verdict">독립검증 적용 판정: '+esc(data['status'])+' · '+verdict+'. 원문 조건에 대한 고객 확인은 기술분석에서 다루며 이 판정을 막지 않습니다. 번역 오류·미확인 번역·프로그램 문제는 별도 해결이 필요합니다.</p>'
     s+=f'<nav class="screen-only"><a id="verified-report" href="{base}/report.html?revision={data["revision"]}" target="_blank" rel="noopener">검증에 사용한 직원용 보고서 보기 · 버전 {data["revision"]}</a><a href="/?document={document}&amp;step=2">URS 보고서 검토로 돌아가기</a></nav>'
     s+='<p class="edit-guide screen-only">수정은 이렇게: 추천문이 맞으면 <strong>이대로 고치기</strong>를 누르세요. 직접 입력은 원할 때만 하세요.</p>'
     s+='<!-- review-record-details --></details>'
-    s+='<section class="result-step-nav screen-only"><button type="button" id="next-stage" disabled>다음 단계 →</button><a id="edit-report-link" target="_blank" rel="noopener">현재 수정할 보고서 보기</a><a id="return-workflow" href="/?document='+esc(document)+'&amp;step=2">단계별 작업 화면</a><p id="next-stage-reason" role="status"></p></section>'
-    if data['status']!=data['stored_status']:s+='<p class="notice">과거 저장 판정 '+esc(data['stored_status'])+'은 보존했습니다. 고객 확인 분리 정책을 적용한 현재 판정입니다. 새 AI 검증을 실행한 결과는 아닙니다.</p>'
-    if data['customer_count']:s+='<p class="customer-handoff" id="customer-handoff">고객 확인 '+str(data['customer_count'])+'건은 기술분석으로 이관했습니다.</p>'
+    s+='<section class="result-step-nav screen-only"><button type="button" id="next-stage" disabled>다음 단계 →</button><a id="return-workflow" href="/?document='+esc(document)+'&amp;step=2">작업 화면</a><p id="next-stage-reason" role="status"></p></section>'
+    if data['status']!=data['stored_status']:s+='<details class="past-policy"><summary>이전 판정</summary><p class="notice">과거 저장 판정 '+esc(data['stored_status'])+'은 보존했습니다. 고객 확인 분리 정책을 적용한 현재 판정입니다. 새 AI 검증을 실행한 결과는 아닙니다.</p></details>'
+    if data['customer_count']:s+='<p class="customer-handoff" id="customer-handoff">고객 확인 '+str(data['customer_count'])+'건 · 기술분석에서 확인</p>'
     s+='<section id="findings"><h2>고칠 항목</h2>'
-    if data['customer_count'] and all(i['customer_confirmation'] for i in data['issues']):s+='<p>고객 확인 외에 남은 독립검증 지적은 없습니다. CSS 단계로 진행할 수 있습니다.</p>'
-    if not data['issues']:s+='<p>저장된 발견 항목이 없습니다. 본문 전체의 정확성을 자동 보증한다는 뜻은 아닙니다.</p>'
+    if data['customer_count'] and all(i['customer_confirmation'] for i in data['issues']):s+='<p>고칠 문구가 없습니다.</p>'
+    if not data['issues']:s+='<p>고칠 문구가 없습니다.</p>'
     for item in data['issues']:
         if item['kind']=='layout' or item['customer_confirmation']:continue
         n=item['id'];kind='처리 완료' if item.get('applied') else {'error':'번역 오류','review':'번역 확인 필요','program':'프로그램 문제'}[item['kind']];can=editable and not item.get('applied') and (item['can_propose'] or item.get('can_manual'))
@@ -276,9 +275,9 @@ def render(workspace,owner,document,target,attempt):
         elif can:s+=editor_html(item,data)
         elif item['kind']=='error' and (item['before'] or item['after']):
             s+='<div class="compare read-only">'
-            if item['before']:s+='<div><strong>현재 보고서에서 바꿀 문구</strong><p>'+esc(item['before'])+'</p></div>'
-            if item['after']:s+='<div><strong>바꿀 문구</strong><p>'+esc(item['after'])+'</p></div>'
-            s+='</div><p class="muted">현재 보고서와 연결된 최신 결과에서 수정할 수 있습니다.</p>'
+            if item['before']:s+='<div><strong>현재 문장</strong><p>'+esc(item['before'])+'</p></div>'
+            if item['after']:s+='<div><strong>고칠 문장</strong><p>'+esc(item['after'])+'</p></div>'
+            s+='</div><p class="muted">이전 결과는 수정할 수 없습니다.</p>'
         quotes=[]
         for ref in item['references']:quotes.append('<p class="source-page-label">원문 '+str(ref['page'])+'쪽</p><blockquote>'+esc(ref['quote'])+'</blockquote>')
         if item['source_en'] and item['source_en'] not in [r['quote'] for r in item['references']]:quotes.append('<blockquote>'+esc(item['source_en'])+'</blockquote>')
@@ -288,12 +287,12 @@ def render(workspace,owner,document,target,attempt):
         s+='</article>'
     if editable:
         manual={'id':'manual:'+str(data['manual_index']),'page':None,'pages':[],'before':'','after':'','can_manual':True}
-        s+='<details id="manual-options"><summary>목록에 없는 문구 직접 고치기</summary><article class="finding manual" data-issue="'+manual['id']+'"><h3>다른 문구 직접 수정</h3><p>AI 지적 외의 본문도 쪽과 문구를 지정해 수정할 수 있습니다.</p>'+editor_html(manual,data)+'</article><button type="button" id="add-manual-correction">직접 수정 항목 추가</button></details>'
+        s+='<details id="manual-options"><summary>목록에 없는 문구 직접 고치기</summary><article class="finding manual" data-issue="'+manual['id']+'"><h3>다른 문구 직접 수정</h3>'+editor_html(manual,data)+'</article><button type="button" id="add-manual-correction">직접 수정 항목 추가</button></details>'
     s+='</section>'
     if data['layout_count']:s+='<details class="layout-notes"><summary>쪽수·줄바꿈 등 표시 차이 '+str(data['layout_count'])+'건 (번역 오류 수에 포함하지 않음)</summary>'+''.join('<p>'+esc(i['problem'] or i['title'])+'</p>' for i in data['issues'] if i['kind']=='layout')+'</details>'
-    s+='<details id="bulk-corrections" class="screen-only"><summary>여러 항목을 직접 골라 수정할 때</summary><section class="actions-panel screen-only" '+('hidden' if not editable else '')+'><h2>선택한 문구 수정</h2><p>수정안을 비교한 뒤 적용해야 새 보고서로 저장됩니다. 원본 보고서와 검증 기록은 이력으로 남습니다.</p><button id="preview-corrections" '+'disabled'+'>선택 항목 수정 전후 확인</button><div id="correction-preview" hidden></div><button id="apply-corrections" hidden>선택한 수정 적용</button><p id="correction-status" role="status"></p></section></details>'
+    s+='<p id="correction-status" class="save-status screen-only" role="status"></p>'
     current_link=base+'/report.html?revision='+str(ready['revision']) if ready else '#'
-    s+='<section class="actions-panel screen-only" id="next-actions"><h2>'+'저장한 보고서'+'</h2><a id="corrected-report" '+('hidden' if ready and ready['revision']==data['revision'] else '')+' href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><p id="verification-state">'+('수정된 보고서는 독립 재검증 전입니다. 아래 실행은 현재 보고서에 연결됩니다.' if ready and ready['revision']!=data['revision'] else '현재 보고서에 대해 다시 검증할 수 있습니다.')+'</p><details id="other-review-actions"><summary>재검증·기술분석 등 다른 작업</summary><button id="reverify" disabled>독립 재검증 실행</button><button id="analyze-current" disabled>기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></details></section>'
+    s+='<section class="actions-panel screen-only" id="next-actions"><h2>'+'저장한 보고서'+'</h2><a id="corrected-report" '+('hidden' if ready and ready['revision']==data['revision'] else '')+' href="'+current_link+'" target="_blank" rel="noopener">'+('수정된 보고서 보기' if ready and ready['revision']!=data['revision'] else '현재 보고서 보기')+'</a><details id="other-review-actions"><summary>다른 작업</summary><button id="reverify" disabled>독립 재검증 실행</button><button id="analyze-current" disabled>기술분석 실행</button><p id="analysis-wait"></p><p id="run-status" role="status"></p><a id="new-result" hidden>새 독립검증 결과 보기</a></details></section>'
     s+='<section class="result-step-nav result-step-nav-bottom screen-only"><button type="button" id="next-stage-bottom" disabled>다음 단계 →</button><p id="next-stage-reason-bottom"></p></section>'
     technical=''
     technical+='<details class="technical"><summary>검증 요청 자료·실제 전송·결과 형식 상세</summary><h3>1. 검증을 요청한 보고서</h3><p>'+esc(data['report_name'])+' · 저장 버전 '+str(data['revision'])+'</p><p>저장 최종 HTML SHA-256: <code>'+esc(data['stored_html_sha256'])+'</code></p><h3>2. AI에 실제 보낸 자료</h3>'
@@ -312,4 +311,4 @@ def render(workspace,owner,document,target,attempt):
     from pathlib import Path
     css=(Path(__file__).resolve().parents[1]/'static/review.css').read_text()
     encoded=json.dumps(data,ensure_ascii=False).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
-    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js?v=recommendation-edit-4"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()
+    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js?v=concise-review-5"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()
