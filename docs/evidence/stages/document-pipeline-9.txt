@@ -13,8 +13,10 @@ test_out_of_range_pages_not_promoted (test_review_presentation.ReviewPresentatio
 test_translation_ambiguity_and_program_are_distinct (test_review_presentation.ReviewPresentationTests.test_translation_ambiguity_and_program_are_distinct) ... ok
 test_only_complete_definite_proposals_have_one_click_action (test_review_presentation.SimpleRecommendationTests.test_only_complete_definite_proposals_have_one_click_action) ... ok
 test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes (test_review_presentation.SimpleRecommendationTests.test_readable_fields_preserve_values_and_have_real_paragraphs_without_empty_boxes) ... ok
+test_both_page_quotes_and_uploaded_pdf_links_are_visible_without_details (test_review_presentation.VisibleSourceTests.test_both_page_quotes_and_uploaded_pdf_links_are_visible_without_details) ... ok
+test_missing_quotes_are_not_fabricated_and_unquoted_pages_are_identified (test_review_presentation.VisibleSourceTests.test_missing_quotes_are_not_fabricated_and_unquoted_pages_are_identified) ... ok
 
 ----------------------------------------------------------------------
-Ran 15 tests in 0.031s
+Ran 17 tests in 0.033s
 
 OK

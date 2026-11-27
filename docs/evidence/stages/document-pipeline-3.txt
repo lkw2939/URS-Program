@@ -13,6 +13,6 @@ test_verification_and_analysis_use_unlimited_wait (test_report_transport.ReportT
 test_web_accepts_and_polls_while_openai_pending_without_second_paid_request (test_report_transport.ReportTransportTests.test_web_accepts_and_polls_while_openai_pending_without_second_paid_request) ... ok
 
 ----------------------------------------------------------------------
-Ran 13 tests in 10.639s
+Ran 13 tests in 9.903s
 
 OK

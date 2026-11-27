@@ -124,7 +124,9 @@ def make_app(workspace, port=8795, secure_cookie=False):
                         document, action = parts[2:]
                         if not post and action == 'original':
                             original = workspace.original(owner, document)
-                            self.reply(200, original['original'], 'application/pdf', attachment=document + '.pdf')
+                            from urllib.parse import parse_qs
+                            inline=parse_qs(urlparse(self.path).query).get('view')==['1']
+                            self.reply(200, original['original'], 'application/pdf', attachment=None if inline else document + '.pdf')
                         elif not post and action == 'status':
                             self.reply(200, workspace.status(owner, document))
                         elif not post and action in ('verification.json','verification.html'):

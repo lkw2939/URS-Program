@@ -72,3 +72,20 @@ class SimpleRecommendationTests(unittest.TestCase):
   from html.parser import HTMLParser
   body={'text':'첫 문단 120 mm <A>.\n\n두 번째 문단 SKU-5.','why':'현장 안전 확인이 필요합니다.','source_en':'  ','value':0}
   result=readable(body);self.assertEqual(result.count('class="readable-field"'),3);self.assertEqual(result.count('class="readable-text"'),4);self.assertNotIn('<A>',result);self.assertIn('&lt;A&gt;',result);self.assertIn('SKU-5.',result);self.assertIn('120 mm',result);self.assertIn('>0</p>',result)
+
+
+class VisibleSourceTests(unittest.TestCase):
+ def test_both_page_quotes_and_uploaded_pdf_links_are_visible_without_details(self):
+  from urs.review_results import source_context_html
+  item=issues({'issues':[{'page':19,'issue_type':'translation','severity':'확인 필요','evidence':[{'page':19,'source_en':'A Foam Gripper with Ejector. (5 Pieces)'},{'page':20,'source_en':'max 5 packages ~ min 1 package.'}]}]},25)[0]
+  result=source_context_html(item,'/api/documents/fixture')
+  self.assertNotIn('<details',result);self.assertIn('A Foam Gripper',result);self.assertIn('max 5 packages',result)
+  for page in (19,20):self.assertIn('original?view=1#page='+str(page),result)
+  self.assertEqual(result.count('lang="en"'),2)
+ def test_missing_quotes_are_not_fabricated_and_unquoted_pages_are_identified(self):
+  from urs.review_results import source_context_html
+  item=issues({'issues':[{'page':19,'pages':[19,20],'reason':'수량 확인 필요'}]},25)[0]
+  result=source_context_html(item,'/api/documents/fixture')
+  self.assertIn('저장된 원문 인용이 없습니다.',result);self.assertNotIn('<blockquote',result)
+  for page in (19,20):self.assertIn('original?view=1#page='+str(page),result)
+  item['source_en']='<script>alert(1)</script>';result=source_context_html(item,'/api/documents/fixture');self.assertIn('&lt;script&gt;',result);self.assertNotIn('<script>',result)

@@ -20,7 +20,7 @@
           "exit_code": 0,
           "tests": 7,
           "log": "foundation-1.txt",
-          "duration_seconds": 0.058
+          "duration_seconds": 0.093
         },
         {
           "command": [
@@ -37,7 +37,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "foundation-2.txt",
-          "duration_seconds": 0.812
+          "duration_seconds": 0.864
         },
         {
           "command": [
@@ -71,7 +71,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "foundation-4.txt",
-          "duration_seconds": 0.137
+          "duration_seconds": 0.152
         }
       ]
     },
@@ -95,7 +95,7 @@
           "exit_code": 0,
           "tests": 16,
           "log": "employee-original-1.txt",
-          "duration_seconds": 3.933
+          "duration_seconds": 4.486
         },
         {
           "command": [
@@ -112,7 +112,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "employee-original-2.txt",
-          "duration_seconds": 10.913
+          "duration_seconds": 10.74
         },
         {
           "command": [
@@ -129,7 +129,7 @@
           "exit_code": 0,
           "tests": 13,
           "log": "employee-original-3.txt",
-          "duration_seconds": 29.312
+          "duration_seconds": 29.314
         }
       ]
     },
@@ -153,7 +153,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-1.txt",
-          "duration_seconds": 0.227
+          "duration_seconds": 0.255
         },
         {
           "command": [
@@ -170,7 +170,7 @@
           "exit_code": 0,
           "tests": 2,
           "log": "pdf-source-2.txt",
-          "duration_seconds": 0.265
+          "duration_seconds": 0.243
         }
       ]
     },
@@ -194,7 +194,7 @@
           "exit_code": 0,
           "tests": 11,
           "log": "technical-meaning-guards-1.txt",
-          "duration_seconds": 0.059
+          "duration_seconds": 0.06
         },
         {
           "command": [
@@ -211,7 +211,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "technical-meaning-guards-2.txt",
-          "duration_seconds": 0.204
+          "duration_seconds": 0.198
         },
         {
           "command": [
@@ -228,7 +228,7 @@
           "exit_code": 0,
           "tests": 8,
           "log": "technical-meaning-guards-3.txt",
-          "duration_seconds": 0.763
+          "duration_seconds": 0.739
         },
         {
           "command": [
@@ -245,7 +245,7 @@
           "exit_code": 0,
           "tests": 10,
           "log": "technical-meaning-guards-4.txt",
-          "duration_seconds": 6.306
+          "duration_seconds": 6.075
         },
         {
           "command": [
@@ -262,7 +262,7 @@
           "exit_code": 0,
           "tests": 9,
           "log": "technical-meaning-guards-5.txt",
-          "duration_seconds": 8.318
+          "duration_seconds": 8.417
         },
         {
           "command": [
@@ -279,7 +279,7 @@
           "exit_code": 0,
           "tests": 4,
           "log": "technical-meaning-guards-6.txt",
-          "duration_seconds": 0.165
+          "duration_seconds": 0.182
         },
         {
           "command": [
@@ -296,14 +296,14 @@
           "exit_code": 0,
           "tests": 20,
           "log": "technical-meaning-guards-7.txt",
-          "duration_seconds": 2.533
+          "duration_seconds": 2.408
         }
       ]
     },
     {
       "id": "document-pipeline",
       "status": "PASS",
-      "tests": 141,
+      "tests": 143,
       "commands": [
         {
           "command": [
@@ -320,7 +320,7 @@
           "exit_code": 0,
           "tests": 12,
           "log": "document-pipeline-1.txt",
-          "duration_seconds": 19.45
+          "duration_seconds": 19.185
         },
         {
           "command": [
@@ -337,7 +337,7 @@
           "exit_code": 0,
           "tests": 14,
           "log": "document-pipeline-2.txt",
-          "duration_seconds": 19.589
+          "duration_seconds": 19.798
         },
         {
           "command": [
@@ -354,7 +354,7 @@
           "exit_code": 0,
           "tests": 13,
           "log": "document-pipeline-3.txt",
-          "duration_seconds": 10.875
+          "duration_seconds": 10.121
         },
         {
           "command": [
@@ -371,7 +371,7 @@
           "exit_code": 0,
           "tests": 10,
           "log": "document-pipeline-4.txt",
-          "duration_seconds": 18.438
+          "duration_seconds": 17.409
         },
         {
           "command": [
@@ -388,7 +388,7 @@
           "exit_code": 0,
           "tests": 16,
           "log": "document-pipeline-5.txt",
-          "duration_seconds": 29.811
+          "duration_seconds": 30.016
         },
         {
           "command": [
@@ -405,7 +405,7 @@
           "exit_code": 0,
           "tests": 14,
           "log": "document-pipeline-6.txt",
-          "duration_seconds": 32.269
+          "duration_seconds": 33.083
         },
         {
           "command": [
@@ -422,7 +422,7 @@
           "exit_code": 0,
           "tests": 14,
           "log": "document-pipeline-7.txt",
-          "duration_seconds": 45.283
+          "duration_seconds": 45.438
         },
         {
           "command": [
@@ -439,7 +439,7 @@
           "exit_code": 0,
           "tests": 7,
           "log": "document-pipeline-8.txt",
-          "duration_seconds": 6.282
+          "duration_seconds": 6.349
         },
         {
           "command": [
@@ -454,9 +454,9 @@
             "-v"
           ],
           "exit_code": 0,
-          "tests": 15,
+          "tests": 17,
           "log": "document-pipeline-9.txt",
-          "duration_seconds": 0.194
+          "duration_seconds": 0.196
         },
         {
           "command": [
@@ -473,7 +473,7 @@
           "exit_code": 0,
           "tests": 5,
           "log": "document-pipeline-10.txt",
-          "duration_seconds": 0.964
+          "duration_seconds": 1.139
         },
         {
           "command": [
@@ -490,7 +490,7 @@
           "exit_code": 0,
           "tests": 3,
           "log": "document-pipeline-11.txt",
-          "duration_seconds": 6.013
+          "duration_seconds": 5.771
         },
         {
           "command": [
@@ -507,7 +507,7 @@
           "exit_code": 0,
           "tests": 7,
           "log": "document-pipeline-12.txt",
-          "duration_seconds": 26.457
+          "duration_seconds": 26.733
         },
         {
           "command": [
@@ -524,7 +524,7 @@
           "exit_code": 0,
           "tests": 11,
           "log": "document-pipeline-13.txt",
-          "duration_seconds": 37.485
+          "duration_seconds": 38.739
         }
       ]
     }
@@ -538,9 +538,9 @@
         "scripts/validate_unit_stages.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 317.211,
+      "duration_seconds": 318.308,
       "log": "final-tests.txt",
-      "tests": 275
+      "tests": 277
     },
     {
       "name": "chromium",
@@ -549,7 +549,7 @@
         "tests/browser_pipeline.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 16.264,
+      "duration_seconds": 16.275,
       "log": "final-browser.txt"
     },
     {
@@ -559,7 +559,7 @@
         "tests/browser_targets.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 6.969,
+      "duration_seconds": 5.202,
       "log": "final-a4-target-browser.txt"
     },
     {
@@ -569,7 +569,7 @@
         "tests/browser_reviews.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 31.997,
+      "duration_seconds": 35.08,
       "log": "final-review-browser.txt"
     },
     {
@@ -579,7 +579,7 @@
         "tests/browser_correction_flow.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 10.996,
+      "duration_seconds": 10.943,
       "log": "final-correction-browser.txt"
     },
     {
@@ -589,7 +589,7 @@
         "tests/browser_costs.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 5.272,
+      "duration_seconds": 5.485,
       "log": "final-cost-browser.txt"
     },
     {
@@ -599,7 +599,7 @@
         "tests/browser_immediate_images.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 14.467,
+      "duration_seconds": 14.186,
       "log": "final-immediate-image-browser.txt"
     },
     {
@@ -609,7 +609,7 @@
         "tests/browser_report_timeout.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 6.402,
+      "duration_seconds": 6.955,
       "log": "final-report-timeout-browser.txt"
     },
     {
@@ -619,7 +619,7 @@
         "tests/browser_saved_reports.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 8.133,
+      "duration_seconds": 8.245,
       "log": "final-saved-html-browser.txt"
     },
     {
@@ -629,7 +629,7 @@
         "tests/browser_staff_report_view.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 5.762,
+      "duration_seconds": 5.691,
       "log": "final-staff-report-browser.txt"
     },
     {
@@ -639,7 +639,7 @@
         "tests/browser_a4_generation.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 11.103,
+      "duration_seconds": 10.947,
       "log": "final-a4-generation-browser.txt"
     },
     {
@@ -649,7 +649,7 @@
         "tests/browser_layout_edit.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 9.802,
+      "duration_seconds": 9.732,
       "log": "final-layout-editor-browser.txt"
     },
     {
@@ -659,7 +659,7 @@
         "tests/browser_result_edit.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 12.372,
+      "duration_seconds": 12.189,
       "log": "final-result-edit-browser.txt"
     },
     {
@@ -669,7 +669,7 @@
         "tests/browser_saved_reviews.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 12.913,
+      "duration_seconds": 13.156,
       "log": "final-saved-review-browser.txt"
     },
     {
@@ -679,7 +679,7 @@
         "tests/browser_simple_review.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 11.779,
+      "duration_seconds": 12.199,
       "log": "final-simple-review-browser.txt"
     },
     {
@@ -689,7 +689,7 @@
         "tests/browser_workflow.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 20.626,
+      "duration_seconds": 22.469,
       "log": "final-workflow-browser.txt"
     },
     {
@@ -699,7 +699,7 @@
         "tests/html_smoke.py"
       ],
       "exit_code": 0,
-      "duration_seconds": 2.017,
+      "duration_seconds": 2.186,
       "log": "final-html.txt"
     }
   ],
@@ -716,9 +716,9 @@
     "start.py": "a32d7c4a5d9b252ea34f7e0b9293fe9022e60d39652426de33b28ee9de2473d4",
     "static/app.css": "d04494be73315ef9fe30d7f4f2d15fafdca66e56ac01f584b063f63e269a7e2d",
     "static/app.js": "12018f7b3d33ad94b7c5c9a9e8fa6dcc4965737f39ef6d1650dd325b53f563f3",
-    "static/index.html": "46ad61ae91c1e97271d0af4326a39aa0b72f9c0b8b5467ff7563a0ee3ce0207b",
-    "static/review.css": "02f54ea13859fafa358b7f4329fed39ad158ef46e3f2583f3165d772c71d9ba2",
-    "static/review.js": "ab566f48b0baae1727d89f3cd4c806b61d6366a53a658a1baf9203585c2ce58a",
+    "static/index.html": "e522fea75d1dc1ab4794345e2a116254d86739d28ca41dc3908c16e104781b83",
+    "static/review.css": "ca2fcf758d3b5aab6c4ca7e94b299da17d8782feb88cd8db4b8100c16a3b98d7",
+    "static/review.js": "cd17cdaf54bda6af2d9d5dadc1563d3e5c00fea9aef2938357997d95f93178ba",
     "tests/browser_a4_generation.py": "d0aa7f2d0097e205c30b0507ef45dcbcc7e2ae8eaaccbbccd934f5c7cb510fb7",
     "tests/browser_correction_flow.py": "488b764bbd3c4cb58121880593d3444d647e763dfd9a84503e6dc38b7b51fdf5",
     "tests/browser_costs.py": "3c82ba3b9804c0affa03080fcc9f3d93f80ddadfcda8a415b376c8028bdbe450",
@@ -726,7 +726,7 @@
     "tests/browser_layout_edit.py": "7daf2cac0ff6c3d961bb8fb15c44a857e1544183d7bb15188233556d04e5cb34",
     "tests/browser_pipeline.py": "2f41bedb717952ef83fbabb8206006d2765990884d1c5f7007c7d9b789c94583",
     "tests/browser_report_timeout.py": "ddece68d9eb5d17145d659b095b58e775bcd66da2e7aeffffca091225456b29a",
-    "tests/browser_result_edit.py": "abb3cafe20ee81f1d3f28f36783cda2a5fec753d87daf0c0e584832a78e05498",
+    "tests/browser_result_edit.py": "a814806ec4c6765978d03099a884f0220fc6f00b66621d556e85c8457df3d441",
     "tests/browser_reviews.py": "d2e176335373da2264a0e824cc8aa82bddde94e15ceec316b791bf8eb0fb8d40",
     "tests/browser_saved_reports.py": "21631c72c0895a27178a6636a07befd741deb7694e2664acf808d9779252e308",
     "tests/browser_saved_reviews.py": "60ab8496415e67d8bdb02ae8eda16dff9685134c7ae1e2395097dc9ef4bba41a",
@@ -759,7 +759,7 @@
     "tests/test_report_transport.py": "c2aa1471f71df6366d6916e82ae3b28643a18d663279eaff3d342653eae400ad",
     "tests/test_report_view.py": "896c635ce09096f48ea8fd9f8957944008f443f17bd6593739744f6fd5984979",
     "tests/test_requirements.py": "8e4a59d6109cad406c8280adccfb7a709ea1d3a6fc06e754d1f068ccc9880219",
-    "tests/test_review_presentation.py": "588ff8ca9c4821c1992cfa7216ab9d8237549dbf942e348903674a0b92746c91",
+    "tests/test_review_presentation.py": "c5fdd29ef678d1322ad956129408e846010e58a860304174fdc554d6eeca140c",
     "tests/test_reviews.py": "f30a51fc94274e65a49938ad7ede2ee192b2317978158cc00dc00afd3f408366",
     "tests/test_saved_reports.py": "9876e8f5a26c71e95e8628cb769ffa079460498901d64014d0ff2ee4cbec6f69",
     "tests/test_service.py": "e66eb6d739c288814499f716c5cc375d19b8c74367bea15870aa5aa8fa9ac17e",
@@ -767,7 +767,7 @@
     "tests/test_terminology.py": "21ae719e1e6e3653e069c89258813e9bcea8dc535c822d6bc76d0c9b2a37a241",
     "tests/test_verification.py": "54ca21aa792f6e80954492d41c5d9437345868a4633944ed6ead4a766ad587f1",
     "tests/test_workflow.py": "fa3955f6fece06c20a0deec03e75408f33e5aacf760e4eae784b0758ff95407c",
-    "tests/test_workspace.py": "99b256bb5bb21d90f7b89e7b13b997f9adc73911914dadb33aafb1e7cdbaf074",
+    "tests/test_workspace.py": "389482d432debdcf1160eb8ff38ce710c3186892badc61a8a45252e5b8e25839",
     "tests/vendor/pdfjs/LICENSE": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
     "tests/vendor/pdfjs/pdf.min.js": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
     "tests/vendor/pdfjs/pdf.worker.min.js": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
@@ -802,7 +802,7 @@
     "urs/review_archive.py": "07fcbf92d77ea54edda7e0ead58d4ac3385964c35507af5211e2afacf6ff1d52",
     "urs/review_evidence.py": "f556e7dc26ca19ac88accac918bdd624f2304df4c309ca957e74774a509dba28",
     "urs/review_policy.py": "4fd2f6a8753a517d59de9c5242dc4b3d2709f8cc0896ca0cd7341e3da6473d7b",
-    "urs/review_results.py": "efc7a2fc6590b91b7622689d8fe7e640f7479b2d24d2f47d4b0732c89ca390a6",
+    "urs/review_results.py": "290d30d57490ba55bd5fcf0ffdbb58e51840d4c7b81705e1580f97695d334310",
     "urs/reviews.py": "b7e2ac3c00f1c0baaae76514e5488fd26107429c08ebcb77002362f95977dc66",
     "urs/saved_reports.py": "d75cc25bb388e95f2ec7bba4c0c90d387c8f1e1e2fdb2ca727b4a12f0cf65200",
     "urs/server.py": "bf3c4b21705bfcd876b48631add6cabcaf51cd130b341d7268c668ef951e7e42",
@@ -810,98 +810,88 @@
     "urs/terminology.py": "8f7385954224b6ca004621d1b32ce5deec26653c282b963fc554fad910f011f7",
     "urs/usage_audit.py": "97900b3cf86640b6ede5318cf30b54bffb06ca7e132f120c7ef7ec253dd457d9",
     "urs/verification.py": "efa63924d6e96b44655017ac104d4827c9b4a0b9d204b13a9169e62f60d78f2c",
-    "urs/web.py": "378ab1b4c143e465318824e583eb1739da45529b8a47666b916440ccf7f39782",
+    "urs/web.py": "f0122836f9730f922faaa600a311c5c08d4c6b74ac2e1f7e71a594a772b31305",
     "urs/workflow.py": "de55d563bd04e5e71fd69cd7c728c87150352c9e460a05628a23adc0659408c3",
     "urs/workspace.py": "0b9c058f7cec1514de1e8f10840a4678724a8b19424174e199faa3570a6a6cc4"
   },
   "evidence_sha256": {
-    "a4-generation-check.json": "f31bc69e364fef82afa108b62f36ea798836094cd4c10f82f10b980c2b19cddd",
+    "simple-review-done.png": "99251b31741ace33c0d531f5620ff3075b7fe1b92d2b25b033aed84a1c5b4aac",
     "a4-generation-page23.png": "a3d3a4b9eca66879517b884863b89ae7f426fdf19ff6995313c8a0a94a9be034",
-    "a4-generation-page9.png": "6c3e12943eb0f67662903f5fcbfbe8be663fed6adf6b0e197aca39e389398acc",
-    "a4-target-registration.png": "c9240d566ea1cf9be29ad02b1581cd8b25a6e09b4e940feb646cdc4acf55f7fd",
-    "ai-settings-desktop.png": "b39e1eee6267a4c0eeec4b0b00acbd8b78e94476fd48c2b8f233b3568a08d1c5",
-    "ai-settings-mobile.png": "e784120a9e5066a9335e31f57ca5019385b016aca1c959c6e3f60ff1036942ce",
-    "correction-report-images.png": "50f6a24edd0ef8cd596b83564929b273376fbb9a888be6d0abf0030f5111f920",
-    "correction-result-applied.png": "faf954c0e7ac4d74cbf1c99cc6a3200fa589c0cecc1576676c41ac4b445eecaa",
-    "correction-result-before.png": "57d0356995a98393c21ef6f83b8a6c25ab7a0f34ab535d4539b5a590df549b47",
-    "correction-result-mobile.png": "50a79c2bfe42a9cb3ed37020e76f7a9cfdedaf1a876685dfaaaa1c5673ad9eb5",
-    "correction-result-reverified.png": "303c42170d018d81db7fb282b39a2cc48518e500c9c1dd182c22fd9f11822ab0",
-    "cost-ledger.png": "e7674817139c1d4442ebbf7e14d71019eb52a79a9d54d37c671a3c8c0faf6f88",
-    "cost-preview.png": "32b6d345c94eacec288099d7a252d9898860066fc4f82debbebf3c404f45d47c",
-    "final-a4-generation-browser.txt": "a0e373ed13e5050d2eee09919eee693c264d975ee098e79bdd562a933b3997c6",
-    "final-a4-target-browser.txt": "57552efa06e16ee53c5fce6e180988d34b603e3d96d1cb94f77e1cdd5c8d1fea",
-    "final-browser.txt": "256c95b9b2fd3fc9e80ce17a6cda25a84425c45e5be2abee4238099949261dd7",
-    "final-correction-browser.txt": "758d794a6fba5bca8a3db26c4987259151bd3e0ae9df6a70a555b3107059f7fc",
-    "final-correction-recheck.txt": "1f5271a03e24984fb7d27b199064cf9deae19b41173ba18a5734e4ef22f8fda6",
-    "final-cost-browser.txt": "e1b71f2a6c3417d86381cf8e27cc17dd305846d7f48d931847a5017ad7b80fb9",
-    "final-flow-policy-recheck.txt": "d5489ac50d3e8882be558f7386445585678da1bf3653d473d73946e2394c698f",
-    "final-html.txt": "b1201bd2d4e9ce4be4abddead070970dd9142012d9f9e818fe676c26fa1615ea",
-    "final-immediate-image-browser.txt": "c45723d8a0cd01582bdbf80e8bc35328807949d9b54183916cf005dd02c88dd5",
-    "final-layout-editor-browser.txt": "420583b22b2dcd9e6251907744fe6ebcfe848809a2b296fc7bbad31bd8aeea5a",
-    "final-office.txt": "c0972375ff23124232bb122e0743bdd7ee309b516ef164e00bbab805a423ffcb",
-    "final-report-timeout-browser.txt": "21cfc323624ebb006af9cb387e924f4267991a8334e9f4df71ff15b1b0add348",
-    "final-result-edit-browser.txt": "3858e8356ab270c12d5ad416f2bb4fe2f2465a68b5dc391aebd89d180dd20970",
-    "final-result-edit-recheck.txt": "2428470ae5d0782ad3105480dcf9875e709d6700d2d41f4c15a4b7cabaf2b6eb",
-    "final-review-browser.txt": "0113ee04c144091ddb978e5e4f07b6ef60984037975cf17ebd6e6525bce01f17",
-    "final-saved-html-browser.txt": "7025b41ed981bbc1b74ace2ffa0bb633e1b5a47df68df1570162ca93be2648b9",
-    "final-saved-review-browser.txt": "92743b4230469f7ee23ff0c4b516d532fab8fdb5ddaa25f3e364978557bcd2df",
-    "final-saved-review-recheck.txt": "c877484f173c1659e5c5d435904d299c46dec11ec33d04caa2f874b826c13865",
-    "final-simple-review-browser.txt": "e7917c0fed970506a9b69f169704f4193ad1ec16f5f6686b26793dd416dccfea",
-    "final-staff-report-browser.txt": "ceb7f951c51c6939176522579ac5063aceaf068b48e1a9a019776c4e296211eb",
-    "final-tests.txt": "8bff1f5fdc031c380e63498a96baceb41979ae1c46fe0ebc72a8fbcf7a0216af",
-    "final-validation-resume.txt": "bad5a99ea687e932ebccef05d1e4282dc66e4cb5f37c688041cc1f9533ca43c3",
-    "final-workflow-browser.txt": "ee51e1c621c29b536e40119632caaed3563ad435873e610295d0bd29c6b4c6cb",
-    "html-comparison.json": "9d2feaad9ade27fcd36e14b700447adeba1442832e079a96ef9fc5411cc6763f",
-    "html-report-desktop.png": "e26e6ef23db99fa40ee528129e8da644e44791364dfeeed177758c62c5920904",
-    "html-report-mobile.png": "ed2f962c754a36e472c077ded3bce450801843755c69d6e61e0d5cc6a5c8bbba",
-    "html-request-contract.json": "e4a9ffd50d59ee6d5a62936f3a43abf6d553a937df248074649ae05b6b261834",
-    "immediate-image-check.json": "e5795351397b5250ae30fc9d01b731a2b5fde4efa1c69c356fae8dbf9b1a585e",
-    "immediate-original-images.png": "673f8b56b7c53259a1ad72051765c4a813e642b0889d3eba6f2ee7b9a5ff11c8",
-    "layout-editor.png": "6ad682e32b2db36047a0e62b869961bf3cefb2e4b91a336793f362909bf2bf53",
-    "model-layout-before.html": "3ca0b8d5236bad58f61a770b75036ba0309e62832e78ad298648278ab8f300c4",
-    "model-layout-check.json": "cba389e454a0da987b4ec5d28559c5fd51f129a77a16705ff77e0bc099f135ed",
-    "model-layout-final.html": "097adcf5e900db31af0b7adfa1089752df2a79a62fb66df36df48a1eabeb1c1c",
-    "model-layout-page23.png": "dc50e3f771838b7fdc875d4ee765206055a4fbb431301304c62df9a46cd8e30c",
-    "model-layout-page9.png": "3e5d62e4e19a7c67e4d790b35323a18267962a264baee6d582a82745798845fc",
+    "html-request-contract.json": "5ac82926ed70cebb12b7e4ca1e2ffc1b7e1c1f6d45faadec03bf832c0aece91c",
     "report-timeout-settings.png": "a13c6f3d070d2a0f078ede6c6cb63f2183f9f035bafad71b227148a992383c89",
-    "result-edit-applied.png": "184da0b67e23531fd7cf1e34b367e583c8d4f9d702f628ee9dee795a96218107",
-    "result-edit-remaining.png": "1c620d2cf6c650c93bd2c9c3c270f29321157288def242ff83b872f5b00a07f8",
-    "review-analysis.png": "ddf683051b7c2fa284370581535338021d654895a3a190d84a103ff35f7e93ee",
-    "review-result-a4-print.pdf": "c9c33370675e505f9074c3de6dc9a29ea121d860a4b256020f180a8dd773361a",
-    "review-result-buttons.png": "07128a10476d983e69e630f30687e213ce18000952df979918c46db59e613299",
-    "review-verification.png": "3d37e7a1aa26ddaf2358bd1701935b8f2168ab81526d0ece4c5d52bd9b25d389",
-    "saved-html-current.png": "0e5d55e3b6aa77e87f97f9b64a659c9901d654dbd737cedade0a013fedf4c74c",
-    "saved-html-end-check.png": "5601dc74f6e0b20f9fe6be148470eb143d8ea914577d86ef1698a235b66d6ca6",
-    "saved-html-none.png": "7401d9e1f5db6adcc6d584997d8f03a6238e283d557345549eb37b656e808149",
-    "saved-html-previous.png": "588cca94060f45a9ddcf87811b60b583297c6d70c0b2cfc780aec09b8eced33f",
-    "saved-review-easy-edit.png": "0ce05354083b69c9b0f873ca1e3c478a45bbc81762038664b4b1bf5b5073085a",
-    "saved-review-history.png": "8d963a0898a888ed52353e3f56bfc352b56c438d20188d64d7886ad022e09494",
-    "simple-review-before.png": "9ddc6264f757ac7d20a6bed74c2fe8d92e528184d43e6287d3daa9045d74067a",
-    "simple-review-done.png": "427f2dd26fcdf9bdf62e08b3d0c2dc60e189983a6f778b7f1a0e8f5ca1c1367e",
+    "final-flow-policy-recheck.txt": "d5489ac50d3e8882be558f7386445585678da1bf3653d473d73946e2394c698f",
+    "final-review-browser.txt": "0113ee04c144091ddb978e5e4f07b6ef60984037975cf17ebd6e6525bce01f17",
     "staff-report-hidden-page23.png": "1bd23c8945a32b9689c85d847f12ef799ba9890dc5ee3ac198d7019c27b0e25a",
-    "staff-report-pass-guide.png": "eddf4d619cad0fb0d7650b67b1f190d2f9082d6db5fd4ce9586bd20f5f604cc9",
-    "staff-report-primary.png": "b7c873510ac8c0e9d450a25f1426cac83f2f4e77b20f1c4f2c5dde2e206c5c83",
+    "result-edit-remaining.png": "1c620d2cf6c650c93bd2c9c3c270f29321157288def242ff83b872f5b00a07f8",
+    "ai-settings-desktop.png": "b39e1eee6267a4c0eeec4b0b00acbd8b78e94476fd48c2b8f233b3568a08d1c5",
+    "final-layout-editor-browser.txt": "420583b22b2dcd9e6251907744fe6ebcfe848809a2b296fc7bbad31bd8aeea5a",
+    "ai-settings-mobile.png": "e784120a9e5066a9335e31f57ca5019385b016aca1c959c6e3f60ff1036942ce",
+    "review-source-visible.png": "7466fc418e93ef322fa4d738800cc7c49100e3e102a0a6d263c08584ac1ac517",
+    "saved-review-history.png": "e7af24f33e179d962b7b139dee849afd307514a5c59cdd7abcea6a985766b091",
+    "final-a4-generation-browser.txt": "a0e373ed13e5050d2eee09919eee693c264d975ee098e79bdd562a933b3997c6",
+    "final-correction-browser.txt": "758d794a6fba5bca8a3db26c4987259151bd3e0ae9df6a70a555b3107059f7fc",
+    "review-result-a4-print.pdf": "d6ed3ab0292cf6bc4746145d44a8ef0c2a05d9ebd477fd575f7e883a47e08305",
+    "final-validation-resume.txt": "bad5a99ea687e932ebccef05d1e4282dc66e4cb5f37c688041cc1f9533ca43c3",
+    "final-report-timeout-browser.txt": "21cfc323624ebb006af9cb387e924f4267991a8334e9f4df71ff15b1b0add348",
+    "final-a4-target-browser.txt": "57552efa06e16ee53c5fce6e180988d34b603e3d96d1cb94f77e1cdd5c8d1fea",
+    "immediate-original-images.png": "673f8b56b7c53259a1ad72051765c4a813e642b0889d3eba6f2ee7b9a5ff11c8",
+    "correction-result-before.png": "44d610d6611b3cc4dffb3f11b3930ffd2828521d25eec3c7302f814805f8ec54",
+    "saved-html-previous.png": "736200357af12f3684776dda67d69baf1e5c29b8aa2b0736b319cc400f43f768",
+    "final-result-edit-browser.txt": "3858e8356ab270c12d5ad416f2bb4fe2f2465a68b5dc391aebd89d180dd20970",
+    "final-immediate-image-browser.txt": "c45723d8a0cd01582bdbf80e8bc35328807949d9b54183916cf005dd02c88dd5",
+    "saved-review-easy-edit.png": "f78e00c59328b8899924455cedd30aea3285a8a0c5e7a0a6ea9aa2977706bd53",
+    "model-layout-before.html": "3ca0b8d5236bad58f61a770b75036ba0309e62832e78ad298648278ab8f300c4",
     "synthetic-model-final.html": "5d41af839510b99202a599b52dae608cc2cab6ef7dec12a67e5bcbf6632f6f2c",
+    "final-correction-recheck.txt": "1f5271a03e24984fb7d27b199064cf9deae19b41173ba18a5734e4ef22f8fda6",
+    "cost-preview.png": "6ab433ae2e6159c13d24aa3ca4b0326be5ac4c12e004e7bbd2ff96f5b6cd91ae",
+    "final-simple-review-browser.txt": "e7917c0fed970506a9b69f169704f4193ad1ec16f5f6686b26793dd416dccfea",
+    "workflow-css.png": "e437722eee97c2e4a17e660869d77ae002efead314638fec9f82c7cb4feb0027",
+    "correction-result-applied.png": "e1944903a531374f24e7c023a98db98094cb5979d7f36e17ed796d3f8241b9c0",
+    "model-layout-final.html": "097adcf5e900db31af0b7adfa1089752df2a79a62fb66df36df48a1eabeb1c1c",
+    "staff-report-pass-guide.png": "eddf4d619cad0fb0d7650b67b1f190d2f9082d6db5fd4ce9586bd20f5f604cc9",
+    "saved-html-none.png": "105b93cfdfc0929b2fc6ab675e23b1274693bcf057cf8b0da613de13f329f876",
+    "layout-editor.png": "6ad682e32b2db36047a0e62b869961bf3cefb2e4b91a336793f362909bf2bf53",
+    "saved-html-end-check.png": "72f71e91fc0176e1eaa6917ce01bdb7c6c9a217c7d83a7a92931132a90c7c1de",
+    "a4-generation-check.json": "f31bc69e364fef82afa108b62f36ea798836094cd4c10f82f10b980c2b19cddd",
+    "final-cost-browser.txt": "e1b71f2a6c3417d86381cf8e27cc17dd305846d7f48d931847a5017ad7b80fb9",
+    "correction-result-mobile.png": "3c81383f53fad8d78e6e59d85eef3d5811180666996aac8691c755cc0b270455",
+    "staff-report-primary.png": "b7c873510ac8c0e9d450a25f1426cac83f2f4e77b20f1c4f2c5dde2e206c5c83",
+    "final-office.txt": "c0972375ff23124232bb122e0743bdd7ee309b516ef164e00bbab805a423ffcb",
+    "final-staff-report-browser.txt": "ceb7f951c51c6939176522579ac5063aceaf068b48e1a9a019776c4e296211eb",
+    "correction-result-reverified.png": "303c42170d018d81db7fb282b39a2cc48518e500c9c1dd182c22fd9f11822ab0",
+    "final-saved-review-recheck.txt": "c877484f173c1659e5c5d435904d299c46dec11ec33d04caa2f874b826c13865",
+    "review-result-buttons.png": "07128a10476d983e69e630f30687e213ce18000952df979918c46db59e613299",
+    "model-layout-page9.png": "3e5d62e4e19a7c67e4d790b35323a18267962a264baee6d582a82745798845fc",
+    "model-layout-page23.png": "dc50e3f771838b7fdc875d4ee765206055a4fbb431301304c62df9a46cd8e30c",
+    "workflow-mobile.png": "eabb1d1879ce1989b24790ad569929a3591257ac851c02c29f2f02d28bed5b7d",
+    "html-comparison.json": "9d2feaad9ade27fcd36e14b700447adeba1442832e079a96ef9fc5411cc6763f",
+    "a4-generation-page9.png": "6c3e12943eb0f67662903f5fcbfbe8be663fed6adf6b0e197aca39e389398acc",
+    "review-verification.png": "3d37e7a1aa26ddaf2358bd1701935b8f2168ab81526d0ece4c5d52bd9b25d389",
+    "correction-report-images.png": "50f6a24edd0ef8cd596b83564929b273376fbb9a888be6d0abf0030f5111f920",
+    "final-html.txt": "b1201bd2d4e9ce4be4abddead070970dd9142012d9f9e818fe676c26fa1615ea",
+    "html-report-mobile.png": "ed2f962c754a36e472c077ded3bce450801843755c69d6e61e0d5cc6a5c8bbba",
+    "final-workflow-browser.txt": "ee51e1c621c29b536e40119632caaed3563ad435873e610295d0bd29c6b4c6cb",
+    "simple-review-before.png": "e06b19b249d03ea1a094808448864e19f5b6e673433e770db4972e9ec8043449",
+    "a4-target-registration.png": "c9240d566ea1cf9be29ad02b1581cd8b25a6e09b4e940feb646cdc4acf55f7fd",
     "synthetic-model-original.html": "cf27f4f6173aa8aa5408022a03567e481be0e920a25d2ee5fd234b426d6908a7",
     "technical-readable.png": "04b4e079111603d48aa5fa4bea2e36f21c04d29c6317ab9d0db4af470534bc32",
-    "workflow-corrected.png": "dc13de1fcd96bd42260c163ebec7ca8a32630718effe3ad5e2360ed6ecca4acb",
-    "workflow-css.png": "e437722eee97c2e4a17e660869d77ae002efead314638fec9f82c7cb4feb0027",
-    "workflow-mobile.png": "51a3235ba66fe463414a0210b844c90965db8c4e52a18af6919cc502847f87e7",
-    "workflow-report.png": "f29e1e014b94106a91b7c2faa7ffbbf13f6993189fad211597e4d64d85157586"
+    "final-tests.txt": "4af505e31cb0377e25f4c26b7d25d751c56a708079ea1dea4f4179fea175132b",
+    "html-report-desktop.png": "e26e6ef23db99fa40ee528129e8da644e44791364dfeeed177758c62c5920904",
+    "final-saved-html-browser.txt": "7025b41ed981bbc1b74ace2ffa0bb633e1b5a47df68df1570162ca93be2648b9",
+    "final-result-edit-recheck.txt": "2428470ae5d0782ad3105480dcf9875e709d6700d2d41f4c15a4b7cabaf2b6eb",
+    "result-edit-applied.png": "1e7f435fbd8454867b8fa1dc59c36c3c515e1794579286c9fcf6f852369f1b71",
+    "model-layout-check.json": "cba389e454a0da987b4ec5d28559c5fd51f129a77a16705ff77e0bc099f135ed",
+    "review-analysis.png": "ddf683051b7c2fa284370581535338021d654895a3a190d84a103ff35f7e93ee",
+    "workflow-report.png": "f29e1e014b94106a91b7c2faa7ffbbf13f6993189fad211597e4d64d85157586",
+    "immediate-image-check.json": "e5795351397b5250ae30fc9d01b731a2b5fde4efa1c69c356fae8dbf9b1a585e",
+    "final-saved-review-browser.txt": "92743b4230469f7ee23ff0c4b516d532fab8fdb5ddaa25f3e364978557bcd2df",
+    "cost-ledger.png": "e7674817139c1d4442ebbf7e14d71019eb52a79a9d54d37c671a3c8c0faf6f88",
+    "final-browser.txt": "256c95b9b2fd3fc9e80ce17a6cda25a84425c45e5be2abee4238099949261dd7",
+    "saved-html-current.png": "0e5d55e3b6aa77e87f97f9b64a659c9901d654dbd737cedade0a013fedf4c74c",
+    "workflow-corrected.png": "dc13de1fcd96bd42260c163ebec7ca8a32630718effe3ad5e2360ed6ecca4acb"
   },
   "real_openai_verified": false,
   "real_customer_urs_verified": false,
   "accuracy_99_demonstrated": false,
-  "all_requirements_completed": false,
-  "resumed_validation": [
-    {
-      "reason": "Presentation tests now open optional metadata instead of requiring system details on the default screen. Production source unchanged after full validation began.",
-      "reused_successful_runners": 2,
-      "rerun_start": "a4-target-browser",
-      "changed_tests_only": [
-        "tests/browser_targets.py"
-      ],
-      "all_current_production_source_hashes_unchanged": true
-    }
-  ]
+  "all_requirements_completed": false
 }

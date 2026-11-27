@@ -34,6 +34,7 @@
    for(const input of finding.querySelectorAll('input,select,button'))input.disabled=readOnly;
    for(const input of finding.querySelectorAll('textarea'))input.readOnly=readOnly;
    if(done&&finding.querySelector('.proposal'))finding.querySelector('.proposal').open=false;
+   if(finding.querySelector('.current-translation h4'))finding.querySelector('.current-translation h4').textContent=done?'수정 전 번역':'현재 번역';
    if(done&&finding.querySelector('.finding-top'))finding.querySelector('.finding-top').textContent=finding.querySelector('.finding-top').textContent.replace(/번역 오류|번역 확인 필요|프로그램 문제/,'처리 완료');
    if(done&&!finding.querySelector('.applied-note')){const note=el('p','저장 완료 · 현재 보고서에 반영했습니다.');note.className='applied-note';finding.querySelector('h3').after(note);}
   }

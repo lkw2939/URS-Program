@@ -236,6 +236,27 @@ def editor_html(item,data):
     return controls
 
 
+
+def source_context_html(item,base):
+    """Show stored evidence verbatim; page links always use the uploaded original."""
+    esc=html.escape
+    refs=list(item.get('references',[]))
+    english=item.get('source_en','')
+    if english and english not in [r['quote'] for r in refs]:refs.append({'page':item.get('page'),'quote':english})
+    def link(page):
+        url=base+'/original?view=1'+('#page='+str(page) if page else '')
+        return '<a class="source-pdf" href="'+esc(url,quote=True)+'" target="_blank" rel="noopener">'+('원문 '+str(page)+'쪽 PDF 보기' if page else '원본 PDF 보기')+'</a>'
+    result='<section class="source-context" aria-label="영어 원문"><h4>영어 원문</h4>'
+    for ref in refs:
+        result+='<div class="source-excerpt">'+link(ref['page'])+'<blockquote lang="en">'+esc(ref['quote'])+'</blockquote></div>'
+    quoted={r['page'] for r in refs if r['page']}
+    missing=[n for n in sorted(set(item.get('pages',[])+item.get('pending_pages',[]))) if n not in quoted]
+    if not refs:result+='<p class="source-missing">저장된 원문 인용이 없습니다.</p>'
+    for page in missing:result+='<p class="source-missing">'+link(page)+' · 인용 미기록</p>'
+    if not refs and not missing:result+='<p>'+link(item.get('page'))+'</p>'
+    return result+'</section>'
+
+
 def render(workspace,owner,document,target,attempt):
     data=load(workspace,owner,document,target,attempt);esc=html.escape;base=f'/api/documents/{document}'
     ready=data['execution_report'];editable=data['can_edit']
@@ -271,6 +292,10 @@ def render(workspace,owner,document,target,attempt):
             from urs.review_evidence import explanation as explain_program
             explanation+='<section class="program-diagnosis"><strong>직원용 HTML · 실제 검증 사본 비교</strong>'+''.join('<p>'+esc(line)+'</p>' for line in explain_program(item,data['presentation_comparison']))+'</section>'
         elif item['how'] and item['how'] not in (item['problem'],item['question']):explanation+='<p><strong>다음 조치</strong> · '+esc(item['how'])+'</p>'
+        if item['kind'] in ('error','review') or item.get('can_manual') or item['references'] or item['source_en']:
+            s+=source_context_html(item,base)
+        quick=bool(item.get('can_propose') and not item.get('can_manual') and item['before'] and item['after'] and item['before']!=item['after'])
+        if item['before'] and not quick:s+='<section class="current-translation"><h4>'+('수정 전 번역' if item.get('applied') else '현재 번역')+'</h4><p>'+esc(item['before'])+'</p></section>'
         if item.get('applied'):s+='<p class="applied-note">보고서 버전 '+str(item['applied']['applied_revision'])+'에 저장했습니다.</p>'
         elif can:s+=editor_html(item,data)
         elif item['kind']=='error' and (item['before'] or item['after']):
@@ -278,11 +303,6 @@ def render(workspace,owner,document,target,attempt):
             if item['before']:s+='<div><strong>현재 문장</strong><p>'+esc(item['before'])+'</p></div>'
             if item['after']:s+='<div><strong>고칠 문장</strong><p>'+esc(item['after'])+'</p></div>'
             s+='</div><p class="muted">이전 결과는 수정할 수 없습니다.</p>'
-        quotes=[]
-        for ref in item['references']:quotes.append('<p class="source-page-label">원문 '+str(ref['page'])+'쪽</p><blockquote>'+esc(ref['quote'])+'</blockquote>')
-        if item['source_en'] and item['source_en'] not in [r['quote'] for r in item['references']]:quotes.append('<blockquote>'+esc(item['source_en'])+'</blockquote>')
-        if quotes:explanation+='<details class="source"><summary>영어 원문 근거</summary>'+''.join(quotes)+'</details>'
-        if item['pending_pages']:explanation+='<p class="muted">추가 대조 필요: '+', '.join(str(p)+'쪽' for p in item['pending_pages'])+' (원문 인용 미기록)</p>'
         if explanation:s+='<details class="finding-explanation"><summary>왜 고쳐야 하나요? · 근거 보기</summary>'+explanation+'</details>'
         s+='</article>'
     if editable:
@@ -311,4 +331,4 @@ def render(workspace,owner,document,target,attempt):
     from pathlib import Path
     css=(Path(__file__).resolve().parents[1]/'static/review.css').read_text()
     encoded=json.dumps(data,ensure_ascii=False).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
-    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js?v=concise-review-5"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()
+    return ('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>독립검증 결과 · '+esc(data['report_name'])+'</title><style>'+css+'</style><script defer src="/review.js?v=source-visible-review-6"></script></head><body><main>'+s+'</main><script type="application/json" id="review-data">'+encoded+'</script></body></html>').encode()
